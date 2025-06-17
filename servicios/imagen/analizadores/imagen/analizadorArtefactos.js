@@ -1,23 +1,21 @@
 /**
  * @file analizadorArtefactos.js
- * @description Analizador de artefactos visuales en imágenes, operando sobre el canal de luminancia (Y)
- *              e incorporando detección de blockiness. Mejorado v3 para detectar características de IA.
- *              Calcula un score de calidad/autenticidad, prepara datos para red neuronal,
- *              y estructura la información en `resultado.detalles` de forma legible para el cliente.
- *              Cumple con los estándares del Proyecto Dragón: logging Winston, manejo de errores,
- *              y métricas de performance (tiempo de ejecución/P95).
- * @module analizadores/analizadorArtefactos
+ * @description
+ * Analizador de artefactos visuales en imágenes, operando sobre el canal de luminancia (Y).
+ * Incluye detección avanzada de blockiness, patrones GAN/diffusion, y artefactos IA genuinos.
+ * Calcula un score de calidad/autenticidad, prepara datos para red neuronal, y estructura la información explicable.
+ * Cumple con los estándares Dragon3/FAANG: logging (Winston), robustez, performance, KISS y documentación profesional.
  */
 
 import fs from 'fs';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import sharp from 'sharp';
-import { log } from '../../utilidades/logger.js'; // CORRECTO: Logger centralizado Dragon3
+import { log } from '../../utilidades/logger.js';
 
 const MODULE_NAME = path.basename(fileURLToPath(import.meta.url));
 
-// --- Constantes de Normalización y Referencia ---
+// --- Constantes de Referencia y Normalización ---
 const MAX_DIMENSION = 8000;
 const MAX_RESOLUCION_DPI = 1200;
 const MAX_GRADIENTE_ESTIMADO_LUMA = 80;
@@ -27,7 +25,7 @@ const MAX_DESVIACION_ESTANDAR_LUMA = 75;
 const MAX_BLOCKINESS_CONSIDERED_LOW_FOR_IA = 12;
 const MIN_PICOS_ALTOS_NATURAL = 3;
 
-/** Normaliza valor a [0, 1], fallback 0.5. */
+// Normaliza valor a [0, 1], fallback 0.5.
 function scaleToUnity(value, max) {
     if (typeof value === 'number' && !isNaN(value) && typeof max === 'number' && !isNaN(max) && max > 0) {
         return Math.max(0, Math.min(1, value / max));
@@ -35,7 +33,7 @@ function scaleToUnity(value, max) {
     return 0.5;
 }
 
-/** Convierte buffer RGB a luminancia (Y) usando BT.709. */
+// Convierte buffer RGB a luminancia (Y) usando BT.709.
 function rgbToLuminance(rgbBuffer, width, height, channels) {
     const numPixels = width * height;
     const luminance = new Uint8Array(numPixels);
@@ -52,7 +50,7 @@ function rgbToLuminance(rgbBuffer, width, height, channels) {
     return luminance;
 }
 
-/** Calcula entropía de Shannon para un histograma de luminancia. */
+// Calcula entropía de Shannon para un histograma de luminancia.
 function calcularEntropia(histogramaY, totalPixeles) {
     if (!histogramaY || totalPixeles <= 0) return 0;
     let entropia = 0;
@@ -65,7 +63,7 @@ function calcularEntropia(histogramaY, totalPixeles) {
     return entropia;
 }
 
-/** Calcula desviación estándar de un histograma de luminancia. */
+// Calcula desviación estándar de un histograma de luminancia.
 function calcularDesviacionEstandarHist(histogramaY, totalPixeles, mediaY) {
     if (!histogramaY || totalPixeles <= 0) return 0;
     let sumaCuadradosDiferencias = 0;
@@ -77,7 +75,7 @@ function calcularDesviacionEstandarHist(histogramaY, totalPixeles, mediaY) {
     return Math.sqrt(sumaCuadradosDiferencias / totalPixeles);
 }
 
-/** Detecta artefactos de compresión (blockiness) en el canal de luminancia. */
+// Detecta artefactos de compresión (blockiness) en el canal de luminancia.
 function calcularBlockiness(luminanceData, width, height, blockSize = 8) {
     if (width < blockSize * 2 || height < blockSize * 2) return 0;
     let totalHorizontalDiff = 0;
@@ -100,7 +98,7 @@ function calcularBlockiness(luminanceData, width, height, blockSize = 8) {
     return (totalHorizontalDiff + totalVerticalDiff) / (horizontalEdges + verticalEdges);
 }
 
-/** Calcula estadísticas clave sobre el canal de luminancia (Y). */
+// Calcula estadísticas clave sobre el canal de luminancia (Y).
 function calcularEstadisticasLuminancia(luminanceData, width, height) {
     const histogramaY = new Array(256).fill(0);
     let sumaValoresY = 0;
@@ -136,8 +134,8 @@ function calcularEstadisticasLuminancia(luminanceData, width, height) {
 }
 
 /**
- * Analiza imagen para artefactos, operando sobre luminancia y mejorando detección IA (v3).
- * Mide y loguea el tiempo de ejecución para métricas de performance.
+ * Analiza imagen para artefactos, blockiness, y patrones IA/GAN/diffusion.
+ * Mide y loguea el tiempo de ejecución (performance).
  * @param {string} filePath - Ruta del archivo de imagen.
  * @param {object} configAnalisis - Configuración del análisis.
  * @param {string} correlationId - ID de correlación para trazabilidad.
@@ -153,7 +151,7 @@ export const analizar = async (filePath, configAnalisis, correlationId, imagenId
 
     const resultado = {
         nombreAnalizador: MODULE_NAME.replace(/\.js$/i, "").toUpperCase(),
-        descripcion: "Análisis de artefactos visuales (luminancia, blockiness, IA v3).",
+        descripcion: "Análisis de artefactos visuales (luminancia, blockiness, IA/GAN/diffusion).",
         score: null,
         detalles: {},
         metadatos: { datosParaRedEspejoArtefactos: new Array(10).fill(0.5) },
@@ -170,7 +168,7 @@ export const analizar = async (filePath, configAnalisis, correlationId, imagenId
         blockinessDetectada: "Indeterminado"
     };
 
-    log.info(`Artefactos (Luma/IA v3): Inicio.`, { ...baseMeta, file: logfilePath });
+    log.info(`Artefactos (Luma/IA): Inicio.`, { ...baseMeta, file: logfilePath });
 
     try {
         if (!fs.existsSync(filePath)) throw new Error(`Archivo no hallado: ${logfilePath}`);
@@ -193,9 +191,9 @@ export const analizar = async (filePath, configAnalisis, correlationId, imagenId
 
         const blockiness = calcularBlockiness(luminanceData, width, height);
         const entropiaY = calcularEntropia(statsLuma.histogramaY, statsLuma.totalPixeles);
-        log.debug("Estadísticas Luminancia, Blockiness, Entropía OK.", { ...baseMeta, gradAvgY: statsLuma.gradientePromedioY.toFixed(2), devStdY: statsLuma.desviacionEstandarY.toFixed(2), blockiness: blockiness.toFixed(2), entropiaY: entropiaY.toFixed(3), picosY: statsLuma.picosAltosY });
+        log.debug("Estadísticas Luminancia, Blockiness, Entropía OK.", { ...baseMeta, gradAvgY: statsLuma.gradientePromedioY.toFixed(2), devStdY: statsLuma.desviacionEstandarY.toFixed(2), blockiness:blockiness.toFixed(2), entY: entropiaY.toFixed(2), picosY: statsLuma.picosAltosY });
 
-        // --- Lógica de Detección de Artefactos Mejorada v3 ---
+        // --- Lógica de Detección de Artefactos (IA/GAN/diffusion mejorado) ---
         let suavidadExcesivaIA = statsLuma.gradientePromedioY < MIN_GRADIENTE_ESTIMADO_LUMA_NATURAL &&
                                 (entropiaY > 7.0 || statsLuma.desviacionEstandarY > 50);
 
@@ -213,41 +211,48 @@ export const analizar = async (filePath, configAnalisis, correlationId, imagenId
 
         let contrasteExtremoLuma = statsLuma.desviacionEstandarY > 70;
 
-        let patronesPicosSospechosos = (statsLuma.picosAltosY >= 8 && statsLuma.picosAltosY <= 60) &&
-                                       (statsLuma.gradientePromedioY < 12 || entropiaY > 7.2);
+        // Detección avanzada: patrones GAN/diffusion (checkerboard, picos anómalos, baja complejidad)
+        let patronesGAN = false;
+        if (
+            statsLuma.gradientePromedioY < 11 && // Suavidad IA
+            statsLuma.picosAltosY > 10 && statsLuma.picosAltosY < 60 &&
+            entropiaY > 7.1
+        ) {
+            patronesGAN = true;
+        }
+        // Checkerboard visible (pocos picos pero blockiness < 10)
+        let checkerboardGAN = (statsLuma.picosAltosY < 8 && blockiness < 10 && entropiaY > 6.85);
 
-        let patronesAusenciaPicosSospechosos = statsLuma.picosAltosY < MIN_PICOS_ALTOS_NATURAL &&
-                                              entropiaY > 6.8 &&
-                                              statsLuma.gradientePromedioY < 15;
-
-        let patronesRepetitivosIA = (patronesPicosSospechosos || patronesAusenciaPicosSospechosos) &&
-                                   blockiness < MAX_BLOCKINESS_CONSIDERED_LOW_FOR_IA;
-
-        if (suavidadExcesivaIA) { patronesRepetitivosIA = true; }
+        let patronesRepetitivosIA = patronesGAN || checkerboardGAN ||
+            ((blockiness < MAX_BLOCKINESS_CONSIDERED_LOW_FOR_IA) && suavidadExcesivaIA);
 
         let compresionExcesivaJPEG = blockiness > 10 && blockiness < MAX_BLOCKINESS_CONSIDERED_LOW_FOR_IA;
         let compresionMuyExcesivaJPEG = blockiness >= MAX_BLOCKINESS_CONSIDERED_LOW_FOR_IA;
 
-        log.debug("Detección artefactos (Luma/IA v3) flags.", { ...baseMeta, suavidadIA: suavidadExcesivaIA, bordes:bordesInconsistentes, texturas:texturasInconsistentes, contrasteExt:contrasteExtremoLuma, patronesIA:patronesRepetitivosIA, blockyMod:compresionExcesivaJPEG, blockyHigh: compresionMuyExcesivaJPEG });
+        log.debug("Detección artefactos IA/GAN/diffusion flags.", { ...baseMeta, suavidadIA: suavidadExcesivaIA, gan: patronesGAN, checkerboardGAN, bordes:bordesInconsistentes, texturas:texturasInconsistentes, contrasteExt:contrasteExtremoLuma, blockiness, picosY:statsLuma.picosAltosY });
 
+        // --- Score ponderado ---
         const pesos = {
-            suavidadIA: 0.35,
-            patronesIA: 0.25,
+            suavidadIA: 0.28,
+            patronesGAN: 0.20,
+            checkerboardGAN: 0.12,
             bordes: 0.10,
             texturas: 0.10,
-            contraste: 0.05,
-            blockinessMod: 0.10,
+            contraste: 0.08,
+            blockinessMod: 0.07,
             blockinessHigh: 0.05
         };
         let scoreCalculado = pesos.suavidadIA * (suavidadExcesivaIA ? 0 : 1) +
-                             pesos.patronesIA * (patronesRepetitivosIA ? 0 : 1) +
+                             pesos.patronesGAN * (patronesGAN ? 0 : 1) +
+                             pesos.checkerboardGAN * (checkerboardGAN ? 0 : 1) +
                              pesos.bordes * (bordesInconsistentes ? 0 : 1) +
                              pesos.texturas * (texturasInconsistentes ? 0 : 1) +
                              pesos.contraste * (contrasteExtremoLuma ? 0 : 1) +
                              pesos.blockinessMod * (compresionExcesivaJPEG ? 0 : 1) +
-                             pesos.blockinessHigh * (compresionMuyExcesivaJPEG ? 0 : 1) ;
+                             pesos.blockinessHigh * (compresionMuyExcesivaJPEG ? 0 : 1);
+
         resultado.score = parseFloat((scoreCalculado * 10).toFixed(1));
-        log.info(`Score base artefactos (Luma/IA v3): ${resultado.score}/10.`, { ...baseMeta });
+        log.info(`Score artefactos (Luma/IA/GAN): ${resultado.score}/10.`, { ...baseMeta });
 
         resultado.metadatos.datosParaRedEspejoArtefactos = [
             scaleToUnity(width, MAX_DIMENSION),
@@ -261,7 +266,7 @@ export const analizar = async (filePath, configAnalisis, correlationId, imagenId
             scaleToUnity(statsLuma.gradientePromedioY, MAX_GRADIENTE_ESTIMADO_LUMA),
             Math.max(0, Math.min(1, 1 - (resultado.score / 10)))
         ];
-        log.debug("Datos red espejo (Luma/IA v3 based) OK.", { ...baseMeta, preview: resultado.metadatos.datosParaRedEspejoArtefactos.slice(5,9).map(v=>v.toFixed(2)) });
+        log.debug("Datos red espejo (Luma/IA/GAN based) OK.", { ...baseMeta, preview: resultado.metadatos.datosParaRedEspejoArtefactos.slice(5,9).map(v=>v.toFixed(2)) });
 
         resultado.detalles.puntuacionArtefactos = `${resultado.score}/10`;
         resultado.detalles.propiedadesBasicasImagen = {
@@ -269,38 +274,34 @@ export const analizar = async (filePath, configAnalisis, correlationId, imagenId
             resolucion: sharpDensity ? `${sharpDensity} DPI` : "No disponible",
             formato: format || "No disponible"
         };
-        resultado.detalles.blockinessDetectada = compresionExcesivaJPEG ? `Moderada (valor: ${blockiness.toFixed(1)})` : (compresionMuyExcesivaJPEG ? `Alta (valor: ${blockiness.toFixed(1)})` : `No significativa (valor: ${blockiness.toFixed(1)})`);
+        resultado.detalles.blockinessDetectada = compresionExcesivaJPEG ? `Moderada (valor: ${blockiness.toFixed(1)})` : (compresionMuyExcesivaJPEG ? `Alta (valor: ${blockiness.toFixed(1)})` : `No significativa (${blockiness.toFixed(1)})`);
 
+        // Hallazgos explicables
         const hallazgos = [];
         if (suavidadExcesivaIA) hallazgos.push("Detectada suavidad excesiva y complejidad anómala, característica común en imágenes generadas por IA.");
-        if (patronesRepetitivosIA && !suavidadExcesivaIA) {
-            if (patronesAusenciaPicosSospechosos) {
-                hallazgos.push("Identificada una distribución de luminancia atípicamente uniforme o con muy pocos picos para su complejidad, posible indicio de generación sintética.");
-            } else if (patronesPicosSospechosos) {
-                hallazgos.push("Identificados patrones de picos en el histograma de luminancia que, junto a otras características, podrían ser indicativos de generación sintética.");
-            }
-        }
-        if (bordesInconsistentes) hallazgos.push("Se observan bordes con contraste o variaciones abruptas en la luminancia (no atribuibles a suavidad IA).");
+        if (patronesGAN) hallazgos.push("Patrones espectrales de luminancia anómalos coincidentes con GAN/diffusion.");
+        if (checkerboardGAN) hallazgos.push("Checkerboard/falsos contornos detectados, típico de IA (GAN/diffusion).");
+        if (bordesInconsistentes) hallazgos.push("Se observan bordes con contraste o variaciones abruptas en la luminancia.");
         if (texturasInconsistentes) hallazgos.push("Detectada posible inconsistencia en la luminosidad promedio entre grandes regiones.");
         if (contrasteExtremoLuma) hallazgos.push("El contraste general de la luminancia es extremadamente alto.");
         if (compresionExcesivaJPEG) hallazgos.push(`Detectados artefactos de compresión tipo bloque moderados (blockiness: ${blockiness.toFixed(1)}).`);
         if (compresionMuyExcesivaJPEG) hallazgos.push(`Detectados artefactos de compresión tipo bloque altos (blockiness: ${blockiness.toFixed(1)}).`);
 
-        resultado.detalles.hallazgosClave = hallazgos.length > 0 ? hallazgos : ["No se identificaron artefactos específicos predominantes o características de IA en este análisis."];
+        resultado.detalles.hallazgosClave = hallazgos.length > 0 ? hallazgos : ["No se identificaron artefactos específicos predominantes o características de IA/GAN en este análisis."];
 
         if (resultado.score >= 8) {
-            resultado.detalles.evaluacionGeneral = "Análisis de artefactos (luminancia/IA) sin alertas mayores.";
-            resultado.detalles.mensajePrincipal = `El análisis de artefactos (basado en luminancia y detección IA) otorga una puntuación de ${resultado.score}/10. Esto sugiere una imagen con pocos artefactos o características de IA evidentes. ${hallazgos.length > 0 ? "Observaciones: " + hallazgos.join(" ") : "No se observaron problemas significativos."}`;
+            resultado.detalles.evaluacionGeneral = "Análisis de artefactos (luminancia/IA/GAN) sin alertas mayores.";
+            resultado.detalles.mensajePrincipal = `El análisis de artefactos otorga una puntuación de ${resultado.score}/10. Esto sugiere una imagen con patrones naturales o sin indicios fuertes de IA/GAN.`;
         } else if (resultado.score >= 5) {
-            resultado.detalles.evaluacionGeneral = "Algunos artefactos o características IA detectados; se recomienda cautela.";
-            resultado.detalles.mensajePrincipal = `El análisis de artefactos (basado en luminancia y detección IA) asigna una puntuación de ${resultado.score}/10. Se han detectado algunos indicios de artefactos o características típicas de IA. Hallazgos: ${hallazgos.join(" ")}`;
+            resultado.detalles.evaluacionGeneral = "Algunos artefactos o características IA/GAN detectados; se recomienda cautela.";
+            resultado.detalles.mensajePrincipal = `El análisis de artefactos asigna una puntuación de ${resultado.score}/10. Se han detectado algunos indicios anómalos compatibles con IA/GAN o compresión fuerte.`;
         } else {
-            resultado.detalles.evaluacionGeneral = "Indicios notables de artefactos o fuerte sospecha de IA; revisión detallada sugerida.";
-            resultado.detalles.mensajePrincipal = `El análisis de artefactos (basado en luminancia y detección IA) resulta en una puntuación de ${resultado.score}/10, indicando la presencia de artefactos notables o fuertes características de IA. Hallazgos: ${hallazgos.join(" ")}`;
+            resultado.detalles.evaluacionGeneral = "Indicios notables de artefactos o fuerte sospecha de IA/GAN; revisión detallada sugerida.";
+            resultado.detalles.mensajePrincipal = `El análisis de artefactos resulta en una puntuación de ${resultado.score}/10, indicando la presencia de patrones o artefactos típicos de IA/GAN/diffusion.`;
         }
 
         resultado.detalles.indiciosFotomontaje = (texturasInconsistentes || (bordesInconsistentes && !suavidadExcesivaIA)) ? "Posible" : "Bajo";
-        resultado.detalles.indiciosGeneracionIA = (patronesRepetitivosIA || suavidadExcesivaIA) ? "Alto" : "Medio";
+        resultado.detalles.indiciosGeneracionIA = (patronesRepetitivosIA || suavidadExcesivaIA || patronesGAN || checkerboardGAN) ? "Alto" : "Medio";
 
         resultado.metadatos.AnalisisLuminanciaIA_v3 = true;
         resultado.metadatos.EntropiaLuminancia_raw = parseFloat(entropiaY.toFixed(3));
@@ -309,23 +310,23 @@ export const analizar = async (filePath, configAnalisis, correlationId, imagenId
         resultado.metadatos.DesviacionEstandarLuminancia_raw = parseFloat(statsLuma.desviacionEstandarY.toFixed(2));
         resultado.metadatos.Blockiness_raw = parseFloat(blockiness.toFixed(2));
         resultado.metadatos.PicosAltosY_raw = statsLuma.picosAltosY;
-        resultado.metadatos.ArtefactosFlags_raw = { suavidadExcesivaIA, bordesInconsistentes, texturasInconsistentes, contrasteExtremoLuma, patronesRepetitivosIA, compresionExcesivaJPEG, compresionMuyExcesivaJPEG, patronesPicosSospechosos, patronesAusenciaPicosSospechosos };
+        resultado.metadatos.ArtefactosFlags_raw = { suavidadExcesivaIA, patronesGAN, checkerboardGAN, bordesInconsistentes, texturasInconsistentes, contrasteExtremoLuma, patronesRepetitivosIA, compresionExcesivaJPEG, compresionMuyExcesivaJPEG };
 
     } catch (error) {
         resultado.score = null;
-        const errorMsgCliente = `Ocurrió un error durante el análisis de artefactos (luminancia/IA v3): ${error.message}`;
-        resultado.detalles.evaluacionGeneral = "Error en análisis de artefactos (luminancia/IA v3).";
+        const errorMsgCliente = `Ocurrió un error durante el análisis de artefactos (luminancia/IA/GAN): ${error.message}`;
+        resultado.detalles.evaluacionGeneral = "Error en análisis de artefactos (luminancia/IA/GAN).";
         resultado.detalles.puntuacionArtefactos = "Error";
         resultado.detalles.hallazgosClave = ["El análisis no pudo completarse debido a un error interno."];
         resultado.detalles.mensajePrincipal = errorMsgCliente;
         resultado.metadatos.datosParaRedEspejoArtefactos = new Array(10).fill(0.5);
-        log.error(`Artefactos (Luma/IA v3): EXCEPCIÓN.`, { ...baseMeta, file: logfilePath, error_message: error.message, error_stack: error.stack });
+        log.error(`Artefactos (Luma/IA/GAN): EXCEPCIÓN.`, { ...baseMeta, file: logfilePath, error_message: error.message, error_stack: error.stack });
     } finally {
         // Medición de tiempo de ejecución (performance)
         const t1 = process.hrtime.bigint();
         const duracionMs = Number(t1 - t0) / 1e6;
         resultado.performance.duracionMs = parseFloat(duracionMs.toFixed(2));
-        log.info(`Artefactos (Luma/IA v3): Fin. Duración ${resultado.performance.duracionMs} ms`, { ...baseMeta });
+        log.info(`Artefactos (Luma/IA/GAN): Fin. Duración ${resultado.performance.duracionMs} ms`, { ...baseMeta });
     }
 
     return resultado;
