@@ -195,24 +195,27 @@ const CHANNELS = {
  * Orden crítico para compatibilidad
  */
 const CAMPOS_SUPERIOR_KEYS = [
-    "RedExif_score",
-    "RedSignatures_score", 
-    "RedTexture_score",
-    "RedDefinicion_score",
-    "RedArtefactos_score",
-    "RedColor_score",
-    "RedResolucion_score",
-    "RedPantalla_score",
-    "MBH_score",
-    "IVM_Final",
-    "INT_Final",
-    "IDEN_Final",
-    "ECHT_score",
-    "ICTM_Final",
-    "ICRN_score",
-    "baseScore"
+    "RedExif_score",         // Manipulación en metadatos
+    "RedSignatures_score",   // Integridad/firma digital
+    "RedTexture_score",      // Manipulación visual/deepfake
+    "RedDefinicion_score",   // Nitidez y enfoque
+    "RedArtefactos_score",   // Artefactos de edición/compresión
+    "RedColor_score",        // Alteraciones de color y paleta
+    "RedResolucion_score",   // Manipulación de resolución
+    "RedPantalla_score",     // Detección de foto a pantalla
+    "MBH_score",             // Motion Boundary Histogram, forense avanzado
+    "ICRN_score"             // Índice de ruido forense
 ];
 
+function normalizarPayloadRedSuperior(payload) {
+    const normalizado = {};
+    CAMPOS_SUPERIOR_KEYS.forEach(key => {
+        let valor = payload[key];
+        if (typeof valor !== 'number' || isNaN(valor)) valor = 0;
+        normalizado[key] = Math.max(0, Math.min(1, parseFloat(valor)));
+    });
+    return normalizado;
+}
 /**
  * ====================================================================
  * FAANG: ENHANCED CUSTOM ERROR CLASSES
