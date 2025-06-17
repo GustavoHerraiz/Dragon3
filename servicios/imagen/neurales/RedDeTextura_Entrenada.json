@@ -1,0 +1,50 @@
+{
+  "layers": {
+    "input": {
+      "size": 10
+    },
+    "hidden": [{
+      "size": 5
+    }],
+    "output": {
+      "size": 1
+    }
+  },
+  "weights": {
+    "input_hidden": [
+      [0.85, 0.65, 0.45, 0.25, 0.15],
+      [-0.85, -0.65, -0.45, -0.25, -0.15],
+      [-0.75, -0.55, -0.35, -0.25, -0.15],
+      [0.65, 0.45, 0.35, 0.25, 0.15],
+      [0.55, 0.45, 0.35, 0.25, 0.15],
+      [-0.45, -0.35, -0.25, -0.15, -0.05],
+      [0.45, 0.35, 0.25, 0.15, 0.05],
+      [-0.35, -0.25, -0.15, -0.05, 0.05],
+      [0.35, 0.25, 0.15, 0.05, 0.05],
+      [0.25, 0.15, 0.05, 0.05, 0.05]
+    ],
+    "hidden_output": [
+      [0.85],
+      [0.65],
+      [0.45],
+      [0.25],
+      [0.15]
+    ]
+  },
+  "metadata": {
+    "description": "Red neuronal para análisis de texturas",
+    "version": "1.0.0",
+    "parameters": [
+      "complejidadTextura",
+      "uniformidadTextura",
+      "patronesRepetitivos",
+      "variacionLocal",
+      "densidad",
+      "contrasteMicro",
+      "granularidad",
+      "direccionalidad",
+      "rugosidad",
+      "entropia"
+    ]
+  }
+}
