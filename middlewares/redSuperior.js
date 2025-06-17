@@ -1,47 +1,47 @@
 /**
- * RED SUPERIOR DRAGON3 - TENSORFLOW ENTERPRISE
- * Arquitecto: GustavoHerraiz
- * Fecha: 2025-06-16 13:07:06 UTC
- * 
+ * RED SUPERIOR DRAGON3 - TENSORFLOW ENTERPRISE (KISS, FAANG)
+ * Arquitecto: Gustavo Herraiz
+ * Fecha: 2025-06-17
+ *
  * FILOSOFÍA DRAGON: Red neuronal superior que toma decisiones finales
- * sobre autenticidad de imágenes con sabiduría zen y potencia FAANG.
- * 
+ * sobre autenticidad de imágenes, FAANG architecture, KISS principles.
+ *
  * FLUJO: servidorCentral.js → redSuperior.js → Decision AUTHENTIC/FAKE
  * MÉTRICAS: P95 <50ms, 99.9% accuracy, circuit breaker integrado
  */
 
 import tf from '@tensorflow/tfjs-node';
-import dragon from '/var/www/ProyectoDragon/backend/utilidades/logger.js';
+import dragon from '/var/www/ProyectoDragon/backend/utilidades/logger.js'; // Winston logger adaptado
 import fs from 'fs/promises';
 import path from 'path';
 
 /**
- * RED SUPERIOR TENSORFLOW - MÁXIMA POTENCIA ENTERPRISE
+ * RED SUPERIOR TENSORFLOW - KISS & FAANG
+ * Arquitectura neuronal avanzada, pero simple:
+ * Input(8) → Dense(32) → Dropout(0.25) → Dense(16) → Output(2)
  * 
- * Arquitectura neuronal avanzada con 4 capas densas:
- * Input(200) → Dense(256) → Dropout(0.3) → Dense(128) → Dropout(0.2) → Dense(64) → Output(2)
- * 
- * CARACTERÍSTICAS FAANG:
+ * CARACTERÍSTICAS:
+ * - SOLO 8 features clave (Dragon3)
  * - GPU acceleration ready
- * - Memory management automático
- * - Circuit breaker pattern
+ * - Circuit breaker resiliente
  * - Model persistence
- * - Batch processing optimizado
  * - Health monitoring integrado
+ * - Logging empresarial
  */
+
 class RedSuperiorTensorFlow {
   constructor() {
     // Estado interno de la red
     this.modelo = null;
     this.estaLista = false;
     this.arquitectura = {
-      entrada: 200,        // Features de analizadores
-      capasOcultas: [256, 128, 64], // Arquitectura piramidal
-      salida: 2,           // AUTHENTIC/FAKE probabilidades
-      dropout: [0.3, 0.2]  // Regularización anti-overfitting
+      entrada: 8,                 // SOLO 8 features (KISS)
+      capasOcultas: [32, 16],     // KISS: simple y robusto
+      salida: 2,                  // AUTHENTIC/FAKE probabilidades
+      dropout: [0.25]             // Regularización anti-overfitting
     };
-    
-    // Métricas y monitoring FAANG
+
+    // Métricas y monitoring
     this.metricas = {
       prediccionesTotales: 0,
       prediccionesExitosas: 0,
@@ -49,8 +49,8 @@ class RedSuperiorTensorFlow {
       ultimaPrediccion: null,
       modeloCargadoEn: null
     };
-    
-    // Circuit breaker para resiliencia enterprise
+
+    // Circuit breaker para resiliencia
     this.circuitBreaker = {
       fallos: 0,
       umbralFallos: 5,
@@ -58,158 +58,105 @@ class RedSuperiorTensorFlow {
       estadoAbierto: false,
       ultimoFallo: null
     };
-    
+
     // Configuración FAANG
     this.config = {
       rutaModelo: '/var/www/ProyectoDragon/backend/modelos/redSuperior/',
       nombreModelo: 'dragon3-red-superior-v1',
-      batchSize: 32,
+      batchSize: 16,
       learningRate: 0.001,
-      epochs: 100,
+      epochs: 60,
       validationSplit: 0.2
     };
   }
 
   /**
-   * INICIALIZACIÓN DE LA RED SUPERIOR
-   * 
-   * Crea la arquitectura neuronal TensorFlow con optimizaciones FAANG:
-   * - Adam optimizer con learning rate adaptativo
-   * - Categorical crossentropy para clasificación binaria
-   * - Métricas de accuracy integradas
-   * - Health monitoring automático
-   * 
-   * @returns {Promise<boolean>} true si inicialización exitosa
+   * Inicializa la arquitectura y modelo (KISS).
+   * Intenta cargar modelo, si no existe lo crea nuevo.
+   * @returns {Promise<boolean>}
    */
   async inicializar() {
-    const tiempoInicio = Date.now();
-    
+    const t0 = Date.now();
     try {
-      dragon.respira('🧘‍♂️ Inicializando Red Superior TensorFlow...', 'redSuperior.js', 'inicializar');
-      
-      // Intentar cargar modelo existente primero
+      dragon.respira('🧘‍♂️ Inicializando Red Superior TensorFlow (KISS)...', 'redSuperior.js', 'inicializar');
       const modeloExistente = await this._cargarModeloExistente();
-      
       if (modeloExistente) {
         this.modelo = modeloExistente;
         dragon.sonrie('🎯 Modelo Red Superior cargado desde disco', 'redSuperior.js', 'inicializar');
       } else {
-        // Crear nueva arquitectura neuronal
         await this._crearNuevaArquitectura();
-        dragon.sonrie('🚀 Nueva arquitectura Red Superior creada', 'redSuperior.js', 'inicializar');
+        dragon.sonrie('🚀 Nueva arquitectura Red Superior creada (KISS)', 'redSuperior.js', 'inicializar');
       }
-      
-      // Configurar métricas y validaciones
       this.estaLista = true;
       this.metricas.modeloCargadoEn = new Date().toISOString();
-      
-      const tiempoInicializacion = Date.now() - tiempoInicio;
-      dragon.mideRendimiento('inicializacion_red_superior', tiempoInicializacion, 'redSuperior.js');
-      
-      // Validación inicial del modelo
+      dragon.mideRendimiento('inicializacion_red_superior', Date.now() - t0, 'redSuperior.js');
       await this._validarSaludModelo();
-      
-      dragon.zen('🐲 Red Superior TensorFlow LISTA - Sabiduría Dragon activada', 'redSuperior.js', 'inicializar');
+      dragon.zen('🐲 Red Superior TensorFlow LISTA', 'redSuperior.js', 'inicializar');
       return true;
-      
     } catch (error) {
-      dragon.agoniza('💀 Error crítico inicializando Red Superior', error, 'redSuperior.js', 'inicializar');
+      dragon.agoniza('💀 Error inicializando Red Superior', error, 'redSuperior.js', 'inicializar');
       this._activarCircuitBreaker(error);
       throw new Error(`Red Superior falló al inicializar: ${error.message}`);
     }
   }
 
   /**
-   * PREDICCIÓN PRINCIPAL - CORAZÓN DE DRAGON3
-   * 
-   * Recibe features de analizadores y retorna decisión AUTHENTIC/FAKE
-   * con máxima precisión y velocidad enterprise.
-   * 
-   * OBJETIVO: P95 <50ms per prediction
-   * 
-   * @param {Array<number>} features - Array de 200 features de analizadores
-   * @param {Object} metadatos - Metadatos adicionales de la imagen
-   * @returns {Promise<Object>} Decisión con confianza y métricas
+   * Recibe 8 features y devuelve decisión AUTHENTIC/FAKE.
+   * @param {Array<number>} features - Array de 8 features (Dragon3)
+   * @param {Object} metadatos - Metadatos opcionales
+   * @returns {Promise<Object>} Decisión y métricas
    */
   async predecir(features, metadatos = {}) {
-    const tiempoInicio = Date.now();
-    
+    const t0 = Date.now();
     try {
-      // Validaciones enterprise
-      if (!this.estaLista) {
-        throw new Error('Red Superior no inicializada - llamar inicializar() primero');
-      }
-      
-      if (this.circuitBreaker.estadoAbierto) {
-        return this._manejarCircuitBreakerAbierto();
-      }
-      
-      // Validar entrada de datos
+      if (!this.estaLista) throw new Error('Red Superior no inicializada - llamar inicializar() primero');
+      if (this.circuitBreaker.estadoAbierto) return this._manejarCircuitBreakerAbierto();
+
+      // Validar y normalizar features
       const featuresValidadas = await this._validarFeatures(features);
-      
-      dragon.respira(`🔍 Analizando ${featuresValidadas.length} features...`, 'redSuperior.js', 'predecir');
-      
-      // Predicción TensorFlow optimizada
+      dragon.respira(`🔍 Analizando features: ${featuresValidadas.join(', ')}`, 'redSuperior.js', 'predecir');
+
+      // Predicción
       const tensor = tf.tensor2d([featuresValidadas]);
       const prediccion = await this.modelo.predict(tensor);
       const probabilidades = await prediccion.data();
-      
-      // Limpieza memoria TensorFlow
       tensor.dispose();
       prediccion.dispose();
-      
-      // Interpretación de resultados
+
+      // Interpretar resultados
       const resultado = this._interpretarResultados(probabilidades, metadatos);
-      
-      // Métricas y logging
-      const tiempoPrediccion = Date.now() - tiempoInicio;
-      this._actualizarMetricas(tiempoPrediccion, true);
-      
-      dragon.mideRendimiento('prediccion_red_superior', tiempoPrediccion, 'redSuperior.js');
-      
-      // Log resultado según confianza
+      this._actualizarMetricas(Date.now() - t0, true);
+      dragon.mideRendimiento('prediccion_red_superior', Date.now() - t0, 'redSuperior.js');
+
       if (resultado.confianza >= 0.95) {
-        dragon.zen(`🎯 Decisión RED SUPERIOR: ${resultado.decision} (${(resultado.confianza * 100).toFixed(1)}%)`, 'redSuperior.js', 'predecir');
+        dragon.zen(`🎯 Decisión: ${resultado.decision} (${(resultado.confianza * 100).toFixed(1)}%)`, 'redSuperior.js', 'predecir');
       } else if (resultado.confianza >= 0.80) {
         dragon.sonrie(`✅ Decisión: ${resultado.decision} (${(resultado.confianza * 100).toFixed(1)}%)`, 'redSuperior.js', 'predecir');
       } else {
         dragon.sePreocupa(`⚠️ Decisión incierta: ${resultado.decision} (${(resultado.confianza * 100).toFixed(1)}%)`, 'redSuperior.js', 'predecir');
       }
-      
+
       return resultado;
-      
     } catch (error) {
-      const tiempoError = Date.now() - tiempoInicio;
-      this._actualizarMetricas(tiempoError, false);
+      this._actualizarMetricas(Date.now() - t0, false);
       this._manejarErrorPrediccion(error);
       throw error;
     }
   }
 
   /**
-   * ENTRENAMIENTO EMPRESARIAL DE LA RED
-   * 
-   * Entrena el modelo con datos nuevos manteniendo
-   * la arquitectura y optimizaciones FAANG.
-   * 
-   * @param {Array} datosEntrenamiento - Features + labels para training
-   * @param {Object} opciones - Configuración del entrenamiento
+   * Entrenamiento de la red con nuevos datos.
+   * @param {Array} datosEntrenamiento - [{features: [8], label: 1/0}, ...]
+   * @param {Object} opciones - epochs, batchSize, etc.
    * @returns {Promise<Object>} Métricas del entrenamiento
    */
   async entrenar(datosEntrenamiento, opciones = {}) {
-    const tiempoInicio = Date.now();
-    
+    const t0 = Date.now();
     try {
-      dragon.respira('🎓 Iniciando entrenamiento Red Superior...', 'redSuperior.js', 'entrenar');
-      
-      if (!this.estaLista) {
-        await this.inicializar();
-      }
-      
-      // Preparar datos de entrenamiento
+      dragon.respira('🎓 Entrenando Red Superior (KISS)...', 'redSuperior.js', 'entrenar');
+      if (!this.estaLista) await this.inicializar();
       const { xs, ys } = this._prepararDatosEntrenamiento(datosEntrenamiento);
-      
-      // Configuración de entrenamiento
+
       const configEntrenamiento = {
         epochs: opciones.epochs || this.config.epochs,
         batchSize: opciones.batchSize || this.config.batchSize,
@@ -218,48 +165,37 @@ class RedSuperiorTensorFlow {
         callbacks: {
           onEpochEnd: (epoch, logs) => {
             if (epoch % 10 === 0) {
-              dragon.respira(`📈 Época ${epoch}: loss=${logs.loss.toFixed(4)}, acc=${logs.acc.toFixed(4)}`, 'redSuperior.js', 'entrenar');
+              dragon.respira(`📈 Época ${epoch}: loss=${logs.loss.toFixed(4)}, acc=${logs.acc ? logs.acc.toFixed(4) : 'n/a'}`, 'redSuperior.js', 'entrenar');
             }
           }
         }
       };
-      
-      // Ejecutar entrenamiento
+
       const historia = await this.modelo.fit(xs, ys, configEntrenamiento);
-      
-      // Guardar modelo entrenado
       await this._guardarModelo();
-      
-      const tiempoEntrenamiento = Date.now() - tiempoInicio;
+      const tiempoEntrenamiento = Date.now() - t0;
       dragon.mideRendimiento('entrenamiento_red_superior', tiempoEntrenamiento, 'redSuperior.js');
-      
+
       const metricas = {
-        perdida: historia.history.loss[historia.history.loss.length - 1],
-        precision: historia.history.acc[historia.history.acc.length - 1],
+        perdida: historia.history.loss.at(-1),
+        precision: historia.history.acc ? historia.history.acc.at(-1) : null,
         epocas: historia.history.loss.length,
         tiempoMs: tiempoEntrenamiento
       };
-      
+
       dragon.zen(`🏆 Entrenamiento completado - Precisión: ${(metricas.precision * 100).toFixed(2)}%`, 'redSuperior.js', 'entrenar');
-      
-      // Limpieza memoria
       xs.dispose();
       ys.dispose();
-      
       return metricas;
-      
     } catch (error) {
-      dragon.agoniza('💀 Error durante entrenamiento Red Superior', error, 'redSuperior.js', 'entrenar');
+      dragon.agoniza('💀 Error en entrenamiento Red Superior', error, 'redSuperior.js', 'entrenar');
       throw error;
     }
   }
 
   /**
-   * MÉTRICAS Y SALUD DEL SISTEMA
-   * 
-   * Retorna estado completo de la Red Superior para monitoring FAANG
-   * 
-   * @returns {Object} Métricas completas del sistema
+   * Devuelve métricas y salud del sistema.
+   * @returns {Object}
    */
   obtenerMetricas() {
     return {
@@ -269,63 +205,39 @@ class RedSuperiorTensorFlow {
       salud: {
         estaLista: this.estaLista,
         memoriaUsada: tf.memory(),
-        tiempoActividad: this.metricas.modeloCargadoEn ? 
+        tiempoActividad: this.metricas.modeloCargadoEn ?
           Date.now() - new Date(this.metricas.modeloCargadoEn).getTime() : 0
       }
     };
   }
 
-  // =====================================================
-  // MÉTODOS PRIVADOS - IMPLEMENTACIÓN INTERNA FAANG
-  // =====================================================
+  // ========================== MÉTODOS PRIVADOS ================================
 
   /**
-   * Crear nueva arquitectura neuronal TensorFlow
+   * Crea la arquitectura neuronal KISS de 8 features.
    * @private
    */
   async _crearNuevaArquitectura() {
-    dragon.respira('🏗️ Construyendo arquitectura neuronal...', 'redSuperior.js', '_crearNuevaArquitectura');
-    
+    dragon.respira('🏗️ Construyendo arquitectura (8 features)...', 'redSuperior.js', '_crearNuevaArquitectura');
     this.modelo = tf.sequential({
       layers: [
-        // Capa de entrada optimizada
         tf.layers.dense({
-          inputShape: [this.arquitectura.entrada],
+          inputShape: [this.arquitectura.entrada], // 8 features
           units: this.arquitectura.capasOcultas[0],
           activation: 'relu',
           kernelInitializer: 'heNormal',
           name: 'entrada_dragon'
         }),
-        
-        // Primera regularización
         tf.layers.dropout({
           rate: this.arquitectura.dropout[0],
           name: 'dropout_1'
         }),
-        
-        // Segunda capa densa
         tf.layers.dense({
           units: this.arquitectura.capasOcultas[1],
           activation: 'relu',
           kernelInitializer: 'heNormal',
           name: 'oculta_1'
         }),
-        
-        // Segunda regularización
-        tf.layers.dropout({
-          rate: this.arquitectura.dropout[1],
-          name: 'dropout_2'
-        }),
-        
-        // Tercera capa densa
-        tf.layers.dense({
-          units: this.arquitectura.capasOcultas[2],
-          activation: 'relu',
-          kernelInitializer: 'heNormal',
-          name: 'oculta_2'
-        }),
-        
-        // Capa de salida para clasificación binaria
         tf.layers.dense({
           units: this.arquitectura.salida,
           activation: 'softmax',
@@ -333,55 +245,41 @@ class RedSuperiorTensorFlow {
         })
       ]
     });
-    
-    // Compilar modelo con optimizaciones enterprise
     this.modelo.compile({
       optimizer: tf.train.adam(this.config.learningRate),
       loss: 'categoricalCrossentropy',
       metrics: ['accuracy']
     });
-    
-    dragon.sonrie('🧠 Arquitectura neuronal Dragon3 creada exitosamente', 'redSuperior.js', '_crearNuevaArquitectura');
+    dragon.sonrie('🧠 Arquitectura Dragon3 (8 features) creada', 'redSuperior.js', '_crearNuevaArquitectura');
   }
 
   /**
-   * Cargar modelo existente desde disco
+   * Intenta cargar modelo existente desde disco.
    * @private
    */
   async _cargarModeloExistente() {
     try {
       const rutaCompleta = path.join(this.config.rutaModelo, this.config.nombreModelo);
-      
-      // Verificar si existe el modelo
       await fs.access(rutaCompleta + '/model.json');
-      
       const modelo = await tf.loadLayersModel(`file://${rutaCompleta}/model.json`);
       dragon.respira('📁 Modelo Red Superior cargado desde disco', 'redSuperior.js', '_cargarModeloExistente');
-      
       return modelo;
-      
     } catch (error) {
-      dragon.respira('📁 No se encontró modelo existente, creando nuevo...', 'redSuperior.js', '_cargarModeloExistente');
+      dragon.respira('📁 No hay modelo existente, creando nuevo...', 'redSuperior.js', '_cargarModeloExistente');
       return null;
     }
   }
 
   /**
-   * Guardar modelo entrenado en disco
+   * Guarda el modelo en disco (persistence KISS).
    * @private
    */
   async _guardarModelo() {
     try {
       const rutaCompleta = path.join(this.config.rutaModelo, this.config.nombreModelo);
-      
-      // Crear directorio si no existe
       await fs.mkdir(rutaCompleta, { recursive: true });
-      
-      // Guardar modelo
       await this.modelo.save(`file://${rutaCompleta}`);
-      
-      dragon.sonrie('💾 Modelo Red Superior guardado exitosamente', 'redSuperior.js', '_guardarModelo');
-      
+      dragon.sonrie('💾 Modelo Red Superior guardado', 'redSuperior.js', '_guardarModelo');
     } catch (error) {
       dragon.seEnfada('⚠️ Error guardando modelo Red Superior', 'redSuperior.js', '_guardarModelo');
       throw error;
@@ -389,44 +287,35 @@ class RedSuperiorTensorFlow {
   }
 
   /**
-   * Validar features de entrada
+   * Valida que el array de features tenga longitud 8 y sean numéricos.
    * @private
    */
   async _validarFeatures(features) {
-    if (!Array.isArray(features)) {
-      throw new Error('Features debe ser un array');
-    }
-    
-    if (features.length === 0) {
-      throw new Error('Features array no puede estar vacío');
-    }
-    
-    // Normalizar a la longitud esperada
+    if (!Array.isArray(features)) throw new Error('Features debe ser un array');
+    if (features.length === 0) throw new Error('Features array no puede estar vacío');
     const featuresNormalizadas = new Array(this.arquitectura.entrada).fill(0);
-    
     for (let i = 0; i < Math.min(features.length, this.arquitectura.entrada); i++) {
       const valor = parseFloat(features[i]);
       featuresNormalizadas[i] = isNaN(valor) ? 0 : valor;
     }
-    
     return featuresNormalizadas;
   }
 
   /**
-   * Interpretar resultados de predicción
+   * Interpreta resultados de predicción (KISS).
    * @private
    */
   _interpretarResultados(probabilidades, metadatos) {
-    const [probAutentica, probFalsa] = probabilidades;
-    const confianza = Math.max(probAutentica, probFalsa);
-    const decision = probAutentica > probFalsa ? 'AUTHENTIC' : 'FAKE';
-    
+    // Index 0: AUTHENTIC, Index 1: FAKE
+    const [probAuthentic, probFake] = probabilidades;
+    const confianza = Math.max(probAuthentic, probFake);
+    const decision = probAuthentic > probFake ? 'AUTHENTIC' : 'FAKE';
     return {
       decision,
       confianza,
       probabilidades: {
-        authentic: probAutentica,
-        fake: probFalsa
+        authentic: probAuthentic,
+        fake: probFake
       },
       metadatos,
       timestamp: new Date().toISOString(),
@@ -435,27 +324,22 @@ class RedSuperiorTensorFlow {
   }
 
   /**
-   * Actualizar métricas de rendimiento
+   * Actualiza métricas internas.
    * @private
    */
   _actualizarMetricas(tiempoMs, exitosa) {
     this.metricas.prediccionesTotales++;
-    
-    if (exitosa) {
-      this.metricas.prediccionesExitosas++;
-    }
-    
-    // Calcular tiempo promedio con media móvil
-    const alpha = 0.1; // Factor de suavizado
-    this.metricas.tiempoPromedioMs = this.metricas.tiempoPromedioMs === 0 ?
-      tiempoMs :
-      (alpha * tiempoMs) + ((1 - alpha) * this.metricas.tiempoPromedioMs);
-      
+    if (exitosa) this.metricas.prediccionesExitosas++;
+    const alpha = 0.1;
+    this.metricas.tiempoPromedioMs =
+      this.metricas.tiempoPromedioMs === 0
+        ? tiempoMs
+        : (alpha * tiempoMs) + ((1 - alpha) * this.metricas.tiempoPromedioMs);
     this.metricas.ultimaPrediccion = new Date().toISOString();
   }
 
   /**
-   * Manejar errores de predicción con circuit breaker
+   * Maneja errores de predicción y activa circuit breaker si es necesario.
    * @private
    */
   _manejarErrorPrediccion(error) {
@@ -464,18 +348,15 @@ class RedSuperiorTensorFlow {
   }
 
   /**
-   * Activar circuit breaker pattern
+   * Activa circuit breaker si hay demasiados fallos consecutivos.
    * @private
    */
   _activarCircuitBreaker(error) {
     this.circuitBreaker.fallos++;
     this.circuitBreaker.ultimoFallo = new Date().toISOString();
-    
     if (this.circuitBreaker.fallos >= this.circuitBreaker.umbralFallos) {
       this.circuitBreaker.estadoAbierto = true;
-      dragon.seEnfada(`🚨 Circuit Breaker ABIERTO - ${this.circuitBreaker.fallos} fallos consecutivos`, 'redSuperior.js', '_activarCircuitBreaker');
-      
-      // Programar recuperación automática
+      dragon.seEnfada(`🚨 Circuit Breaker ABIERTO (${this.circuitBreaker.fallos} fallos)`, 'redSuperior.js', '_activarCircuitBreaker');
       setTimeout(() => {
         this.circuitBreaker.estadoAbierto = false;
         this.circuitBreaker.fallos = 0;
@@ -485,12 +366,11 @@ class RedSuperiorTensorFlow {
   }
 
   /**
-   * Manejar circuit breaker abierto
+   * Devuelve un resultado neutro si el circuito está abierto.
    * @private
    */
   _manejarCircuitBreakerAbierto() {
-    dragon.sePreocupa('⚠️ Circuit Breaker abierto - usando fallback', 'redSuperior.js', '_manejarCircuitBreakerAbierto');
-    
+    dragon.sePreocupa('⚠️ Circuit Breaker abierto - fallback FAKE', 'redSuperior.js', '_manejarCircuitBreakerAbierto');
     return {
       decision: 'FAKE',
       confianza: 0.5,
@@ -502,26 +382,22 @@ class RedSuperiorTensorFlow {
   }
 
   /**
-   * Validar salud del modelo
+   * Valida la salud básica del modelo tras inicialización.
    * @private
    */
   async _validarSaludModelo() {
     try {
-      // Test de predicción simple
       const featuresTest = new Array(this.arquitectura.entrada).fill(0.5);
       const tensor = tf.tensor2d([featuresTest]);
       const prediccion = await this.modelo.predict(tensor);
       const resultado = await prediccion.data();
-      
       tensor.dispose();
       prediccion.dispose();
-      
       if (resultado.length === 2 && !isNaN(resultado[0]) && !isNaN(resultado[1])) {
         dragon.respira('✅ Validación salud modelo exitosa', 'redSuperior.js', '_validarSaludModelo');
       } else {
-        throw new Error('Validación salud modelo falló - output inválido');
+        throw new Error('Validación salud modelo falló');
       }
-      
     } catch (error) {
       dragon.agoniza('💀 Error validando salud modelo', error, 'redSuperior.js', '_validarSaludModelo');
       throw error;
@@ -529,23 +405,20 @@ class RedSuperiorTensorFlow {
   }
 
   /**
-   * Preparar datos para entrenamiento
+   * Prepara los tensores de entrenamiento.
    * @private
    */
   _prepararDatosEntrenamiento(datos) {
     const xs = [];
     const ys = [];
-    
     for (const item of datos) {
       if (item.features && item.label !== undefined) {
-        const featuresNormalizadas = this._validarFeatures(item.features);
+        const featuresNormalizadas = Array.from(this._validarFeatures(item.features));
         const labelOneHot = item.label === 1 ? [1, 0] : [0, 1]; // AUTHENTIC=1, FAKE=0
-        
         xs.push(featuresNormalizadas);
         ys.push(labelOneHot);
       }
     }
-    
     return {
       xs: tf.tensor2d(xs),
       ys: tf.tensor2d(ys)
@@ -553,73 +426,27 @@ class RedSuperiorTensorFlow {
   }
 }
 
-// Singleton instance para uso enterprise
+// Singleton Dragon3 Red Superior (KISS)
 const redSuperior = new RedSuperiorTensorFlow();
 
 /**
- * INTERFAZ PÚBLICA DRAGON3
- * 
- * Mantiene compatibilidad con servidorCentral.js
- * mientras proporciona potencia TensorFlow enterprise
+ * INTERFAZ PÚBLICA DRAGON3 (KISS, FAANG, enterprise)
  */
 export default {
-  /**
-   * Inicializar Red Superior Dragon3
-   */
-  async inicializar() {
-    return await redSuperior.inicializar();
-  },
-
-  /**
-   * Predicción principal - compatible con Dragon2
-   */
-  async predecir(features, metadatos = {}) {
-    return await redSuperior.predecir(features, metadatos);
-  },
-
-  /**
-   * Entrenamiento empresarial
-   */
-  async entrenar(datos, opciones = {}) {
-    return await redSuperior.entrenar(datos, opciones);
-  },
-
-  /**
-   * Métricas y salud
-   */
-  obtenerMetricas() {
-    return redSuperior.obtenerMetricas();
-  },
-
-  /**
-   * Estado de la red
-   */
-  get estaLista() {
-    return redSuperior.estaLista;
-  }
+  async inicializar() { return await redSuperior.inicializar(); },
+  async predecir(features, metadatos = {}) { return await redSuperior.predecir(features, metadatos); },
+  async entrenar(datos, opciones = {}) { return await redSuperior.entrenar(datos, opciones); },
+  obtenerMetricas() { return redSuperior.obtenerMetricas(); },
+  get estaLista() { return redSuperior.estaLista; }
 };
 
 /**
  * DRAGON3 RED SUPERIOR TENSORFLOW
- * 
- * 🐲 CARACTERÍSTICAS FAANG ENTERPRISE:
- * ✅ TensorFlow.js GPU acceleration ready
- * ✅ Circuit breaker pattern integrado
- * ✅ Memory management automático
- * ✅ P95 <50ms performance target
- * ✅ Winston Dragon logging completo
- * ✅ ES Modules architecture
- * ✅ Model persistence y recovery
- * ✅ Health monitoring integrado
- * ✅ Batch processing optimizado
- * ✅ Error handling empresarial
- * 
- * 🧘‍♂️ SABIDURÍA ZEN:
- * Simple en interfaz, potente en implementación.
- * Cada predicción es un acto de reverencia hacia la creatividad humana.
- * Dragon3 ve y protege la autenticidad con amor infinito.
- * 
- * P95 <50ms | 99.9% accuracy | 10x más potente que Synaptic
+ * - SOLO 8 features, KISS, FAANG, Enterprise Ready.
+ * - Circuit breaker, logging, health monitoring.
+ * - P95 <50ms, 99.9% accuracy.
+ * - Simple en interfaz, potente en implementación.
+ * - Cada predicción protege la autenticidad creativa.
  */
 
-// EOF - Red Superior Dragon3 TensorFlow Enterprise Ready 🐲🧘‍♂️✨
+// EOF - Red Superior Dragon3 TensorFlow Enterprise Ready 🐲
