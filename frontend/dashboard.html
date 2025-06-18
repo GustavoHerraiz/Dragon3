@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="initial-scale=1, width=device-width" />
+    <meta http-equiv="Content-Security-Policy" content="script-src 'self' 'unsafe-inline';">
+    <link rel="icon" href="data:,">
+
+
+    <title>Dashboard - Blade Corporation</title>
+    <link rel="stylesheet" href="/global.css" />
+    <link rel="stylesheet" href="/index.css" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=SF Compact Display:wght@400&display=swap"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400&display=swap"
+    />
+</head>
+
+<body>
+    <div class="wwwbladecorporationnet-6" data-animate-on-scroll>
+        <header class="head-blade">
+            <div class="logo-blade-corp">
+                <img class="logo-blade-corp-child" alt="Logo" src="./public/group-1@2x.png">
+                <div class="blade-corporation">Blade Corporation</div>
+            </div>
+            <nav class="menu">
+                <div class="verificador-mbh" onclick="window.location.href='index.html'">Volver al inicio</div>
+            </nav>
+            <div class="contacto">
+                <button class="botom1">
+                    <span class="contacto1">Cerrar Sesión</span>
+                    <img class="icon1" alt="Cerrar" src="./public/1.svg">
+                </button>
+            </div>
+        </header>
+        
+        <section class="section-servicios" data-animate-on-scroll>
+            <div class="nuestros-servicios-parent">
+                <h1 class="nuestros-servicios">Panel de Usuario</h1>
+                <div id="datosUsuario" class="nos-especializamos-en"></div>
+            </div>
+            
+            <div class="cards-service">
+                <div class="card">
+                    <h3>Subir archivo para análisis</h3>
+                    <form id="uploadForm">
+                        <input type="file" id="archivo" multiple required>
+                        <button type="submit" class="botom4">Subir y Analizar</button>
+                    </form>
+                </div>
+                <div class="card">
+                    <h3>Resultado del análisis</h3>
+                    <div id="respuesta" class="el-sello-mbh"></div>
+                </div>
+                <div class="card">
+                    <h3>Historial de archivos</h3>
+                    <ul id="listaArchivos" class="el-sello-mbh"></ul>
+                </div>
+            </div>
+        </section>
+        
+        <footer class="footer">
+            <div class="title7">
+                <div class="blade-corp">
+                    <img class="blade-corp-child" alt="" src="./public/group-1.svg">
+                    <div class="blade-corporation1">Blade Corporation</div>
+                </div>
+            </div>
+        </footer>
+    </div>
+    <script>
+		
+      // Mantener exactamente el mismo script original
+      async function cargarDatos() {
+        const token = localStorage.getItem("token");
+        if (!token) {
+          window.location.href = "login.html";
+          return;
+        }
+
+        try {
+          const usuario = await fetch("https://www.bladecorporation.net/auth/verificar", {
+            method: "GET",
+            headers: { "Authorization": `Bearer ${token}` }
+          }).then(res => res.json());
+
+          document.getElementById("datosUsuario").innerHTML = `
+            <p>Email: ${usuario.email}</p>
+            <p>Tipo: ${usuario.tipo}</p>
+            <p>Créditos: ${usuario.creditos}</p>
+          `;
+
+          const archivos = await fetch("https://www.bladecorporation.net/archivos/mis-archivos", {
+            method: "GET",
+            headers: { "Authorization": `Bearer ${token}` }
+          }).then(res => res.json());
+
+          const lista = document.getElementById("listaArchivos");
+          lista.innerHTML = "";
+          archivos.forEach(archivo => {
+            const indice = archivo.resultado?.indiceAutenticidad ?? "N/A";
+            const item = document.createElement("li");
+            item.innerHTML = `${archivo.nombre} - ${archivo.tipo} | Autenticidad: ${indice}/10`;
+            item.style.padding = "8px 0";
+            item.style.borderBottom = "1px solid var(--color-aquamarine-100)";
+            lista.appendChild(item);
+          });
+
+        } catch (error) {
+          console.error("Error cargando datos:", error);
+        }
+      }
+
+      async function cerrarSesion() {
+        localStorage.clear();
+        window.location.href = "login.html";
+      }
+
+      document.getElementById("uploadForm").addEventListener("submit", async function(event) {
+        event.preventDefault();
+        
+        const archivoInput = document.getElementById("archivo");
+        if (!archivoInput.files.length) {
+          alert("Selecciona al menos un archivo.");
+          return;
+        }
+
+        const formData = new FormData();
+        for (let i = 0; i < archivoInput.files.length; i++) {
+          formData.append("archivos", archivoInput.files[i]); 
+        }
+
+        const token = localStorage.getItem("token") || null;
+
+        try {
+          const respuesta = await fetch("https://www.bladecorporation.net/subir", {
+            method: "POST",
+            body: formData,
+            headers: token ? { "Authorization": `Bearer ${token}` } : {}
+          });
+
+          if (!respuesta.ok) throw new Error(`HTTP error! Status: ${respuesta.status}`);
+
+          const resultado = await respuesta.json();
+          document.getElementById("respuesta").innerHTML = `
+            <div class="resultado-analisis">
+              <h4>${resultado.mensaje}</h4>
+              ${resultado.archivos.map(archivo => `
+                <p>Archivo: ${archivo.nombre}</p>
+                <p>Estado: ${archivo.estado}</p>
+              `).join('')}
+            </div>
+          `;
+
+          if (resultado.archivos.length > 0) {
+            await analizarImagen(resultado.archivos[0].nombre);
+          }
+
+          cargarDatos();
+        } catch (error) {
+          document.getElementById("respuesta").innerHTML = "<p class='error-analisis'>Error al subir los archivos</p>";
+          console.error("Error en la subida:", error);
+        }
+      });
+
+      async function analizarImagen(nombreArchivo) {
+        const token = localStorage.getItem("token") || null;
+        const formData = new FormData();
+        formData.append("archivo", document.getElementById("archivo").files[0]);
+
+        try {
+          const respuesta = await fetch("https://www.bladecorporation.net/analizar-imagen", {
+            method: "POST",
+            body: formData,
+            headers: token ? { "Authorization": `Bearer ${token}` } : {}
+          });
+
+          if (!respuesta.ok) throw new Error(`HTTP error! Status: ${respuesta.status}`);
+
+          const resultado = await respuesta.json();
+          document.getElementById("respuesta").innerHTML = `
+            <div class="detalles-analisis">
+              <h3>Resultado del Análisis</h3>
+              ${Object.entries(resultado.resultado).map(([key, value]) => `
+                <p><strong>${key}:</strong> ${value}</p>
+              `).join('')}
+            </div>
+          `;
+
+        } catch (error) {
+          document.getElementById("respuesta").innerHTML = "<p class='error-analisis'>Error en el análisis de la imagen</p>";
+          console.error("Error en el análisis:", error);
+        }
+      }
+
+      cargarDatos();
+    </script>
+  </body>
+</html>

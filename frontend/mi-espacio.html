@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Mi Espacio - Blade Corporation</title>
+    <link rel="stylesheet" href="./global.css" />
+    <link rel="stylesheet" href="./index.css" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400&display=swap" />
+    <style>
+        :root {
+            --panel-max-width: 740px;
+        }
+        body {
+            min-height: 100vh;
+            background: var(--color-gray-200);
+            display: flex;
+            flex-direction: column;
+        }
+        .panel-container {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 2rem 1rem;
+            max-width: var(--panel-max-width);
+            margin: 0 auto;
+            width: 100%;
+        }
+        .panel-title {
+            color: var(--color-aquamarine-100);
+            font-size: var(--font-size-21xl);
+            font-weight: 700;
+            margin-bottom: 0.8rem;
+            text-align: center;
+        }
+        .cerrar-sesion-container {
+            width: 100%;
+            display: flex;
+            justify-content: flex-end;
+            margin-bottom: 2rem;
+        }
+        .cerrar-sesion-btn {
+            background: var(--color-aquamarine-100);
+            color: var(--color-gray-200);
+            border: none;
+            border-radius: var(--br-11xl);
+            padding: 0.7rem 2.2rem;
+            font-size: var(--body-base-size);
+            font-family: var(--font-roboto);
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.3s;
+        }
+        .cerrar-sesion-btn:hover {
+            opacity: 0.92;
+        }
+        .panel-section {
+            width: 100%;
+            background: var(--color-gray-100);
+            border-radius: var(--br-5xs);
+            box-shadow: 0px 4px 20px rgba(22, 223, 172, 0.06);
+            border: 1px solid var(--color-aquamarine-100);
+            margin-bottom: 2rem;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+        }
+        .panel-section h3 {
+            color: var(--color-white);
+            font-size: var(--font-size-7xl);
+            margin-bottom: 1rem;
+        }
+        .panel-section label {
+            color: var(--color-white);
+            font-weight: 400;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+        .panel-section input[type="file"] {
+            margin-bottom: 1rem;
+        }
+        .panel-section button {
+            width: fit-content;
+            padding: 0.7rem 2.2rem;
+            border-radius: var(--br-11xl);
+            font-size: var(--body-base-size);
+            font-family: var(--font-roboto);
+            background: var(--color-aquamarine-100);
+            color: var(--color-gray-200);
+            border: none;
+            cursor: pointer;
+            font-weight: 600;
+            transition: opacity 0.3s;
+            margin-bottom: 1rem;
+        }
+        .panel-section button:hover {
+            opacity: 0.92;
+        }
+        #resultado-analisis {
+            margin-top: 1rem;
+            width: 100%;
+            color: var(--color-white);
+            background: #23272e;
+            border-radius: var(--br-8xs);
+            padding: 1rem;
+            font-family: var(--font-roboto), monospace;
+            font-size: var(--font-size-xs);
+            overflow-x: auto;
+        }
+        .historial-lista {
+            margin-top: 1rem;
+            background: #23272e;
+            border-radius: var(--br-8xs);
+            padding: 1rem;
+            color: var(--color-white);
+            font-size: var(--font-size-xs);
+            list-style: none;
+            max-height: 230px;
+            overflow-y: auto;
+        }
+        .historial-lista li {
+            border-bottom: 1px solid var(--color-aquamarine-100);
+            padding: 0.7rem 0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .historial-lista li:last-child {
+            border-bottom: none;
+        }
+        .historial-lista .nombre-archivo {
+            font-weight: 500;
+        }
+        .historial-lista .fecha-archivo {
+            font-size: 0.92em;
+            opacity: 0.6;
+        }
+        @media (max-width: 600px) {
+            .panel-container {
+                padding: 0.5rem;
+            }
+            .panel-section {
+                padding: 1rem;
+            }
+            .panel-title {
+                font-size: var(--font-size-7xl);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="wwwbladecorporationnet-6 animate" style="flex: 1; display: flex; flex-direction: column;">
+        <header class="head-blade" style="flex-shrink: 0;">
+            <div class="logo-blade-corp" style="transform: scale(0.9);">
+                <img class="logo-blade-corp-child" alt="Logo" src="./public/group-1@2x.png" />
+                <div class="blade-corporation" style="font-size: var(--font-size-xl);">Blade Corporation</div>
+            </div>
+            <nav class="menu" style="gap: var(--space-200);">
+                <div class="verificador-mbh" style="font-size: var(--font-size-xs);"
+                     onclick="window.location.href='index.html'">Inicio</div>
+                <div class="verificador-mbh" style="font-size: var(--font-size-xs);"
+                     onclick="window.location.href='index.html#sectionServiciosContainer'">Servicios</div>
+                <div class="verificador-mbh" style="font-size: var(--font-size-xs);"
+                     onclick="window.location.href='index.html#sectionPlanesContainer'">Planes</div>
+            </nav>
+            <div class="contacto">
+                <button class="botom" onclick="window.location.href='login.html'" style="padding: 6px 12px;">
+                    <div class="accede-a-dragn" style="font-size: var(--font-size-xs);">Iniciar sesión</div>
+                    <img class="icon" alt="Ícono" src="./public/dragon-2.svg" style="width: 14px; height: 14px;" />
+                </button>
+            </div>
+        </header>
+
+        <main class="panel-container">
+            <div class="cerrar-sesion-container">
+                <button id="logoutBtn" class="cerrar-sesion-btn">Cerrar sesión</button>
+            </div>
+            <div class="panel-title">Panel de Usuario</div>
+
+            <!-- Subir archivo -->
+            <section class="panel-section">
+                <h3>Subir archivo para análisis</h3>
+                <form id="analisisForm" enctype="multipart/form-data">
+                    <input type="file" id="archivo" name="archivo" accept="image/*" required>
+                    <button type="submit">Subir y Analizar</button>
+                </form>
+                <div id="resultado-analisis"></div>
+            </section>
+
+            <!-- Historial -->
+            <section class="panel-section">
+                <h3>Historial de archivos</h3>
+                <ul class="historial-lista" id="historial-lista">
+                    <li>Cargando historial...</li>
+                </ul>
+            </section>
+        </main>
+    </div>
+
+    <script>
+    // Cerrar sesión
+    document.addEventListener("DOMContentLoaded", function () {
+        const logoutBtn = document.getElementById("logoutBtn");
+        if (logoutBtn) {
+            logoutBtn.addEventListener("click", function () {
+                localStorage.clear();
+                window.location.href = "index.html";
+            });
+        }
+    });
+
+    // Mostrar el resultado de análisis adaptado a tu respuesta de backend
+    function mostrarResultadoAnalisis(data) {
+        const resultadoDiv = document.getElementById("resultado-analisis");
+        if (!data) {
+            resultadoDiv.innerHTML = "<span style='color:#df1616;'>Error: Sin datos de análisis</span>";
+            return;
+        }
+        const r = data.resultado || {};
+        let html = `
+            <b>Mensaje:</b> ${data.mensaje || '-'}<br>
+            <b>Nombre archivo:</b> ${data.nombreArchivo || '-'}<br>
+            <b>Veredicto:</b> ${r.veredicto || '-'}<br>
+            <b>Imagen ID:</b> ${r.imagenId || '-'}<br>
+            <b>Timestamp:</b> ${r.timestamp || '-'}<br>
+            <b>Detalles:</b>
+            <pre style="background:#161b22;color:#16dfac;padding:8px;border-radius:6px;margin-top:6px;">
+${r.detalles ? JSON.stringify(r.detalles, null, 2) : '-'}
+            </pre>
+        `;
+        resultadoDiv.innerHTML = html;
+    }
+
+    // Añade un elemento al historial en la interfaz
+    function addToHistorial(nombre, timestamp) {
+        const lista = document.getElementById("historial-lista");
+        if (
+            lista.children.length === 1 &&
+            (lista.children[0].innerText.includes("No hay archivos") ||
+                lista.children[0].innerText.includes("Cargando historial"))
+        ) {
+            lista.innerHTML = "";
+        }
+        const li = document.createElement("li");
+        li.innerHTML = `<span class="nombre-archivo">${nombre}</span><span class="fecha-archivo">${timestamp}</span>`;
+        lista.prepend(li);
+    }
+
+    // Carga el historial real desde el backend al cargar la página
+    async function cargarHistorial() {
+        const lista = document.getElementById("historial-lista");
+        lista.innerHTML = "<li>Cargando historial...</li>";
+        try {
+            const response = await fetch("/informes/historial", {
+                headers: {
+                    ...(localStorage.getItem("token")
+                        ? { Authorization: "Bearer " + localStorage.getItem("token") }
+                        : {}),
+                },
+            });
+            const data = await response.json();
+            if (response.ok && Array.isArray(data.historial) && data.historial.length > 0) {
+                lista.innerHTML = "";
+                data.historial.forEach((item) => {
+                    // item debe tener nombreArchivo y resultado.timestamp
+                    const fecha =
+                        item.resultado && item.resultado.timestamp
+                            ? new Date(item.resultado.timestamp).toLocaleString()
+                            : "-";
+                    addToHistorial(item.nombreArchivo || "Archivo", fecha);
+                });
+            } else {
+                lista.innerHTML = "<li>No hay archivos analizados todavía.</li>";
+            }
+        } catch (e) {
+            lista.innerHTML = "<li style='color:#df1616;'>Error al cargar el historial.</li>";
+        }
+    }
+
+    // Maneja el formulario de análisis de imágenes
+    document.addEventListener("DOMContentLoaded", function () {
+        const form = document.getElementById("analisisForm");
+        if (!form) return;
+        form.addEventListener("submit", async function (event) {
+            event.preventDefault();
+            const archivoInput = document.getElementById("archivo");
+            const archivo = archivoInput.files[0];
+            if (!archivo) return;
+
+            const formData = new FormData();
+            formData.append("archivo", archivo);
+
+            document.getElementById("resultado-analisis").innerHTML = "Analizando imagen...";
+            try {
+                const response = await fetch("/informes", {
+                    method: "POST",
+                    headers: {
+                        ...(localStorage.getItem("token")
+                            ? { Authorization: "Bearer " + localStorage.getItem("token") }
+                            : {}),
+                    },
+                    body: formData,
+                });
+                const data = await response.json();
+                if (response.ok) {
+                    mostrarResultadoAnalisis(data);
+                    cargarHistorial(); // recarga el historial tras un nuevo análisis
+                } else {
+                    document.getElementById("resultado-analisis").innerHTML = `<span style="color:#df1616;">❌ ${data.error || "Error en el análisis"}</span>`;
+                }
+            } catch (err) {
+                document.getElementById("resultado-analisis").innerHTML =
+                    `<span style="color:#df1616;">❌ Error de conexión con el servidor</span>`;
+            }
+        });
+    });
+
+    // Carga el historial al cargar la página
+    window.addEventListener("DOMContentLoaded", cargarHistorial);
+
+    // Animación opcional si usas 'animate'
+    document.addEventListener("DOMContentLoaded", function () {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                entries.forEach((entry) => {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add("animate");
+                        observer.unobserve(entry.target);
+                    }
+                });
+            },
+            { threshold: 0.1 }
+        );
+        document.querySelectorAll("[data-animate-on-scroll]").forEach((element) => {
+            observer.observe(element);
+        });
+    });
+</script>
+</body>
+</html>

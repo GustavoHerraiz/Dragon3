@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resultado del Análisis - Blade Corporation</title>
+    <link rel="stylesheet" href="./global.css">
+    <link rel="stylesheet" href="./index.css">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+    <div class="wwwbladecorporationnet-6">
+        <header class="head-blade">
+            <div class="logo-blade-corp">
+                <img class="logo-blade-corp-child" alt="Logo" src="./public/group-1@2x.png">
+                <div class="blade-corporation">Blade Corporation</div>
+            </div>
+            <nav class="menu">
+                <button class="button-menu" onclick="window.location.href='analizador.html'">Volver al Analizador</button>
+                <button class="button-menu" onclick="window.location.href='index.html'">Ir a la Home</button>
+            </nav>
+        </header>
+
+        <section class="section-servicios">
+            <div class="nuestros-servicios-parent">
+                <h1 class="nuestros-servicios">Resultado del Análisis</h1>
+                <p class="nos-especializamos-en">Aquí tienes los detalles del análisis realizado a tu archivo.</p>
+            </div>
+
+            <!-- Valoración principal -->
+            <div class="cards-service">
+                <div class="card">
+                    <h3>Valoración Principal</h3>
+                    <p id="resultadoGeneral" class="valoracion-principal"></p>
+                </div>
+            </div>
+
+            <!-- Resumen del análisis -->
+            <div class="cards-service">
+                <div class="card">
+                    <h3>Resumen del Análisis</h3>
+                    <p><strong>Score de Creación Humana:</strong> <span id="scoreHumano"></span>/10</p>
+                    <p><strong>Confianza:</strong> <span id="confianza"></span>%</p>
+                    <p><strong>Decisión:</strong> <span id="decision"></span></p>
+                </div>
+            </div>
+
+            <!-- Detalles básicos -->
+            <div class="cards-service">
+                <div class="card">
+                    <h3>Detalles Básicos</h3>
+                    <ul>
+                        <li><strong>Formato:</strong> <span id="formato"></span></li>
+                        <li><strong>Dimensiones:</strong> <span id="dimensiones"></span></li>
+                        <li><strong>Resolución:</strong> <span id="resolucion"></span></li>
+                        <li><strong>EXIF:</strong> <span id="exif"></span></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Resultados detallados -->
+            <div class="cards-service">
+                <div class="card">
+                    <h3>Resultados Detallados</h3>
+                    <div id="resultadosDetallados"></div>
+                </div>
+            </div>
+
+            <!-- Gráfico -->
+            <div class="cards-service">
+                <div class="card">
+                    <h3>Distribución de Puntuaciones</h3>
+                    <canvas id="graficoResultados"></canvas>
+                </div>
+            </div>
+        </section>
+    </div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+    const datos = JSON.parse(localStorage.getItem('resultadoAnalisis'))?.resultado;
+    console.log("Datos obtenidos del localStorage:", datos);
+
+    if (!datos) {
+        alert("No se encontraron datos válidos. Por favor, realiza el análisis primero.");
+        window.location.href = "analizador.html";
+        return;
+    }
+
+    // Mostrar valoración principal
+    const resultadoGeneral = document.getElementById("resultadoGeneral");
+    resultadoGeneral.textContent =
+        datos.scoreHumano > 7
+            ? "La imagen parece haber sido creada por un humano."
+            : datos.scoreHumano < 4
+                ? "La imagen muestra indicadores de haber sido creada por inteligencia artificial."
+                : "No se puede determinar con certeza.";
+    resultadoGeneral.style.color = datos.scoreHumano > 7 ? "green" : datos.scoreHumano < 4 ? "red" : "orange";
+
+    // Resumen del análisis
+    document.getElementById("scoreHumano").textContent = datos.scoreHumano || "N/A";
+    document.getElementById("confianza").textContent = datos.confianza || "N/A";
+    document.getElementById("decision").textContent = datos.decision || "No disponible";
+
+    // Detalles básicos
+    document.getElementById("formato").textContent = datos.basico?.formato || "Desconocido";
+    document.getElementById("dimensiones").textContent = datos.basico?.dimensiones || "No disponible";
+    document.getElementById("resolucion").textContent = datos.basico?.resolucion || "No disponible";
+
+    // Procesar y mostrar metadatos EXIF
+    const exifContainer = document.getElementById("exif");
+    const exifKeys = Object.keys(datos.basico?.exif || {}).filter(key => {
+        const value = datos.basico.exif[key];
+        return value && value !== "No disponible"; // Excluir valores no válidos
+    });
+
+    if (exifKeys.length > 0) {
+        const exifList = document.createElement("ul");
+        exifKeys.forEach(key => {
+            const value = datos.basico.exif[key];
+            const formattedValue = typeof value === "object" ? JSON.stringify(value) : value;
+            const exifItem = document.createElement("li");
+            exifItem.textContent = `${key}: ${formattedValue}`;
+            exifList.appendChild(exifItem);
+        });
+        exifContainer.innerHTML = ""; // Limpiar contenido existente
+        exifContainer.appendChild(exifList);
+    } else {
+        exifContainer.textContent = "Metadatos EXIF no disponibles";
+    }
+
+    // Mostrar resultados detallados
+    const resultadosDetallados = datos.resultadosDetallados || [];
+    const resultadosContainer = document.getElementById("resultadosDetallados");
+    resultadosContainer.innerHTML = ""; // Limpiar contenido existente
+
+    resultadosDetallados.forEach((detalle) => {
+        const { analizador, descripcion, puntuacion, metadatos, mensaje } = detalle;
+
+        const detalleDiv = document.createElement("div");
+        detalleDiv.classList.add("resultado-detallado");
+
+        // Procesar metadatos dinámicamente
+        let metadatosHTML;
+        if (typeof metadatos === "object" && Object.keys(metadatos).length > 0) {
+            metadatosHTML = "<ul>";
+            for (const key in metadatos) {
+                const value = metadatos[key];
+                const formattedValue = typeof value === "object" ? JSON.stringify(value) : value; // Formatear valores complejos
+                metadatosHTML += `<li><strong>${key}:</strong> ${formattedValue}</li>`;
+            }
+            metadatosHTML += "</ul>";
+        } else {
+            metadatosHTML = `<p>Metadatos no disponibles</p>`;
+        }
+
+        // Generar el contenido HTML
+        detalleDiv.innerHTML = `
+            <p><strong>Analizador:</strong> ${analizador}</p>
+            <p><strong>Descripción:</strong> ${descripcion}</p>
+            <p><strong>Puntuación:</strong> ${puntuacion ?? "No asignada"}</p>
+            <p><strong>Metadatos:</strong></p>
+            ${metadatosHTML}
+            <p><strong>Mensaje:</strong> ${mensaje}</p>
+            <hr>
+        `;
+
+        resultadosContainer.appendChild(detalleDiv);
+    });
+
+    // Generar gráfico de puntuaciones
+    const ctxResultados = document.getElementById("graficoResultados").getContext("2d");
+    if (resultadosDetallados.length > 0) {
+        const labels = resultadosDetallados.map(d => d.analizador || "Desconocido");
+        const scores = resultadosDetallados.map(d => d.puntuacion || 0);
+
+        new Chart(ctxResultados, {
+            type: "bar",
+            data: {
+                labels,
+                datasets: [{
+                    label: "Puntuación de Analizadores",
+                    data: scores,
+                    backgroundColor: scores.map(score => score >= 8 ? "#4CAF50" : score >= 5 ? "#FF9800" : "#FF5722")
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 10
+                    }
+                }
+            }
+        });
+    } else {
+        console.warn("No hay datos suficientes para generar un gráfico.");
+    }
+
+    // Limpiar caché automáticamente después de mostrar el análisis
+    localStorage.removeItem('resultadoAnalisis');
+});
+</script>
+

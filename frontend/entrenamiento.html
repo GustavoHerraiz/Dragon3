@@ -1,0 +1,485 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Analizador de Archivos - Blade Corporation</title>
+    <link rel="stylesheet" href="./global.css" />
+    <link rel="stylesheet" href="./index.css" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400&display=swap"
+    />
+    <style>
+		/* Añade estos estilos al section <style> */
+		
+		/* Base para todos los elementos */
+* {
+    box-sizing: border-box; /* [5] */
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    min-height: 100vh;
+    background: #f4f7f6;
+}
+
+/* Contenedor de la cuadrícula */
+.container {
+    width: 100%;
+    max-width: 1200px; /* [6] */
+    margin: 0 auto;
+    padding: 0 15px;
+}
+
+.detalles-analisis {
+    width: 100%;
+    box-sizing: border-box;
+}
+
+.response-container {
+    max-height: 60vh;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch; /* Scroll suave para móviles */
+    touch-action: pan-y; /* Habilita el desplazamiento táctil */
+    overscroll-behavior: contain; /* Evita efectos de rebote no deseados */
+    scrollbar-width: thin; /* Para navegadores modernos */
+}
+
+/* Scrollbar personalizada para Chrome/Safari */
+.response-container::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+}
+
+.response-container::-webkit-scrollbar-thumb {
+    background: #3498db;
+    border-radius: 4px;
+}
+
+.response-container::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 4px;
+}
+
+@media screen and (max-width: 768px) {
+    .response-container {
+        max-height: 50vh;
+        overscroll-behavior: none; /* Mejor comportamiento en iOS */
+    }
+}
+
+/* Responsive para móviles y tablets */
+/* Para pantallas menores de 768px */
+@media (max-width: 768px) {
+    .main-container {
+        padding: 10px;
+        gap: 1rem;
+    }
+    
+    .upload-section {
+    flex: 0 0 auto;
+    background: #fff;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+    margin-bottom: 20px;
+    min-height: 200px; /* Altura mínima fija */
+    width: 100%; /* Ancho completo */
+}
+
+    
+    .detalles-analisis pre {
+        font-size: 12px;
+        padding: 10px;
+    }
+}
+
+/* Para pantallas muy pequeñas (móviles) */
+@media (max-width: 480px) {
+    .detalles-analisis h3 {
+        font-size: 1.2rem;
+    }
+    
+    .detalles-analisis h4 {
+        font-size: 1rem;
+    }
+}
+
+/* Mejora específica para JSON en móviles */
+pre::-webkit-scrollbar {
+    height: 5px;
+    width: 5px;
+}
+
+pre::-webkit-scrollbar-thumb {
+    background: #bdc3c7;
+    border-radius: 10px;
+}
+
+.token {
+    word-break: break-word;
+}
+
+.token.key {
+    display: inline-block;
+    min-width: 40%;
+    vertical-align: top;
+}
+        html, body {
+            height: 100%;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            overflow-y: auto;
+        }
+        .wwwbladecorporationnet-6 {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .footer {
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background-color: var(--color-gray-100);
+            width: 100%;
+            position: relative;
+            height: 60px;
+        }
+        .button-list img {
+            width: 24px;
+            height: 24px;
+            margin: 0 5px;
+        }
+        .cards-service {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 40px;
+            max-width: 1200px;
+            margin: auto;
+            flex-wrap: wrap;
+        }
+        .card-container {
+            flex: 1;
+            min-width: 45%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .card {
+            width: 100%;
+            padding: 20px;
+            min-height: 300px;
+            border-radius: 12px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+            transition: transform 0.3s ease;
+        }
+        .card:hover {
+            transform: scale(1.02);
+        }
+        .botom4 {
+            margin-top: 15px;
+        }
+        .dragon-2-icon.loading {
+            display: none;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+       .detalles-analisis {
+    color: #2d3436;
+    font-family: 'Inter', sans-serif;
+}
+/* Contenedor principal */
+.main-container {
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    gap: 2rem;
+    padding: 20px;
+    box-sizing: border-box;
+}
+
+
+/* Contenedor de subida */
+.upload-section {
+    flex: 0 0 auto; /* No crece ni se encoge */
+    background: #fff;
+    padding: 2rem;
+    border-radius: 8px;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+    margin-bottom: 20px; /* Separación adicional */
+}
+
+/* Contenedor de resultados */
+.resultados {
+    flex: 1 1 auto;
+    min-height: 500px; /* Altura mínima fija */
+    height: 500px; /* Altura fija */
+    overflow-y: auto;
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 2px 15px rgba(0,0,0,0.1);
+    padding: 20px;
+    width: 100%; /* Ancho completo */
+}
+
+
+
+.detalles-analisis pre {
+    background: #f8f9fa;
+    color: #2d3436;
+    border: 1px solid #dee2e6;
+    border-radius: 8px;
+    padding: 15px;
+    margin: 10px 0;
+    font-size: 14px;
+    line-height: 1.6;
+    overflow-x: auto;
+}
+
+.detalles-analisis h4 {
+    color: #2c3e50;
+    font-weight: 600;
+    margin: 20px 0 10px;
+    padding-bottom: 5px;
+    border-bottom: 2px solid #3498db;
+}
+
+.detalles-analisis strong {
+    color: #2c3e50;
+    font-weight: 600;
+}
+
+.detalles-analisis pre {
+    --json-key-color: #3498db;
+    --json-string-color: #27ae60;
+    --json-number-color: #e67e22;
+    --json-boolean-color: #8e44ad;
+}
+
+.detalles-analisis pre .token.key {
+    color: var(--json-key-color);
+}
+
+.detalles-analisis pre .token.string {
+    color: var(--json-string-color);
+}
+
+.detalles-analisis pre .token.number {
+    color: var(--json-number-color);
+}
+
+.detalles-analisis pre .token.boolean {
+    color: var(--json-boolean-color);
+}
+
+
+.error-analisis {
+    color: #e74c3c;
+    font-weight: bold;
+}
+        .response-container {
+            max-height: 200px;
+            overflow-y: auto;
+            padding: 10px;
+            border: 1px solid #ccc;
+            background-color: #f9f9f9;
+            border-radius: 8px;
+            width: 100%;
+        }
+        @media screen and (max-width: 768px) {
+            .cards-service {
+                flex-direction: column;
+                align-items: center;
+            }
+            .card-container {
+                min-width: 100%;
+            }
+            .footer {
+                flex-direction: column;
+                align-items: center;
+                height: auto;
+                padding: 15px;
+            }
+            .button-list img {
+                width: 20px;
+                height: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="wwwbladecorporationnet-6" data-animate-on-scroll>
+        <header class="head-blade">
+            <div class="logo-blade-corp">
+                <img class="logo-blade-corp-child" alt="Logo" src="./public/group-1@2x.png">
+                <div class="blade-corporation">Blade Corporation</div>
+            </div>
+            <nav class="menu">
+                <div class="verificador-mbh" onclick="window.location.href='index.html'">Volver al inicio</div>
+                <a class="button-link" href="entrenamiento.html">¡Ayúdanos a entrenar!</a>
+            </nav>
+        </header>
+        
+        <section class="section-servicios" data-animate-on-scroll>
+    <div class="nuestros-servicios-parent">
+        <h1 class="nuestros-servicios">Entrenamiento del Sistema</h1>
+        <p class="nos-especializamos-en">
+            Ayúdanos a mejorar nuestro análisis subiendo archivos y etiquetándolos como humanos o generados por IA.
+        </p>
+    </div>
+    <div class="cards-service">
+        <div class="card-container">
+            <div class="card">
+                <h3>Subir archivo para entrenamiento</h3>
+                <form id="uploadForm" action="/guardar-entrenamiento" method="POST" enctype="multipart/form-data">
+                    <input type="file" name="archivo" id="archivo" required>
+                    <div>
+                        <!-- Etiquetas para identificar si es humano o IA -->
+                        <label><input type="radio" name="etiqueta" value="humano" required> Humano</label>
+                        <label><input type="radio" name="etiqueta" value="ai"> IA</label>
+                    </div>
+                    <button type="submit" class="botom4">Enviar archivo</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</section>
+
+
+        
+        <footer class="footer">
+            <div class="title7">
+                <div class="blade-corp">
+                    <img class="blade-corp-child" alt="" src="./public/group-11.svg">
+                    <div class="blade-corporation1">Blade Corporation</div>
+                </div>
+            </div>
+            <div class="button-list">
+                <img src="./public/x-logo.svg" alt="X">
+                <img src="./public/icon1.svg" alt="Instagram">
+                <img src="./public/icon2.svg" alt="Otro">
+                <img src="./public/icon3.svg" alt="Otro">
+            </div>
+        </footer>
+    </div>
+    <script>
+
+  <script>
+  document
+    document.getElementById("uploadForm").addEventListener("submit", async function (event) {
+    event.preventDefault();
+
+    const archivoInput = document.getElementById("archivo");
+    if (!archivoInput.files.length) {
+        alert("Selecciona un archivo.");
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append("archivo", archivoInput.files[0]);
+
+    try {
+        const respuesta = await fetch("https://www.bladecorporation.net/analizar-imagen-publico", {
+            method: "POST",
+            body: formData
+        });
+
+        const resultado = await respuesta.json();
+        localStorage.setItem("resultadoAnalisis", JSON.stringify(resultado, null, 2));
+
+        // Redirige a la página de resultados
+        window.location.href = "analizar-imagen-publico.html";
+    } catch (error) {
+        alert("Error en el análisis: " + error.message);
+    }
+});
+
+
+  async function analizarImagen(resultado) {
+    // ✅ Recibe 'resultado', no 'nombreArchivo'
+
+    try {
+      // ✅ No reenviar el archivo, usar el nombre del archivo ya analizado en el server
+      // ✅ Formatear la respuesta para que primero aparezca el Score
+      let htmlContent = `
+            <div class="detalles-analisis">
+                <h3>Resultado del Análisis</h3>
+                <h2>Score de Creación Humana: ${
+                  resultado.resultado?.scoreHumano ?? "N/A"
+                }/10</h2>
+                <h4>Metadatos Básicos:</h4>
+                <pre>${JSON.stringify(
+                  resultado.resultado.basico,
+                  null,
+                  2
+                )}</pre>
+                <h4>EXIF:</h4>
+                <pre>${JSON.stringify(resultado.resultado.exif, null, 2)}</pre>
+                <h4>Estadísticas:</h4>
+                <pre>${JSON.stringify(
+                  resultado.resultado.estadisticas,
+                  null,
+                  2
+                )}</pre>
+                <h4>Canales de Color:</h4>
+                <pre>${JSON.stringify(
+                  resultado.resultado.canales,
+                  null,
+                  2
+                )}</pre>
+            </div>
+        `;
+      document.getElementById("respuesta").innerHTML = htmlContent;
+    } catch (error) {
+      document.getElementById("respuesta").innerHTML = `
+            <p class='error-analisis'>Error en el análisis: ${error.message}</p>
+        `;
+      console.error("Error en el análisis:", error);
+    }
+  }
+  // Dentro del <script>
+  let touchStartY = 0;
+
+  document
+    .querySelector(".response-container")
+    .addEventListener("touchstart", function (e) {
+      touchStartY = e.touches[0].clientY;
+    }, { passive: true });
+
+  document
+    .querySelector(".response-container")
+    .addEventListener("touchmove", function (e) {
+      const currentY = e.touches[0].clientY;
+      const scrollTop = this.scrollTop;
+      const scrollHeight = this.scrollHeight;
+      const clientHeight = this.clientHeight;
+
+      // Detectar dirección del scroll
+      if (currentY > touchStartY && scrollTop === 0) {
+        e.preventDefault();
+      }
+      if (currentY < touchStartY && scrollTop + clientHeight >= scrollHeight) {
+        e.preventDefault();
+      }
+    }, { passive: false });
+</script>
+
+</body>
+</html>

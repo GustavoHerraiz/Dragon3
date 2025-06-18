@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="initial-scale=1, width=device-width" />
+    <title>Mi Cuenta - Blade Corporation</title>
+    <link rel="stylesheet" href="./global.css" />
+    <link rel="stylesheet" href="./index.css" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;600;700&display=swap" />
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400&display=swap" />
+    <style>
+        .cuenta-container {
+            max-width: 460px;
+            margin: 2.5rem auto 1.5rem auto;
+            background: var(--color-gray-100);
+            border-radius: var(--br-5xs);
+            box-shadow: 0 4px 24px rgba(22, 223, 172, 0.1);
+            padding: 2.2rem;
+        }
+        .cuenta-container h1 {
+            color: var(--color-aquamarine-100);
+            text-align: center;
+            margin-bottom: 1.7rem;
+        }
+        .cuenta-form label {
+            color: var(--color-white);
+            font-size: 1rem;
+            margin-bottom: 0.3rem;
+            font-weight: 500;
+        }
+        .cuenta-form input {
+            width: 100%;
+            padding: 0.8rem;
+            border-radius: var(--br-8xs);
+            font-size: var(--body-base-size);
+            background: var(--color-gray-200);
+            border: 1px solid var(--color-aquamarine-100);
+            color: var(--color-white);
+            margin-bottom: 1.1rem;
+            transition: border-color 0.2s;
+        }
+        .cuenta-form input:focus {
+            outline: none;
+            border-color: #16dfac;
+        }
+        .cuenta-form button {
+            background: var(--color-aquamarine-100);
+            color: var(--color-gray-200);
+            border: none;
+            border-radius: var(--br-8xs);
+            font-weight: 600;
+            font-size: 1rem;
+            padding: 0.7rem 1.5rem;
+            cursor: pointer;
+            transition: background 0.2s;
+            margin-top: 0.5rem;
+        }
+        .cuenta-form button:hover {
+            background: #13b18a;
+        }
+        .mensaje-cuenta {
+            min-height: 24px;
+            text-align: center;
+            margin-top: 1rem;
+            font-size: var(--font-size-xs);
+            border-radius: var(--br-8xs);
+        }
+        .volver-panel {
+            display: block;
+            margin: 2rem auto 0 auto;
+            text-align: center;
+            color: var(--color-aquamarine-100);
+            text-decoration: underline;
+            font-size: 1rem;
+            font-weight: 500;
+        }
+    </style>
+</head>
+<body>
+    <div class="wwwbladecorporationnet-6">
+        <header class="head-blade">
+            <div class="logo-blade-corp">
+                <img class="logo-blade-corp-child" alt="Logo" src="./public/group-1@2x.png">
+                <div class="blade-corporation">Blade Corporation</div>
+            </div>
+        </header>
+
+        <main class="cuenta-container">
+            <h1>Mi Cuenta</h1>
+            <form id="cuentaForm" class="cuenta-form" autocomplete="off">
+                <label for="name">Nombre completo</label>
+                <input type="text" id="name" name="name" required placeholder="Tu nombre" />
+
+                <label for="email">Correo electrónico</label>
+                <input type="email" id="email" name="email" required placeholder="Tu email" />
+
+                <label for="password">Nueva contraseña (opcional)</label>
+                <input type="password" id="password" name="password" placeholder="Nueva contraseña (mínimo 8 caracteres)" autocomplete="new-password" />
+
+                <label for="password2">Repite nueva contraseña</label>
+                <input type="password" id="password2" name="password2" placeholder="Repetir nueva contraseña" autocomplete="new-password" />
+
+                <button type="submit">Actualizar datos</button>
+            </form>
+            <div id="mensaje" class="mensaje-cuenta"></div>
+            <a href="mi-espacio.html" class="volver-panel">← Volver a Mi Espacio</a>
+        </main>
+    </div>
+    <script>
+        // Cargar datos actuales
+        async function cargarDatosCuenta() {
+            const token = localStorage.getItem("token");
+            if (!token) {
+                window.location.href = "login.html";
+                return;
+            }
+            try {
+                const usuario = await fetch("/auth/verify", {
+                    method: "GET",
+                    headers: { "Authorization": `Bearer ${token}` }
+                }).then(res => res.json());
+                if(usuario.name) document.getElementById("name").value = usuario.name;
+                if(usuario.email) document.getElementById("email").value = usuario.email;
+            } catch (e) {
+                document.getElementById("mensaje").textContent = "No se pudo cargar el perfil.";
+                document.getElementById("mensaje").style.color = "#df1616";
+            }
+        }
+
+        document.getElementById("cuentaForm").addEventListener("submit", async function(event){
+            event.preventDefault();
+            const name = document.getElementById("name").value.trim();
+            const email = document.getElementById("email").value.trim();
+            const password = document.getElementById("password").value;
+            const password2 = document.getElementById("password2").value;
+            const mensaje = document.getElementById("mensaje");
+            mensaje.textContent = '';
+            mensaje.style.color = '';
+
+            if (!name || !email) {
+                mensaje.textContent = "Nombre y email son obligatorios.";
+                mensaje.style.color = "#df1616";
+                return;
+            }
+            if (password) {
+                if(password.length < 8) {
+                    mensaje.textContent = "La contraseña nueva debe tener al menos 8 caracteres.";
+                    mensaje.style.color = "#df1616";
+                    return;
+                }
+                if(password !== password2) {
+                    mensaje.textContent = "Las contraseñas no coinciden.";
+                    mensaje.style.color = "#df1616";
+                    return;
+                }
+            }
+            const token = localStorage.getItem("token");
+            if (!token) {
+                window.location.href = "login.html";
+                return;
+            }
+            try {
+                const updateData = { name, email };
+                if(password) updateData.password = password;
+                const res = await fetch("/auth/update", {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`
+                    },
+                    body: JSON.stringify(updateData)
+                });
+                const data = await res.json();
+                if (res.ok) {
+                    mensaje.textContent = "✅ Perfil actualizado correctamente.";
+                    mensaje.style.color = "#16dfac";
+                } else {
+                    mensaje.textContent = "❌ " + (data.error || "Error actualizando perfil.");
+                    mensaje.style.color = "#df1616";
+                }
+            } catch (error) {
+                mensaje.textContent = "❌ Error de conexión.";
+                mensaje.style.color = "#df1616";
+            }
+        });
+
+        cargarDatosCuenta();
+    </script>
+</body>
+</html>
