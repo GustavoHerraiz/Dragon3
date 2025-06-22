@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Dragon3 - Mi Espacio</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- CSS real Dragon3 -->
+  <link rel="stylesheet" href="global.css">
+  <link rel="stylesheet" href="dragon.css">
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+  <!--
+    Dragon3 - mi_espacio.html
+    Panel multirol FAANG/KISS con botones y clases compatibles con tu CSS real.
+  -->
+  <header class="header">
+    <div class="logo">
+      <img src="logo.png" alt="Logo Dragon3" />
+      <span>Mi Espacio Dragon3</span>
+    </div>
+    <nav class="menu">
+      <button id="btnHome" class="button" type="button">Inicio</button>
+      <button id="btnLogout" class="button" type="button">Cerrar sesión</button>
+    </nav>
+  </header>
+  <main class="container">
+    <section class="panel" id="bienvenida">
+      <h2>Bienvenido/a, <span id="nombreUsuario">...</span></h2>
+      <div>
+        <span id="tipoUsuario">...</span> | <span id="emailUsuario"></span>
+      </div>
+      <div id="alertas" class="oculto"></div>
+    </section>
+
+    <section class="panel" id="perfil">
+      <h2>Mi Perfil</h2>
+      <div id="datosPerfil"></div>
+      <button type="button" id="btnEditarPerfil" class="button">Editar perfil</button>
+      <button type="button" id="btnCambiarPassword" class="button">Cambiar contraseña</button>
+      <div id="formEditarPerfil" class="oculto"></div>
+      <div id="formCambiarPassword" class="oculto"></div>
+    </section>
+
+    <section class="panel" id="analisisArchivos">
+      <h2>Analizar archivo</h2>
+      <form id="formAnalizarArchivo" enctype="multipart/form-data" class="form-container">
+        <input type="file" id="inputArchivo" class="input" name="archivo" accept="image/*,application/pdf,video/*" required>
+        <button type="submit" class="button">Subir y analizar</button>
+      </form>
+      <div id="resultadoAnalisis"></div>
+    </section>
+
+    <section class="panel" id="historialAnalisis">
+      <h2>Historial de análisis</h2>
+      <div id="listaHistorial"></div>
+    </section>
+
+    <section class="panel" id="estadisticas">
+      <h2>Mis estadísticas</h2>
+      <div id="estadisticasUsuario"></div>
+    </section>
+
+    <!-- PREMIUM ONLY -->
+    <section class="panel oculto" id="premiumPanel">
+      <h2>Premium</h2>
+      <div>
+        <strong>Límite ampliado de análisis</strong><br>
+        <span id="limitePremium"></span>
+      </div>
+      <div>
+        <strong>Descargar informes de análisis</strong><br>
+        <div id="descargasPremium"></div>
+      </div>
+      <div class="prx">Gestión de pagos/facturación — <b>próximamente</b></div>
+      <div class="prx">Notificaciones personalizables — <b>próximamente</b></div>
+    </section>
+
+    <!-- ENTERPRISE ONLY -->
+    <section class="panel oculto" id="enterprisePanel">
+      <h2>Panel Enterprise</h2>
+      <div>
+        <strong>Gestión usuarios organización</strong>
+        <div id="gestionUsuariosOrg"></div>
+      </div>
+      <div class="prx">Auditoría y logs avanzados — <b>próximamente</b></div>
+      <div class="prx">Integraciones externas — <b>próximamente</b></div>
+    </section>
+
+    <!-- ADMIN ONLY -->
+    <section class="panel oculto" id="adminPanel">
+      <h2>Panel Administrador</h2>
+      <div>
+        <strong>Monitorización de servicios</strong>
+        <div id="healthCheckAdmin"></div>
+      </div>
+      <div>
+        <strong>Gestión global de usuarios y análisis</strong>
+        <div id="gestionGlobalAdmin"></div>
+      </div>
+      <div class="prx">Gestión de incidencias y broadcast — <b>próximamente</b></div>
+      <div class="prx">Configuración global del sistema — <b>próximamente</b></div>
+    </section>
+  </main>
+  <footer class="footer">
+    <div class="footer-links">
+      <a href="mailto:soporte@bladecorporation.net">Soporte</a>
+      <a href="index.html">Inicio</a>
+      <a href="https://www.bladecorporation.net" target="_blank">Corporativo</a>
+    </div>
+    <p>© 2025 Dragon3 AI Auth System | FAANG Enterprise</p>
+  </footer>
+  <script src="scripts/mi-espacio.js"></script>
+</body>
+</html>

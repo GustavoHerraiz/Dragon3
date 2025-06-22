@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Dragon3 - Resultado del Análisis</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Hoja de estilos principal (ajusta el path si es necesario) -->
+  <link rel="stylesheet" href="estilos.css">
+  <!-- Protección básica de seguridad -->
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <!-- Estilos responsive y claridad visual mínima si no usas framework externo -->
+  <style>
+    body {
+      font-family: 'Segoe UI', Arial, sans-serif;
+      margin: 0; padding: 0;
+      background: #f9f9fb;
+      color: #222;
+      min-height: 100vh;
+      display: flex; flex-direction: column;
+    }
+    header, footer {
+      background: #192137;
+      color: #fff;
+      padding: 1rem 0.5rem;
+      text-align: center;
+    }
+    main {
+      flex: 1;
+      padding: 1.2rem 0.5rem;
+      max-width: 700px;
+      margin: auto;
+      background: #fff;
+      border-radius: 12px;
+      box-shadow: 0 3px 16px rgba(30,40,80,0.06);
+    }
+    h1, h2 {
+      margin: 0.5em 0;
+    }
+    #resultadoSection {
+      background: #f3f7fa;
+      border-radius: 8px;
+      padding: 1em;
+      margin-bottom: 1.5em;
+      word-break: break-word;
+    }
+    pre {
+      background: #232936;
+      color: #e5eaf3;
+      padding: 1em;
+      border-radius: 6px;
+      overflow-x: auto;
+      font-size: 1em;
+      line-height: 1.4;
+      margin: 0.7em 0;
+      box-shadow: 0 1px 8px #19213722;
+    }
+    .error {
+      color: #d70040;
+      background: #fff3f6;
+      border: 1px solid #d70040;
+      border-radius: 5px;
+      padding: 0.8em 1em;
+      margin-bottom: 1em;
+      font-weight: 600;
+      font-size: 1.05em;
+      display: block;
+    }
+    nav {
+      display: flex;
+      gap: 0.7em;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin: 2em 0 0.5em 0;
+    }
+    nav button {
+      background: #234fff;
+      color: #fff;
+      border: none;
+      border-radius: 5px;
+      padding: 0.7em 1.2em;
+      font-size: 1em;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    nav button:hover, nav button:focus {
+      background: #172cb3;
+      outline: none;
+    }
+    @media (max-width: 600px) {
+      main {
+        padding: 0.7rem 0.2rem;
+      }
+      nav button {
+        width: 100%;
+        margin-bottom: 0.5em;
+        font-size: 0.97em;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!--
+    ================================================================
+    Dragon3 Analizar Imagen Público - Página de resultados
+    - Compatible con server.js: resultadoAnalisis, correlationId, analysisTimestamp
+    - UX: Accesible, robusto, profesional, responsive, botones de navegación
+    - Lógica JS externa: scripts/analizar-imagen-publico.js
+    ================================================================
+  -->
+  <header>
+    <h1>Resultado del Análisis</h1>
+  </header>
+  <main>
+    <!-- Sección de resultado, oculta si hay error -->
+    <section id="resultadoSection" style="display:none;">
+      <h2>Detalles del análisis</h2>
+      <!-- Resultado principal en JSON formateado -->
+      <pre id="resultadoJSON" aria-label="Resultado del análisis"></pre>
+      <!-- Info adicional: correlación y timestamp -->
+      <div id="extraInfo" style="margin-top: 1em;">
+        <div><strong>ID de correlación:</strong> <span id="correlationId"></span></div>
+        <div><strong>Fecha/hora del análisis:</strong> <span id="analysisTimestamp"></span></div>
+      </div>
+    </section>
+    <!-- Mensaje de error accesible y claro -->
+    <div id="errorMsg" class="error" role="alert" style="display:none;"></div>
+    <!-- Botones de navegación óptimos para el flujo público -->
+    <nav>
+      <button type="button" onclick="window.location.href='index.html'">Volver a inicio</button>
+      <button type="button" onclick="window.location.href='analizador.html'">Nuevo análisis</button>
+      <button type="button" onclick="window.location.href='login.html'">Iniciar sesión</button>
+      <button type="button" onclick="window.location.href='registrarse.html'">Registrarse</button>
+    </nav>
+  </main>
+  <footer>
+    <small>© 2025 Dragon3 AI Auth System | FAANG Enterprise</small>
+  </footer>
+  <!-- Lógica desacoplada: scripts/analizar-imagen-publico.js -->
+  <script src="scripts/analizar-imagen-publico.js"></script>
+</body>
+</html>
