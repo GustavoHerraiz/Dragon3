@@ -2,18 +2,18 @@
  * ====================================================================
  * DRAGON3 - SERVER EXPRESS FAANG ENTERPRISE
  * ====================================================================
- * 
+ *
  * Archivo: server.js
  * Proyecto: Dragon3 - Sistema Autentificación IA Enterprise
  * Versión: 3.0.0-FAANG
  * Fecha: 2025-04-15
  * Autor: Gustavo Herráiz - Lead Architect
- * 
+ *
  * DESCRIPCIÓN:
  * Servidor Express principal con estándares FAANG enterprise para manejo
  * de análisis multitype (imagen/PDF/video), autenticación JWT, y coordinación
  * con servicios Dragon3. Optimizado para P95 <200ms, 99.9% uptime.
- * 
+ *
  * FAANG ENHANCEMENTS:
  * - Real-time P95/P99 performance tracking con alerting
  * - Circuit breaker patterns enterprise-grade
@@ -25,7 +25,7 @@
  * - Health monitoring proactivo con service mesh
  * - Graceful degradation modes
  * - Advanced telemetry integration
- * 
+ *
  * MÉTRICAS OBJETIVO FAANG:
  * - API response time: P95 <200ms, P99 <500ms
  * - File upload processing: P95 <2s, P99 <5s
@@ -34,18 +34,18 @@
  * - Error rate: <0.5%
  * - Uptime: 99.9%
  * - Concurrent requests: 1000+
- * 
+ *
  * MULTITYPE FLOW:
- * Frontend → Express Routes → File Type Detection → Analyzer Routing → 
+ * Frontend → Express Routes → File Type Detection → Analyzer Routing →
  * analizadorImagen.js/analizadorPDF.js/analizadorVideo.js → servidorCentral.js → Redis → Red Superior
- * 
+ *
  * SLA COMPLIANCE:
  * - API Latency: P95 <200ms end-to-end
  * - File Processing: P95 <2s regardless of type
  * - Availability: 99.9% uptime
  * - Throughput: 1000+ requests/minute
  * - Security: Zero tolerance policy
- * 
+ *
  * ====================================================================
  */
 
@@ -93,7 +93,7 @@ import Usuario from "./modelos/mongodb/Usuario.js";
 import { calcularHashArchivo } from "./utilidades/hashArchivo.js";
 import ServidorCentral from './servicios/servidorCentral.js';
 import SensorFactory from './utilidades/SensorFactory.js';
-import { iniciarRedSuperior } from './servicios/redSuperior/redSuperior.js';
+// import { iniciarRedSuperior } from './servicios/redSuperior/redSuperior.js';
 import authRoutes from "./rutas/auth.js";
 import archivosRoutes from "./rutas/archivos.js";
 import authMiddleware from "./middlewares/autentificacion.js";
@@ -115,7 +115,7 @@ const FAANG_CONFIG = {
         memoryLimitMB: parseInt(process.env.MEMORY_LIMIT_MB) || 500,
         gcThreshold: parseInt(process.env.GC_THRESHOLD_MB) || 400
     },
-    
+
     // Rate limiting (DDoS protection)
     rateLimiting: {
         windowMs: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 900000, // 15 minutes
@@ -125,7 +125,7 @@ const FAANG_CONFIG = {
         uploadWindowMs: parseInt(process.env.UPLOAD_RATE_LIMIT_WINDOW_MS) || 3600000, // 1 hour
         uploadMaxRequests: parseInt(process.env.UPLOAD_RATE_LIMIT_MAX_REQUESTS) || 50
     },
-    
+
     // Security settings (OWASP compliant)
     security: {
         maxFileSize: parseInt(process.env.MAX_FILE_SIZE_MB) || 100,
@@ -137,7 +137,7 @@ const FAANG_CONFIG = {
         trustProxy: process.env.TRUST_PROXY === 'true',
         secureHeaders: process.env.SECURE_HEADERS !== 'false'
     },
-    
+
     // File handling (Multitype support)
     files: {
         allowedImageTypes: ['image/jpeg', 'image/png', 'image/jpg', 'image/webp'],
@@ -147,7 +147,7 @@ const FAANG_CONFIG = {
         tempPath: process.env.TEMP_PATH || './uploads/temporal',
         trainingPath: process.env.TRAINING_PATH || '/var/www/Dragon3/backend/servicios/entrenamiento'
     },
-    
+
     // Circuit breaker settings (Reliability engineering)
     circuitBreaker: {
         enabled: process.env.CIRCUIT_BREAKER_ENABLED !== 'false',
@@ -156,7 +156,7 @@ const FAANG_CONFIG = {
         monitoringWindow: parseInt(process.env.CIRCUIT_BREAKER_MONITORING_WINDOW_MS) || 300000,
         halfOpenMaxRequests: parseInt(process.env.CIRCUIT_BREAKER_HALF_OPEN_MAX) || 5
     },
-    
+
     // Memory management (Performance optimization)
     memory: {
         gcInterval: parseInt(process.env.GC_MONITORING_INTERVAL_MS) || 30000,
@@ -165,7 +165,7 @@ const FAANG_CONFIG = {
         forceGCEnabled: process.env.FORCE_GC_ENABLED !== 'false',
         requestMemoryThreshold: parseInt(process.env.REQUEST_MEMORY_THRESHOLD_MB) || 50
     },
-    
+
     // Monitoring settings (FAANG observability)
     monitoring: {
         healthCheckInterval: parseInt(process.env.HEALTH_CHECK_INTERVAL_MS) || 60000,
@@ -206,27 +206,27 @@ class DragonServerError extends Error {
         this.metadata = metadata;
         this.retryable = false;
         this.alertRequired = severity === 'critical' || severity === 'high';
-        
+
         if (Error.captureStackTrace) {
             Error.captureStackTrace(this, this.constructor);
         }
     }
-    
+
     setCorrelationId(correlationId) {
         this.correlationId = correlationId;
         return this;
     }
-    
+
     setUserId(userId) {
         this.userId = userId;
         return this;
     }
-    
+
     setRetryable(retryable = true) {
         this.retryable = retryable;
         return this;
     }
-    
+
     toJSON() {
         return {
             name: this.name,
@@ -314,11 +314,11 @@ class ExpressPerformanceMonitor {
             slowRequests: [],
             requestsByEndpoint: new Map()
         };
-        
+
         this.performanceObserver = new performanceHooks.PerformanceObserver((list) => {
             this.handlePerformanceEntries(list.getEntries());
         });
-        
+
         this.alertThresholds = {
             apiResponseP95: FAANG_CONFIG.performance.apiResponseP95,
             apiResponseP99: FAANG_CONFIG.performance.apiResponseP99,
@@ -326,39 +326,39 @@ class ExpressPerformanceMonitor {
             databaseP95: FAANG_CONFIG.performance.databaseP95,
             memoryUsage: FAANG_CONFIG.memory.maxHeapUsage
         };
-        
+
         this.lastAlertTimes = new Map();
         this.alertCooldown = 60000; // 1 minute cooldown
-        
+
         this.startMonitoring();
     }
-    
+
     startMonitoring() {
         if (FAANG_CONFIG.monitoring.performanceLogging) {
             this.performanceObserver.observe({ entryTypes: ['measure', 'mark'] });
         }
-        
+
         // Memory monitoring específico para Express
         setInterval(() => {
             this.collectMemoryMetrics();
         }, FAANG_CONFIG.memory.gcInterval);
-        
+
         // Performance summary logging
         setInterval(() => {
             this.logPerformanceSummary();
         }, FAANG_CONFIG.monitoring.metricsReportInterval);
-        
+
         dragon.sonrie('Express Performance Monitor FAANG iniciado', MODULE_NAME, 'PERFORMANCE_MONITOR_START', {
             version: VERSION_MODULO,
             alertThresholds: this.alertThresholds,
             monitoringEnabled: FAANG_CONFIG.monitoring.performanceLogging
         });
     }
-    
+
     handlePerformanceEntries(entries) {
         for (const entry of entries) {
             const duration = entry.duration;
-            
+
             if (entry.name.startsWith('express:request:')) {
                 this.recordRequestTime(duration, entry.name);
             } else if (entry.name.startsWith('express:database:')) {
@@ -370,26 +370,26 @@ class ExpressPerformanceMonitor {
             }
         }
     }
-    
+
     recordRequestTime(duration, operationName) {
         this.metrics.requestTimes.push({
             duration,
             timestamp: Date.now(),
             operation: operationName
         });
-        
+
         // Extract endpoint from operation name
         const endpoint = operationName.split(':')[2] || 'unknown';
         const endpointMetrics = this.metrics.requestsByEndpoint.get(endpoint) || { count: 0, totalTime: 0, errors: 0 };
         endpointMetrics.count++;
         endpointMetrics.totalTime += duration;
         this.metrics.requestsByEndpoint.set(endpoint, endpointMetrics);
-        
+
         // Keep only last 1000 measurements
         if (this.metrics.requestTimes.length > 1000) {
             this.metrics.requestTimes = this.metrics.requestTimes.slice(-1000);
         }
-        
+
         // Slow request detection
         if (duration > FAANG_CONFIG.monitoring.slowRequestThreshold) {
             this.metrics.slowRequests.push({
@@ -398,78 +398,78 @@ class ExpressPerformanceMonitor {
                 operation: operationName,
                 endpoint
             });
-            
+
             if (this.metrics.slowRequests.length > 100) {
                 this.metrics.slowRequests = this.metrics.slowRequests.slice(-100);
             }
         }
-        
+
         // P95 violation detection
         if (duration > this.alertThresholds.apiResponseP95) {
             this.handlePerformanceViolation('api_response_p95', duration, this.alertThresholds.apiResponseP95, operationName);
         }
-        
+
         // P99 violation detection
         if (duration > this.alertThresholds.apiResponseP99) {
             this.handlePerformanceViolation('api_response_p99', duration, this.alertThresholds.apiResponseP99, operationName);
         }
     }
-    
+
     recordDatabaseTime(duration, operationName) {
         this.metrics.databaseTimes.push({
             duration,
             timestamp: Date.now(),
             operation: operationName
         });
-        
+
         if (this.metrics.databaseTimes.length > 500) {
             this.metrics.databaseTimes = this.metrics.databaseTimes.slice(-500);
         }
-        
+
         if (duration > this.alertThresholds.databaseP95) {
             this.handlePerformanceViolation('database_p95', duration, this.alertThresholds.databaseP95, operationName);
         }
     }
-    
+
     recordFileProcessingTime(duration, operationName) {
         this.metrics.fileProcessingTimes.push({
             duration,
             timestamp: Date.now(),
             operation: operationName
         });
-        
+
         if (this.metrics.fileProcessingTimes.length > 200) {
             this.metrics.fileProcessingTimes = this.metrics.fileProcessingTimes.slice(-200);
         }
-        
+
         if (duration > this.alertThresholds.fileProcessingP95) {
             this.handlePerformanceViolation('file_processing_p95', duration, this.alertThresholds.fileProcessingP95, operationName);
         }
     }
-    
+
     recordAuthTime(duration, operationName) {
         this.metrics.authTimes.push({
             duration,
             timestamp: Date.now(),
             operation: operationName
         });
-        
+
         if (this.metrics.authTimes.length > 200) {
             this.metrics.authTimes = this.metrics.authTimes.slice(-200);
         }
     }
-    
+
     handlePerformanceViolation(metric, actualValue, threshold, operationName) {
         const alertKey = `${metric}_violation`;
         const lastAlert = this.lastAlertTimes.get(alertKey);
         const now = Date.now();
-        
+
         if (lastAlert && (now - lastAlert) < this.alertCooldown) {
             return;
         }
-        
+
         this.lastAlertTimes.set(alertKey, now);
-        
+
         dragon.mideRendimiento(`express_${metric}_violation`, actualValue, MODULE_NAME, {
             metric,
             threshold,
@@ -480,13 +480,13 @@ class ExpressPerformanceMonitor {
             severity: actualValue > threshold * 1.5 ? 'critical' : 'high'
         });
     }
-    
+
     collectMemoryMetrics() {
         const memoryUsage = process.memoryUsage();
         const heapUsedMB = memoryUsage.heapUsed / 1024 / 1024;
         const heapTotalMB = memoryUsage.heapTotal / 1024 / 1024;
         const heapUsagePercent = (heapUsedMB / heapTotalMB) * 100;
-        
+
         const memoryMetric = {
             heapUsedMB: Math.round(heapUsedMB * 100) / 100,
             heapTotalMB: Math.round(heapTotalMB * 100) / 100,
@@ -495,27 +495,27 @@ class ExpressPerformanceMonitor {
             external: Math.round((memoryUsage.external / 1024 / 1024) * 100) / 100,
             timestamp: Date.now()
         };
-        
+
         this.metrics.memoryUsage.push(memoryMetric);
-        
+
         if (this.metrics.memoryUsage.length > 100) {
             this.metrics.memoryUsage = this.metrics.memoryUsage.slice(-100);
         }
-        
+
         // Memory pressure detection
         if (heapUsagePercent > this.alertThresholds.memoryUsage) {
             this.handleMemoryPressure(heapUsagePercent, heapUsedMB, memoryMetric);
         }
-        
+
         // Proactive GC triggering
-        if (heapUsedMB > FAANG_CONFIG.performance.gcThreshold && 
-            FAANG_CONFIG.memory.forceGCEnabled && 
+        if (heapUsedMB > FAANG_CONFIG.performance.gcThreshold &&
+            FAANG_CONFIG.memory.forceGCEnabled &&
             global.gc) {
-            
+
             const gcStartTime = Date.now();
             global.gc();
             const gcDuration = Date.now() - gcStartTime;
-            
+
             dragon.respira('GC triggered - Express memory pressure relief', MODULE_NAME, 'GC_EXPRESS_TRIGGER', {
                 beforeHeapMB: heapUsedMB,
                 gcDuration,
@@ -524,20 +524,20 @@ class ExpressPerformanceMonitor {
             });
         }
     }
-    
+
     handleMemoryPressure(heapUsagePercent, heapUsedMB, memoryMetric) {
         const alertKey = 'express_memory_pressure';
         const lastAlert = this.lastAlertTimes.get(alertKey);
         const now = Date.now();
-        
+
         if (lastAlert && (now - lastAlert) < this.alertCooldown) {
             return;
         }
-        
+
         this.lastAlertTimes.set(alertKey, now);
-        
+
         const severity = heapUsagePercent > this.alertThresholds.memoryUsage * 1.2 ? 'critical' : 'high';
-        
+
         dragon.sePreocupa(`Express memory pressure detected: ${heapUsagePercent.toFixed(1)}%`, MODULE_NAME, 'EXPRESS_MEMORY_PRESSURE', {
             heapUsagePercent,
             heapUsedMB,
@@ -546,40 +546,40 @@ class ExpressPerformanceMonitor {
             memoryBreakdown: memoryMetric
         });
     }
-    
+
     logPerformanceSummary() {
         const summary = this.getSummary();
-        
+
         dragon.respira('Express performance summary FAANG', MODULE_NAME, 'EXPRESS_PERFORMANCE_SUMMARY', {
             summary,
             version: VERSION_MODULO,
             timestamp: new Date().toISOString()
         });
     }
-    
+
     getP95Time(metricArray) {
         if (metricArray.length === 0) return 0;
         const durations = metricArray.map(m => m.duration || m).sort((a, b) => a - b);
         const index = Math.floor(durations.length * 0.95);
         return durations[index] || 0;
     }
-    
+
     getP99Time(metricArray) {
         if (metricArray.length === 0) return 0;
         const durations = metricArray.map(m => m.duration || m).sort((a, b) => a - b);
         const index = Math.floor(durations.length * 0.99);
         return durations[index] || 0;
     }
-    
+
     getAverageTime(metricArray) {
         if (metricArray.length === 0) return 0;
         const durations = metricArray.map(m => m.duration || m);
         return durations.reduce((sum, val) => sum + val, 0) / durations.length;
     }
-    
+
     getSummary() {
         const currentMemory = process.memoryUsage();
-        
+
         return {
             requests: {
                 p95: Math.round(this.getP95Time(this.metrics.requestTimes) * 100) / 100,
@@ -618,16 +618,16 @@ class ExpressPerformanceMonitor {
             endpoints: Object.fromEntries(this.metrics.requestsByEndpoint)
         };
     }
-    
+
     incrementErrorCount(errorType) {
         const current = this.metrics.errorCounts.get(errorType) || 0;
         this.metrics.errorCounts.set(errorType, current + 1);
     }
-    
+
     getEndpointMetrics(endpoint) {
         return this.metrics.requestsByEndpoint.get(endpoint) || { count: 0, totalTime: 0, errors: 0 };
     }
-    
+
     incrementEndpointError(endpoint) {
         const metrics = this.metrics.requestsByEndpoint.get(endpoint) || { count: 0, totalTime: 0, errors: 0 };
         metrics.errors++;
@@ -642,23 +642,26 @@ const performanceMonitor = new ExpressPerformanceMonitor();
 
 /**
  * FAANG: Enhanced correlation ID middleware con performance tracking
+ * CORREGIDO: Headers sent validation para evitar ERR_HTTP_HEADERS_SENT
  */
 const correlationMiddleware = (req, res, next) => {
     const startTime = performanceHooks.performance.now();
-    
+
     // Generate correlation ID
     req.correlationId = req.headers['x-correlation-id'] || uuidv4();
     req.startTime = Date.now();
-    
-    // Add correlation ID to response headers
-    res.setHeader('X-Correlation-ID', req.correlationId);
-    res.setHeader('X-Response-Time', '0');
-    res.setHeader('X-Server-Version', VERSION_MODULO);
-    
+
+    // Add correlation ID to response headers - SOLO SI NO ENVIADOS
+    if (!res.headersSent) {
+        res.setHeader('X-Correlation-ID', req.correlationId);
+        res.setHeader('X-Response-Time', '0');
+        res.setHeader('X-Server-Version', VERSION_MODULO);
+    }
+
     // Performance mark for request start
     const endpoint = req.route?.path || req.path || 'unknown';
     performanceHooks.performance.mark(`express:request:${endpoint}:${req.correlationId}:start`);
-    
+
     dragon.respira('Solicitud entrante FAANG', MODULE_NAME, 'REQUEST_START', {
         correlationId: req.correlationId,
         method: req.method,
@@ -668,25 +671,27 @@ const correlationMiddleware = (req, res, next) => {
         endpoint,
         timestamp: new Date().toISOString()
     });
-    
+
     // Response finished handler
     res.on('finish', () => {
         const duration = Date.now() - req.startTime;
         const durationPrecise = performanceHooks.performance.now() - startTime;
-        
+
         // Performance mark for request end
         performanceHooks.performance.mark(`express:request:${endpoint}:${req.correlationId}:end`);
-        performanceHooks.performance.measure(`express:request:${endpoint}:${req.correlationId}`, 
-                                              `express:request:${endpoint}:${req.correlationId}:start`, 
+        performanceHooks.performance.measure(`express:request:${endpoint}:${req.correlationId}`,
+                                              `express:request:${endpoint}:${req.correlationId}:start`,
                                               `express:request:${endpoint}:${req.correlationId}:end`);
-        
-        // Update response time header
-        res.setHeader('X-Response-Time', `${Math.round(durationPrecise * 100) / 100}ms`);
-        
-        const logLevel = res.statusCode >= 500 ? 'agoniza' : 
-                        res.statusCode >= 400 ? 'sePreocupa' : 
+
+        // Update response time header - SOLO SI HEADERS NO ENVIADOS
+        if (!res.headersSent) {
+            res.setHeader('X-Response-Time', `${Math.round(durationPrecise * 100) / 100}ms`);
+        }
+
+        const logLevel = res.statusCode >= 500 ? 'agoniza' :
+                        res.statusCode >= 400 ? 'sePreocupa' :
                         duration > FAANG_CONFIG.monitoring.slowRequestThreshold ? 'sePreocupa' : 'respira';
-        
+
         dragon[logLevel]('Solicitud completada FAANG', MODULE_NAME, 'REQUEST_FINISH', {
             correlationId: req.correlationId,
             method: req.method,
@@ -697,13 +702,13 @@ const correlationMiddleware = (req, res, next) => {
             endpoint,
             performance: durationPrecise < FAANG_CONFIG.performance.apiResponseP95 ? 'optimal' : 'slow'
         });
-        
+
         // Update endpoint metrics
         if (res.statusCode >= 400) {
             performanceMonitor.incrementEndpointError(endpoint);
         }
     });
-    
+
     next();
 };
 
@@ -714,7 +719,7 @@ const securityMiddleware = (req, res, next) => {
     try {
         // IP validation
         const clientIP = req.ip || req.connection.remoteAddress;
-        
+
         // Basic IP format validation
         if (!clientIP || clientIP === '::1' || clientIP === '127.0.0.1') {
             // Allow localhost in development
@@ -722,7 +727,7 @@ const securityMiddleware = (req, res, next) => {
                 return next();
             }
         }
-        
+
         // User agent validation
         const userAgent = req.headers['user-agent'];
         if (!userAgent) {
@@ -731,21 +736,21 @@ const securityMiddleware = (req, res, next) => {
                 ip: clientIP,
                 endpoint: req.path
             });
-            
+
             if (FAANG_CONFIG.security.enableCSRF) {
-                return res.status(400).json({ 
+                return res.status(400).json({
                     error: 'User-Agent header required',
-                    correlationId: req.correlationId 
+                    correlationId: req.correlationId
                 });
             }
         }
-        
+
         // Check for suspicious patterns in User-Agent
         const suspiciousPatterns = ['bot', 'crawler', 'spider', 'scraper', 'curl', 'wget'];
-        const isSuspicious = suspiciousPatterns.some(pattern => 
+        const isSuspicious = suspiciousPatterns.some(pattern =>
             userAgent?.toLowerCase().includes(pattern)
         );
-        
+
         if (isSuspicious) {
             dragon.sePreocupa('Suspicious User-Agent detected', MODULE_NAME, 'SECURITY_SUSPICIOUS_UA', {
                 correlationId: req.correlationId,
@@ -754,11 +759,11 @@ const securityMiddleware = (req, res, next) => {
                 endpoint: req.path
             });
         }
-        
+
         // Request size validation
         const contentLength = parseInt(req.headers['content-length']) || 0;
         const maxSize = FAANG_CONFIG.security.maxFileSize * 1024 * 1024; // Convert MB to bytes
-        
+
         if (contentLength > maxSize) {
             dragon.sePreocupa('Request size exceeds limit', MODULE_NAME, 'SECURITY_SIZE_LIMIT', {
                 correlationId: req.correlationId,
@@ -766,24 +771,24 @@ const securityMiddleware = (req, res, next) => {
                 maxSize,
                 ip: clientIP
             });
-            
-            return res.status(413).json({ 
+
+            return res.status(413).json({
                 error: 'Request entity too large',
-                correlationId: req.correlationId 
+                correlationId: req.correlationId
             });
         }
-        
+
         next();
-        
+
     } catch (error) {
         dragon.agoniza('Error in security middleware', error, MODULE_NAME, 'SECURITY_MIDDLEWARE_ERROR', {
             correlationId: req.correlationId
         });
-        
+
         // Fail securely
-        res.status(500).json({ 
+        res.status(500).json({
             error: 'Security validation failed',
-            correlationId: req.correlationId 
+            correlationId: req.correlationId
         });
     }
 };
@@ -800,7 +805,7 @@ const createRedisInstance = (role = 'general') => {
         port: parseInt(process.env.REDIS_PORT) || 6379,
         password: process.env.REDIS_PASSWORD || undefined,
         db: parseInt(process.env.REDIS_DB) || 0,
-        
+
         // FAANG: Enhanced connection settings
         retryDelayOnFailover: parseInt(process.env.REDIS_RETRY_DELAY) || 100,
         maxRetriesPerRequest: parseInt(process.env.REDIS_MAX_RETRIES) || 3,
@@ -808,18 +813,18 @@ const createRedisInstance = (role = 'general') => {
         commandTimeout: parseInt(process.env.REDIS_COMMAND_TIMEOUT) || 5000,
         lazyConnect: true,
         keepAlive: 30000,
-        
+
         // FAANG: Cluster support
         enableOfflineQueue: false,
         maxLoadingTimeout: 60000,
-        
+
         // FAANG: Performance optimization
         family: 4, // Force IPv4
         compression: 'gzip'
     };
-    
+
     const redis = new Redis(config);
-    
+
     // Enhanced error handling with circuit breaker
     redis.on('error', (error) => {
         dragon.agoniza(`Redis ${role} error`, error, MODULE_NAME, 'REDIS_ERROR', {
@@ -829,10 +834,10 @@ const createRedisInstance = (role = 'general') => {
             errorCode: error.code,
             errorMessage: error.message
         });
-        
+
         performanceMonitor.incrementErrorCount(`redis_${role}_error`);
     });
-    
+
     redis.on('connect', () => {
         dragon.sonrie(`Redis ${role} conectado`, MODULE_NAME, 'REDIS_CONNECT', {
             role,
@@ -840,27 +845,27 @@ const createRedisInstance = (role = 'general') => {
             port: config.port
         });
     });
-    
+
     redis.on('ready', () => {
         dragon.zen(`Redis ${role} ready perfectamente`, MODULE_NAME, 'REDIS_READY', {
             role,
             status: 'operational'
         });
     });
-    
+
     redis.on('close', () => {
         dragon.sePreocupa(`Redis ${role} connection closed`, MODULE_NAME, 'REDIS_CLOSE', {
             role
         });
     });
-    
+
     redis.on('reconnecting', (delay) => {
         dragon.respira(`Redis ${role} reconnecting in ${delay}ms`, MODULE_NAME, 'REDIS_RECONNECTING', {
             role,
             delay
         });
     });
-    
+
     return redis;
 };
 
@@ -878,43 +883,43 @@ const redis = createRedisInstance('general');
 const validateProductionSecurity = () => {
     if (process.env.NODE_ENV === 'production') {
         const securityIssues = [];
-        
+
         // MBH Salt validation
         if (!process.env.MBH_SALT || process.env.MBH_SALT === 'default-development-salt-dragon-project-needs-secure-env-salt') {
             securityIssues.push('MBH_SALT inseguro');
         }
-        
+
         // JWT Secret validation
         if (!process.env.JWT_SECRET || process.env.JWT_SECRET === 'clave_secreta_super_segura') {
             securityIssues.push('JWT_SECRET inseguro');
         }
-        
+
         // Database URL validation
         if (!process.env.MONGO_URI) {
             securityIssues.push('MONGO_URI no configurado');
         }
-        
+
         // Redis password validation (if required)
         if (process.env.REDIS_REQUIRE_AUTH === 'true' && !process.env.REDIS_PASSWORD) {
             securityIssues.push('REDIS_PASSWORD requerido pero no configurado');
         }
-        
+
         // CORS origin validation
         if (FAANG_CONFIG.security.allowedOrigins.includes('*')) {
             securityIssues.push('CORS wildcard (*) no permitido en producción');
         }
-        
+
         if (securityIssues.length > 0) {
             dragon.agoniza('Problemas de seguridad en producción detectados', new Error('Security Issues'), MODULE_NAME, 'SECURITY_VALIDATION_FAILED', {
                 issues: securityIssues,
                 environment: 'production',
                 severity: 'critical'
             });
-            
+
             // Force exit on security issues
             process.exit(1);
         }
-        
+
         dragon.zen('Validación de seguridad producción pasada', MODULE_NAME, 'SECURITY_VALIDATION_PASSED', {
             environment: 'production',
             checksCompleted: ['mbh_salt', 'jwt_secret', 'mongo_uri', 'redis_auth', 'cors_origin']
@@ -952,7 +957,7 @@ const generalRateLimit = rateLimit({
     legacyHeaders: false,
     handler: (req, res) => {
         const clientIP = req.ip || req.connection.remoteAddress;
-        
+
         dragon.sePreocupa('Rate limit exceeded - general API', MODULE_NAME, 'RATE_LIMIT_GENERAL', {
             correlationId: req.correlationId,
             ip: clientIP,
@@ -960,9 +965,9 @@ const generalRateLimit = rateLimit({
             method: req.method,
             userAgent: req.headers['user-agent']?.substring(0, 100)
         });
-        
+
         performanceMonitor.incrementErrorCount('rate_limit_general');
-        
+
         res.status(429).json({
             error: 'Demasiadas solicitudes, intenta de nuevo más tarde',
             correlationId: req.correlationId,
@@ -991,7 +996,7 @@ const authRateLimit = rateLimit({
     legacyHeaders: false,
     handler: (req, res) => {
         const clientIP = req.ip || req.connection.remoteAddress;
-        
+
         dragon.sePreocupa('Rate limit exceeded - authentication', MODULE_NAME, 'RATE_LIMIT_AUTH', {
             correlationId: req.correlationId,
             ip: clientIP,
@@ -1000,9 +1005,9 @@ const authRateLimit = rateLimit({
             userAgent: req.headers['user-agent']?.substring(0, 100),
             severity: 'high'
         });
-        
+
         performanceMonitor.incrementErrorCount('rate_limit_auth');
-        
+
         res.status(429).json({
             error: 'Demasiados intentos de autenticación, intenta de nuevo más tarde',
             correlationId: req.correlationId,
@@ -1025,7 +1030,7 @@ const uploadRateLimit = rateLimit({
     legacyHeaders: false,
     handler: (req, res) => {
         const clientIP = req.ip || req.connection.remoteAddress;
-        
+
         dragon.sePreocupa('Rate limit exceeded - file upload', MODULE_NAME, 'RATE_LIMIT_UPLOAD', {
             correlationId: req.correlationId,
             ip: clientIP,
@@ -1034,9 +1039,9 @@ const uploadRateLimit = rateLimit({
             fileType: req.headers['content-type'],
             contentLength: req.headers['content-length']
         });
-        
+
         performanceMonitor.incrementErrorCount('rate_limit_upload');
-        
+
         res.status(429).json({
             error: 'Demasiadas subidas de archivos, intenta de nuevo más tarde',
             correlationId: req.correlationId,
@@ -1062,7 +1067,7 @@ const speedLimiter = slowDown({
     },
     onLimitReached: (req, res, options) => {
         const clientIP = req.ip || req.connection.remoteAddress;
-        
+
         dragon.sePreocupa('Speed limit threshold reached', MODULE_NAME, 'SPEED_LIMIT_REACHED', {
             correlationId: req.correlationId,
             ip: clientIP,
@@ -1111,7 +1116,7 @@ const corsConfig = {
     origin: (origin, callback) => {
         // Allow requests with no origin (mobile apps, curl, etc.)
         if (!origin) return callback(null, true);
-        
+
         // Check if origin is in allowed list
         if (FAANG_CONFIG.security.allowedOrigins.includes(origin)) {
             dragon.respira('CORS origin allowed', MODULE_NAME, 'CORS_ALLOWED', {
@@ -1120,7 +1125,7 @@ const corsConfig = {
             });
             return callback(null, true);
         }
-        
+
         // Check for wildcard patterns
         const isWildcardAllowed = FAANG_CONFIG.security.allowedOrigins.some(allowedOrigin => {
             if (allowedOrigin === '*') return true;
@@ -1130,7 +1135,7 @@ const corsConfig = {
             }
             return false;
         });
-        
+
         if (isWildcardAllowed) {
             dragon.respira('CORS origin allowed via wildcard', MODULE_NAME, 'CORS_WILDCARD_ALLOWED', {
                 origin,
@@ -1138,22 +1143,22 @@ const corsConfig = {
             });
             return callback(null, true);
         }
-        
+
         // Reject origin
         dragon.sePreocupa('CORS origin rejected', MODULE_NAME, 'CORS_REJECTED', {
             origin,
             allowedOrigins: FAANG_CONFIG.security.allowedOrigins,
             severity: 'medium'
         });
-        
+
         const error = new Error(`CORS policy violation: Origin ${origin} not allowed`);
         error.status = 403;
         callback(error);
     },
     methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
     allowedHeaders: [
-        "Content-Type", 
-        "Authorization", 
+        "Content-Type",
+        "Authorization",
         "X-Requested-With",
         "X-Correlation-ID",
         "X-API-Key"
@@ -1182,7 +1187,7 @@ const compressionConfig = {
         if (req.headers['cache-control'] && req.headers['cache-control'].includes('no-transform')) {
             return false;
         }
-        
+
         // Compress everything else that's compressible
         return compression.filter(req, res);
     },
@@ -1205,7 +1210,7 @@ process.on('uncaughtException', (err) => {
         severity: 'critical',
         timestamp: new Date().toISOString()
     });
-    
+
     // Allow some time for logging before potential restart
     setTimeout(() => {
         // Let PM2 or process manager handle restart
@@ -1220,7 +1225,7 @@ process.on('unhandledRejection', (reason, promise) => {
         severity: 'high',
         timestamp: new Date().toISOString()
     });
-    
+
     performanceMonitor.incrementErrorCount('unhandled_rejection');
 });
 
@@ -1283,7 +1288,7 @@ app.use(express.json({
         const size = buf.length;
         const limitMB = parseInt(process.env.JSON_PAYLOAD_LIMIT) || 10;
         const limitBytes = limitMB * 1024 * 1024;
-        
+
         if (size > limitBytes) {
             dragon.sePreocupa('JSON payload size exceeded', MODULE_NAME, 'JSON_SIZE_EXCEEDED', {
                 correlationId: req.correlationId,
@@ -1291,7 +1296,7 @@ app.use(express.json({
                 limit: limitBytes,
                 endpoint: req.path
             });
-            
+
             const error = new Error('JSON payload too large');
             error.status = 413;
             throw error;
@@ -1299,9 +1304,9 @@ app.use(express.json({
     }
 }));
 
-app.use(express.urlencoded({ 
-    extended: true, 
-    limit: process.env.URLENCODED_PAYLOAD_LIMIT || '10mb' 
+app.use(express.urlencoded({
+    extended: true,
+    limit: process.env.URLENCODED_PAYLOAD_LIMIT || '10mb'
 }));
 
 dragon.respira('Express middleware básico configurado', MODULE_NAME, 'EXPRESS_MIDDLEWARE_BASIC', {
@@ -1325,30 +1330,30 @@ dragon.respira('Custom middleware FAANG aplicado', MODULE_NAME, 'CUSTOM_MIDDLEWA
  */
 const initializeDatabaseConnection = async () => {
     const dbStartTime = performanceHooks.performance.now();
-    
+
     try {
         dragon.respira('Inicializando conexión MongoDB FAANG', MODULE_NAME, 'DB_INIT_START', {
             version: VERSION_MODULO,
             environment: process.env.NODE_ENV || 'development'
         });
-        
+
         // FAANG: Enhanced mongoose configuration
         mongoose.set('strictQuery', true);
         mongoose.set('bufferCommands', false); // Disable mongoose buffering
         mongoose.set('bufferMaxEntries', 0); // Disable mongoose buffering
-        
+
         // Performance mark for database connection
         performanceHooks.performance.mark('express:database:connection:start');
-        
+
         await conectarDB();
-        
+
         performanceHooks.performance.mark('express:database:connection:end');
-        performanceHooks.performance.measure('express:database:connection', 
-                                              'express:database:connection:start', 
+        performanceHooks.performance.measure('express:database:connection',
+                                              'express:database:connection:start',
                                               'express:database:connection:end');
-        
+
         const dbConnectionTime = performanceHooks.performance.now() - dbStartTime;
-        
+
         // Set up database event listeners
         mongoose.connection.on('connected', () => {
             dragon.zen('MongoDB conectado perfectamente FAANG', MODULE_NAME, 'DB_CONNECTED', {
@@ -1358,29 +1363,29 @@ const initializeDatabaseConnection = async () => {
                 connectionTime: Math.round(dbConnectionTime * 100) / 100
             });
         });
-        
+
         mongoose.connection.on('error', (error) => {
             dragon.agoniza('MongoDB error', error, MODULE_NAME, 'DB_ERROR', {
                 error: error.message,
                 code: error.code,
                 severity: 'high'
             });
-            
+
             performanceMonitor.incrementErrorCount('mongodb_error');
         });
-        
+
         mongoose.connection.on('disconnected', () => {
             dragon.sePreocupa('MongoDB desconectado', MODULE_NAME, 'DB_DISCONNECTED', {
                 timestamp: new Date().toISOString()
             });
         });
-        
+
         mongoose.connection.on('reconnected', () => {
             dragon.sonrie('MongoDB reconectado', MODULE_NAME, 'DB_RECONNECTED', {
                 timestamp: new Date().toISOString()
             });
         });
-        
+
         // Performance validation
         if (dbConnectionTime > FAANG_CONFIG.performance.databaseP95) {
             dragon.mideRendimiento('database_connection_slow', dbConnectionTime, MODULE_NAME, {
@@ -1389,22 +1394,22 @@ const initializeDatabaseConnection = async () => {
                 violation: 'connection_slow'
             });
         }
-        
+
         return true;
-        
+
     } catch (error) {
         const dbConnectionTime = performanceHooks.performance.now() - dbStartTime;
-        
+
         performanceHooks.performance.mark('express:database:connection:error');
-        
+
         dragon.agoniza('Error crítico conectando MongoDB FAANG', error, MODULE_NAME, 'DB_CONNECTION_ERROR', {
             connectionTime: Math.round(dbConnectionTime * 100) / 100,
             error: error.message,
             severity: 'critical'
         });
-        
+
         performanceMonitor.incrementErrorCount('mongodb_connection_error');
-        
+
         // Continue with limited functionality
         return false;
     }
@@ -1418,10 +1423,10 @@ const initializeDatabaseConnection = async () => {
 const initializeFileSystem = () => {
     try {
         dragon.respira('Inicializando sistema de archivos FAANG', MODULE_NAME, 'FILE_SYSTEM_INIT_START');
-        
+
         // Main upload directory
         const uploadPath = path.resolve(__dirname, FAANG_CONFIG.files.uploadPath);
-        
+
         if (!fs.existsSync(uploadPath)) {
             fs.mkdirSync(uploadPath, { recursive: true, mode: 0o755 });
             dragon.sonrie(`Directorio uploads creado: ${uploadPath}`, MODULE_NAME, 'UPLOAD_DIR_CREATE', {
@@ -1429,7 +1434,7 @@ const initializeFileSystem = () => {
                 permissions: '0755'
             });
         }
-        
+
         // Create subdirectories for different file types
         const subdirectories = [
             { name: 'imagenes', types: FAANG_CONFIG.files.allowedImageTypes },
@@ -1437,7 +1442,7 @@ const initializeFileSystem = () => {
             { name: 'video', types: FAANG_CONFIG.files.allowedVideoTypes },
             { name: 'temporal', types: ['temporary'] }
         ];
-        
+
         subdirectories.forEach(subdir => {
             const dirPath = path.join(uploadPath, subdir.name);
             if (!fs.existsSync(dirPath)) {
@@ -1448,10 +1453,10 @@ const initializeFileSystem = () => {
                 });
             }
         });
-        
+
         // Training directory setup
         const trainingPath = path.resolve(FAANG_CONFIG.files.trainingPath);
-        
+
         if (!fs.existsSync(trainingPath)) {
             try {
                 fs.mkdirSync(trainingPath, { recursive: true, mode: 0o755 });
@@ -1465,11 +1470,11 @@ const initializeFileSystem = () => {
                 });
             }
         }
-        
+
         // Create training subdirectories
         const trainingSubdirs = ['imagenes', 'pdf', 'video'];
         const labelSubdirs = ['humanos', 'ai'];
-        
+
         trainingSubdirs.forEach(type => {
             labelSubdirs.forEach(label => {
                 const dirPath = path.join(trainingPath, type, label);
@@ -1485,22 +1490,22 @@ const initializeFileSystem = () => {
                 }
             });
         });
-        
+
         dragon.zen('Sistema de archivos FAANG inicializado perfectamente', MODULE_NAME, 'FILE_SYSTEM_READY', {
             uploadPath,
             trainingPath,
             subdirectories: subdirectories.length,
             trainingStructure: trainingSubdirs.length * labelSubdirs.length
         });
-        
+
         return { uploadPath, trainingPath };
-        
+
     } catch (error) {
         dragon.agoniza('Error crítico inicializando sistema de archivos', error, MODULE_NAME, 'FILE_SYSTEM_ERROR', {
             error: error.message,
             severity: 'high'
         });
-        
+
         throw error;
     }
 };
@@ -1515,7 +1520,7 @@ const { uploadPath, trainingPath } = initializeFileSystem();
  */
 const enhancedFileFilter = (req, file, cb) => {
     const startTime = performanceHooks.performance.now();
-    
+
     try {
         // Combine all allowed types
         const allAllowedTypes = [
@@ -1523,14 +1528,14 @@ const enhancedFileFilter = (req, file, cb) => {
             ...FAANG_CONFIG.files.allowedPdfTypes,
             ...FAANG_CONFIG.files.allowedVideoTypes
         ];
-        
+
         dragon.respira('Validando archivo subido', MODULE_NAME, 'FILE_VALIDATION_START', {
             correlationId: req.correlationId,
             filename: file.originalname,
             mimetype: file.mimetype,
             size: file.size || 'unknown'
         });
-        
+
         // MIME type validation
         if (allAllowedTypes.includes(file.mimetype)) {
             // Additional security validation
@@ -1546,9 +1551,9 @@ const enhancedFileFilter = (req, file, cb) => {
                 'video/wmv': ['.wmv'],
                 'video/webm': ['.webm']
             };
-            
+
             const validExtensions = expectedExtensions[file.mimetype] || [];
-            
+
             if (validExtensions.length > 0 && !validExtensions.includes(fileExtension)) {
                 dragon.sePreocupa('MIME type y extensión no coinciden', MODULE_NAME, 'FILE_MIMETYPE_MISMATCH', {
                     correlationId: req.correlationId,
@@ -1557,7 +1562,7 @@ const enhancedFileFilter = (req, file, cb) => {
                     extension: fileExtension,
                     expectedExtensions: validExtensions
                 });
-                
+
                 const error = new FileUploadError(
                     'Tipo de archivo no coincide con extensión',
                     file.mimetype,
@@ -1565,11 +1570,11 @@ const enhancedFileFilter = (req, file, cb) => {
                     { extension: fileExtension, expectedExtensions: validExtensions }
                 );
                 error.setCorrelationId(req.correlationId);
-                
+
                 performanceMonitor.incrementErrorCount('file_mimetype_mismatch');
                 return cb(error, false);
             }
-            
+
             // File name validation
             const sanitizedName = file.originalname.replace(/[^a-zA-Z0-9.-]/g, '_');
             if (sanitizedName !== file.originalname) {
@@ -1579,21 +1584,21 @@ const enhancedFileFilter = (req, file, cb) => {
                     sanitized: sanitizedName
                 });
             }
-            
+
             const validationTime = performanceHooks.performance.now() - startTime;
-            
+
             dragon.sonrie('Archivo aceptado FAANG', MODULE_NAME, 'FILE_ACCEPTED', {
                 correlationId: req.correlationId,
                 filename: file.originalname,
                 mimetype: file.mimetype,
                 validationTime: Math.round(validationTime * 100) / 100
             });
-            
+
             cb(null, true);
-            
+
         } else {
             const validationTime = performanceHooks.performance.now() - startTime;
-            
+
             dragon.sePreocupa('Tipo de archivo no permitido', MODULE_NAME, 'FILE_TYPE_REJECTED', {
                 correlationId: req.correlationId,
                 filename: file.originalname,
@@ -1601,7 +1606,7 @@ const enhancedFileFilter = (req, file, cb) => {
                 allowedTypes: allAllowedTypes,
                 validationTime: Math.round(validationTime * 100) / 100
             });
-            
+
             const error = new FileUploadError(
                 'Tipo de archivo no permitido',
                 file.mimetype,
@@ -1609,20 +1614,20 @@ const enhancedFileFilter = (req, file, cb) => {
                 { allowedTypes: allAllowedTypes }
             );
             error.setCorrelationId(req.correlationId);
-            
+
             performanceMonitor.incrementErrorCount('file_type_rejected');
             cb(error, false);
         }
-        
+
     } catch (filterError) {
         const validationTime = performanceHooks.performance.now() - startTime;
-        
+
         dragon.agoniza('Error en file filter', filterError, MODULE_NAME, 'FILE_FILTER_ERROR', {
             correlationId: req.correlationId,
             filename: file.originalname,
             validationTime: Math.round(validationTime * 100) / 100
         });
-        
+
         performanceMonitor.incrementErrorCount('file_filter_error');
         cb(filterError, false);
     }
@@ -1635,7 +1640,7 @@ const enhancedStorage = multer.diskStorage({
     destination: (req, file, cb) => {
         try {
             let subDir = 'temporal';
-            
+
             // Determine subdirectory based on file type
             if (FAANG_CONFIG.files.allowedImageTypes.includes(file.mimetype)) {
                 subDir = 'imagenes';
@@ -1644,9 +1649,9 @@ const enhancedStorage = multer.diskStorage({
             } else if (FAANG_CONFIG.files.allowedVideoTypes.includes(file.mimetype)) {
                 subDir = 'video';
             }
-            
+
             const destinationPath = path.join(uploadPath, subDir);
-            
+
             dragon.respira('Determinando destino archivo', MODULE_NAME, 'FILE_DESTINATION', {
                 correlationId: req.correlationId,
                 filename: file.originalname,
@@ -1654,19 +1659,19 @@ const enhancedStorage = multer.diskStorage({
                 subdirectory: subDir,
                 destinationPath
             });
-            
+
             cb(null, destinationPath);
-            
+
         } catch (destError) {
             dragon.agoniza('Error determinando destino archivo', destError, MODULE_NAME, 'FILE_DESTINATION_ERROR', {
                 correlationId: req.correlationId,
                 filename: file.originalname
             });
-            
+
             cb(destError);
         }
     },
-    
+
     filename: (req, file, cb) => {
         try {
             const ext = path.extname(file.originalname);
@@ -1674,10 +1679,10 @@ const enhancedStorage = multer.diskStorage({
             const userId = req.user ? req.user._id.toString() : `anonimo-${req.correlationId.substring(0,8)}`;
             const fileId = uuidv4();
             const timestamp = Date.now();
-            
+
             // Create unique filename with security considerations
             const nombreUnico = `${userId}-${timestamp}-${fileId}${ext}`;
-            
+
             dragon.respira('Generando nombre único archivo', MODULE_NAME, 'FILE_NAME_GENERATION', {
                 correlationId: req.correlationId,
                 originalName: file.originalname,
@@ -1685,19 +1690,20 @@ const enhancedStorage = multer.diskStorage({
                 userId: req.user ? userId : 'anonymous',
                 fileId
             });
-            
+
             cb(null, nombreUnico);
-            
+
         } catch (nameError) {
             dragon.agoniza('Error generando nombre archivo', nameError, MODULE_NAME, 'FILE_NAME_ERROR', {
                 correlationId: req.correlationId,
                 filename: file.originalname
             });
-            
+
             cb(nameError);
         }
     }
 });
+
 
 /**
  * FAANG: Enhanced multer configuration
@@ -1705,7 +1711,7 @@ const enhancedStorage = multer.diskStorage({
 const upload = multer({
     storage: enhancedStorage,
     fileFilter: enhancedFileFilter,
-    limits: { 
+    limits: {
         fileSize: FAANG_CONFIG.security.maxFileSize * 1024 * 1024, // Convert MB to bytes
         files: FAANG_CONFIG.security.maxFiles,
         fieldSize: 1024 * 1024, // 1MB for form fields
@@ -1713,7 +1719,7 @@ const upload = multer({
         fields: 10 // Maximum 10 non-file fields
     },
     preservePath: false,
-    
+
     onError: (err, next) => {
         dragon.agoniza('Multer error general', err, MODULE_NAME, 'MULTER_ERROR', {
             error: err.message,
@@ -1721,11 +1727,12 @@ const upload = multer({
             field: err.field,
             severity: 'medium'
         });
-        
+
         performanceMonitor.incrementErrorCount('multer_general_error');
         next(err);
     }
 });
+// ...existing code...
 
 dragon.zen('Multer FAANG configurado perfectamente', MODULE_NAME, 'MULTER_CONFIGURED', {
     maxFileSize: FAANG_CONFIG.security.maxFileSize,
@@ -1735,8 +1742,7 @@ dragon.zen('Multer FAANG configurado perfectamente', MODULE_NAME, 'MULTER_CONFIG
     allowedVideoTypes: FAANG_CONFIG.files.allowedVideoTypes.length
 });
 
-// =================== FAANG ENHANCED SERVICE INITIALIZATION ===================
-
+// =================== FAANG ENHANCED SERVICE STATE ===================
 /**
  * FAANG: Global service state management
  */
@@ -1748,196 +1754,43 @@ const serviceState = {
     sensorFactory: { status: 'initializing', instance: null }
 };
 
+// =================== FAANG ENHANCED REDIS SERVICES ===================
 /**
- * FAANG: Enhanced Redis initialization with comprehensive monitoring
+ * FAANG: Enhanced Redis services initialization
  */
 const initializeRedisServices = async () => {
     try {
-        dragon.respira('Inicializando servicios Redis FAANG', MODULE_NAME, 'REDIS_SERVICES_INIT_START');
+        dragon.respira('Inicializando servicios Redis FAANG...', MODULE_NAME, 'REDIS_SERVICES_INIT');
         
-        // Redis ready handler
-        redis.on('ready', async () => {
-            serviceState.redis.status = 'ready';
-            serviceState.redis.lastCheck = new Date().toISOString();
-            
-            dragon.zen('Redis general conectado Dragon3 FAANG', MODULE_NAME, 'REDIS_CONNECT', {
-                instance: 'general',
-                status: 'ready'
-            });
-            
-            // Initialize ServidorCentral with circuit breaker
-            try {
-                const servidorStartTime = performanceHooks.performance.now();
-                
-                servidorCentral = new ServidorCentral(8080, redisPublisher, redisSubscriber);
-                const servidorInitTime = performanceHooks.performance.now() - servidorStartTime;
-                
-                serviceState.servidorCentral.status = 'ready';
-                serviceState.servidorCentral.instance = servidorCentral;
-                
-                dragon.zen('Servidor Central WebSocket iniciado FAANG', MODULE_NAME, 'WEBSOCKET_START', {
-                    port: 8080,
-                    initTime: Math.round(servidorInitTime * 100) / 100,
-                    redisIntegration: true
-                });
-                
-            } catch (servidorError) {
-                serviceState.servidorCentral.status = 'error';
-                
-                dragon.agoniza('Error ServidorCentral - continuando sin WebSocket', servidorError, MODULE_NAME, 'WEBSOCKET_ERROR', {
-                    error: servidorError.message,
-                    fallback: 'degraded_mode'
-                });
-            }
-            
-            // Initialize Red Superior with circuit breaker
-            try {
-                const redSuperiorStartTime = performanceHooks.performance.now();
-                
-                await iniciarRedSuperior(redisSubscriber, redisPublisher);
-                const redSuperiorInitTime = performanceHooks.performance.now() - redSuperiorStartTime;
-                
-                serviceState.redSuperior.status = 'ready';
-                serviceState.redSuperior.active = true;
-                
-                dragon.zen('Red Superior iniciada perfectamente FAANG', MODULE_NAME, 'RED_SUPERIOR_START', {
-                    initTime: Math.round(redSuperiorInitTime * 100) / 100,
-                    redisIntegration: true
-                });
-                
-            } catch (redSuperiorError) {
-                serviceState.redSuperior.status = 'degraded';
-                serviceState.redSuperior.active = false;
-                
-                dragon.sePreocupa('Red Superior no disponible - modo local FAANG', MODULE_NAME, 'RED_SUPERIOR_DEGRADED', {
-                    error: redSuperiorError.message,
-                    fallback: 'local_mode'
-                });
-            }
-            
-            // Initialize SensorFactory (OPTIONAL)
-            try {
-                const sensorStartTime = performanceHooks.performance.now();
-                
-                const sensorFactory = SensorFactory.getInstance();
-                await sensorFactory.initializeAll();
-                const sensorInitTime = performanceHooks.performance.now() - sensorStartTime;
-                
-                serviceState.sensorFactory.status = 'ready';
-                serviceState.sensorFactory.instance = sensorFactory;
-                
-                dragon.sonrie('SensorFactory inicializado FAANG', MODULE_NAME, 'SENSOR_INIT', {
-                    initTime: Math.round(sensorInitTime * 100) / 100
-                });
-                
-            } catch (sensorError) {
-                serviceState.sensorFactory.status = 'degraded';
-                
-                dragon.sePreocupa('SensorFactory no disponible - continuando FAANG', MODULE_NAME, 'SENSOR_DEGRADED', {
-                    error: sensorError.message,
-                    impact: 'optional_functionality'
-                });
-            }
-        });
-        
-        // Enhanced Redis error handler
-        redis.on('error', (err) => {
-            serviceState.redis.status = 'error';
-            serviceState.redis.lastCheck = new Date().toISOString();
-            
-            dragon.sePreocupa('Redis error - modo degradado FAANG', MODULE_NAME, 'REDIS_ERROR', { 
-                error: err.message,
-                code: err.code,
-                fallback: 'degraded_mode'
-            });
-            
-            performanceMonitor.incrementErrorCount('redis_general_error');
-        });
-        
-    } catch (error) {
-        serviceState.redis.status = 'failed';
-        
-        dragon.agoniza('Error crítico inicializando servicios Redis', error, MODULE_NAME, 'REDIS_SERVICES_ERROR', {
-            error: error.message,
-            severity: 'high'
-        });
-    }
-};
-
-// =================== FAANG ENHANCED FRONTEND STATIC SERVING ===================
-
-/**
- * FAANG: Enhanced static file serving with security headers
- */
-const setupStaticFileServing = () => {
-    try {
-        const frontendPath = path.resolve(__dirname, "../frontend");
-        
-        // Verify frontend directory exists
-        if (!fs.existsSync(frontendPath)) {
-            dragon.sePreocupa('Directorio frontend no encontrado', MODULE_NAME, 'FRONTEND_DIR_MISSING', {
-                expectedPath: frontendPath,
-                fallback: 'api_only_mode'
-            });
-            return;
+        // Clean Redis streams on startup to avoid conflicts
+        try {
+            await redis.del('dragon:stream');
+            await redis.del('dragon:consumers');
+            dragon.respira('Redis streams limpiados', MODULE_NAME, 'REDIS_CLEANUP');
+        } catch (cleanupError) {
+            dragon.sePreocupa('Error limpiando Redis streams - continuando', cleanupError, MODULE_NAME, 'REDIS_CLEANUP_ERROR');
         }
+
+        // Test Redis connection
+        await redis.ping();
+        dragon.zen('Redis servicios inicializados correctamente', MODULE_NAME, 'REDIS_SERVICES_READY');
         
-        // Static file middleware with security headers
-        app.use(express.static(frontendPath, {
-            maxAge: process.env.STATIC_CACHE_MAX_AGE || '1d',
-            etag: true,
-            lastModified: true,
-            setHeaders: (res, path, stat) => {
-                // Security headers for static files
-                res.setHeader('X-Content-Type-Options', 'nosniff');
-                res.setHeader('X-Frame-Options', 'DENY');
-                
-                // Cache control based on file type
-                if (path.endsWith('.html')) {
-                    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
-                } else if (path.match(/\.(js|css|png|jpg|jpeg|gif|ico|svg)$/)) {
-                    res.setHeader('Cache-Control', 'public, max-age=31536000'); // 1 year for assets
-                }
-            },
-            index: ['index.html'],
-            redirect: false,
-            dotfiles: 'ignore'
-        }));
-        
-        dragon.zen('Frontend estático configurado FAANG', MODULE_NAME, 'FRONTEND_STATIC', {
-            path: frontendPath,
-            cacheMaxAge: process.env.STATIC_CACHE_MAX_AGE || '1d',
-            securityHeaders: true
-        });
-        
+        return true;
     } catch (error) {
-        dragon.agoniza('Error configurando archivos estáticos', error, MODULE_NAME, 'STATIC_FILES_ERROR', {
-            error: error.message
-        });
+        dragon.sePreocupa('Error inicializando servicios Redis', error, MODULE_NAME, 'REDIS_SERVICES_ERROR');
+        return false;
     }
 };
 
-// Initialize services and static serving
-initializeDatabaseConnection();
-initializeRedisServices();
-setupStaticFileServing();
+// ...existing code...
 
-// Export service state for monitoring
-export { serviceState };
-
-
-// =================== FAANG ENHANCED MULTITYPE ANALYZER ROUTER ===================
-
-/**
- * FAANG: Enhanced analyzer routing con circuit breaker y performance monitoring
- */
 const routeToAnalyzer = async (filePath, correlationId, imagenId, file, userId = null) => {
     const analyzeStartTime = performanceHooks.performance.now();
     const fileType = file.mimetype;
-    
+
     // Performance mark for file analysis start
     performanceHooks.performance.mark(`express:file:${fileType}:${correlationId}:start`);
-    
+
     try {
         dragon.respira('Iniciando análisis multitype FAANG', MODULE_NAME, 'ANALYZE_START', {
             correlationId,
@@ -1947,32 +1800,32 @@ const routeToAnalyzer = async (filePath, correlationId, imagenId, file, userId =
             fileSize: file.size,
             userId: userId || 'anonymous'
         });
-        
+
         let resultado;
         let analyzerType;
-        
+
         // Route based on MIME type with enhanced validation
         if (FAANG_CONFIG.files.allowedImageTypes.includes(fileType)) {
             analyzerType = 'imagen';
-            dragon.respira('Routing to image analyzer FAANG', MODULE_NAME, 'ROUTE_IMAGE', { 
-                correlationId, imagenId, fileType 
+            dragon.respira('Routing to image analyzer FAANG', MODULE_NAME, 'ROUTE_IMAGE', {
+                correlationId, imagenId, fileType
             });
             resultado = await analizarImagen(filePath, correlationId, imagenId);
-            
+
         } else if (FAANG_CONFIG.files.allowedPdfTypes.includes(fileType)) {
             analyzerType = 'pdf';
-            dragon.respira('Routing to PDF analyzer FAANG', MODULE_NAME, 'ROUTE_PDF', { 
-                correlationId, imagenId, fileType 
+            dragon.respira('Routing to PDF analyzer FAANG', MODULE_NAME, 'ROUTE_PDF', {
+                correlationId, imagenId, fileType
             });
             resultado = await analizarPDF(filePath, correlationId, imagenId);
-            
+
         } else if (FAANG_CONFIG.files.allowedVideoTypes.includes(fileType)) {
             analyzerType = 'video';
-            dragon.respira('Routing to video analyzer FAANG', MODULE_NAME, 'ROUTE_VIDEO', { 
-                correlationId, imagenId, fileType 
+            dragon.respira('Routing to video analyzer FAANG', MODULE_NAME, 'ROUTE_VIDEO', {
+                correlationId, imagenId, fileType
             });
             resultado = await analizarVideo(filePath, correlationId, imagenId);
-            
+
         } else {
             throw new FileUploadError(
                 `Tipo de archivo no soportado: ${fileType}`,
@@ -1981,15 +1834,15 @@ const routeToAnalyzer = async (filePath, correlationId, imagenId, file, userId =
                 { supportedTypes: [...FAANG_CONFIG.files.allowedImageTypes, ...FAANG_CONFIG.files.allowedPdfTypes, ...FAANG_CONFIG.files.allowedVideoTypes] }
             ).setCorrelationId(correlationId);
         }
-        
+
         // Performance mark for file analysis end
         performanceHooks.performance.mark(`express:file:${fileType}:${correlationId}:end`);
-        performanceHooks.performance.measure(`express:file:${fileType}:${correlationId}`, 
-                                              `express:file:${fileType}:${correlationId}:start`, 
+        performanceHooks.performance.measure(`express:file:${fileType}:${correlationId}`,
+                                              `express:file:${fileType}:${correlationId}:start`,
                                               `express:file:${fileType}:${correlationId}:end`);
-        
+
         const analyzeTime = performanceHooks.performance.now() - analyzeStartTime;
-        
+
         // Validate analysis result
         if (!resultado || typeof resultado !== 'object') {
             throw new DragonServerError(
@@ -2000,7 +1853,7 @@ const routeToAnalyzer = async (filePath, correlationId, imagenId, file, userId =
                 { analyzerType, fileType, resultType: typeof resultado }
             ).setCorrelationId(correlationId);
         }
-        
+
         // Performance validation
         if (analyzeTime > FAANG_CONFIG.performance.fileProcessingP95) {
             dragon.mideRendimiento('file_processing_p95_violation', analyzeTime, MODULE_NAME, {
@@ -2012,7 +1865,7 @@ const routeToAnalyzer = async (filePath, correlationId, imagenId, file, userId =
                 violation: 'p95_exceeded'
             });
         }
-        
+
         dragon.zen('Análisis multitype completado perfectamente FAANG', MODULE_NAME, 'ANALYZE_SUCCESS', {
             correlationId,
             imagenId,
@@ -2022,7 +1875,7 @@ const routeToAnalyzer = async (filePath, correlationId, imagenId, file, userId =
             performance: analyzeTime < FAANG_CONFIG.performance.fileProcessingP95 ? 'optimal' : 'acceptable',
             resultValid: true
         });
-        
+
         return {
             ...resultado,
             metadata: {
@@ -2034,13 +1887,13 @@ const routeToAnalyzer = async (filePath, correlationId, imagenId, file, userId =
                 version: VERSION_MODULO
             }
         };
-        
+
     } catch (error) {
         const analyzeTime = performanceHooks.performance.now() - analyzeStartTime;
-        
+
         // Performance mark for error
         performanceHooks.performance.mark(`express:file:${fileType}:${correlationId}:error`);
-        
+
         // Enhanced error handling based on error type
         if (error instanceof FileUploadError) {
             dragon.sePreocupa('Error de tipo de archivo en análisis', MODULE_NAME, 'ANALYZE_FILE_TYPE_ERROR', {
@@ -2061,12 +1914,13 @@ const routeToAnalyzer = async (filePath, correlationId, imagenId, file, userId =
                 stack: error.stack
             });
         }
-        
+
         performanceMonitor.incrementErrorCount(`analyze_${fileType.split('/')[0]}_error`);
-        
+
         throw error;
     }
 };
+
 
 // =================== FAANG ENHANCED PUBLIC ROUTES ===================
 
@@ -2077,30 +1931,30 @@ app.post("/analizar-imagen-publico", uploadRateLimit, upload.single("archivo"), 
     const correlationId = req.correlationId;
     const startTime = performanceHooks.performance.now();
     const imagenId = uuidv4();
-    
-    dragon.respira('Análisis público iniciado FAANG', MODULE_NAME, 'ANALYZE_PUBLIC_START', { 
+
+    dragon.respira('Análisis público iniciado FAANG', MODULE_NAME, 'ANALYZE_PUBLIC_START', {
         correlationId,
         imagenId,
         ip: req.ip,
         userAgent: req.headers['user-agent']?.substring(0, 100)
     });
-    
+
     try {
         // File validation
         if (!req.file) {
-            dragon.sePreocupa('No file uploaded - public analysis', MODULE_NAME, 'ANALYZE_PUBLIC_NO_FILE', { 
+            dragon.sePreocupa('No file uploaded - public analysis', MODULE_NAME, 'ANALYZE_PUBLIC_NO_FILE', {
                 correlationId,
                 imagenId
             });
-            
+
             performanceMonitor.incrementErrorCount('public_no_file');
-            return res.status(400).json({ 
+            return res.status(400).json({
                 error: "No se ha subido ningún archivo.",
                 correlationId,
                 timestamp: new Date().toISOString()
             });
         }
-        
+
         // File size validation
         if (req.file.size > FAANG_CONFIG.security.maxFileSize * 1024 * 1024) {
             dragon.sePreocupa('File size exceeded - public analysis', MODULE_NAME, 'ANALYZE_PUBLIC_SIZE_EXCEEDED', {
@@ -2109,22 +1963,22 @@ app.post("/analizar-imagen-publico", uploadRateLimit, upload.single("archivo"), 
                 fileSize: req.file.size,
                 maxSize: FAANG_CONFIG.security.maxFileSize * 1024 * 1024
             });
-            
+
             performanceMonitor.incrementErrorCount('public_file_too_large');
-            return res.status(413).json({ 
+            return res.status(413).json({
                 error: "Archivo demasiado grande.",
                 correlationId,
                 maxSize: `${FAANG_CONFIG.security.maxFileSize}MB`
             });
         }
-        
+
         const filePath = req.file.path;
-        
+
         // Route to appropriate analyzer
         const resultado = await routeToAnalyzer(filePath, correlationId, imagenId, req.file);
-        
+
         const totalTime = performanceHooks.performance.now() - startTime;
-        
+
         // Cleanup temporary file
         try {
             fs.unlinkSync(filePath);
@@ -2139,15 +1993,15 @@ app.post("/analizar-imagen-publico", uploadRateLimit, upload.single("archivo"), 
                 error: cleanupError.message
             });
         }
-        
-        dragon.zen('Análisis público completado perfectamente FAANG', MODULE_NAME, 'ANALYZE_PUBLIC_SUCCESS', { 
+
+        dragon.zen('Análisis público completado perfectamente FAANG', MODULE_NAME, 'ANALYZE_PUBLIC_SUCCESS', {
             correlationId,
             imagenId,
             fileType: req.file.mimetype,
             totalTime: Math.round(totalTime * 100) / 100,
             performance: totalTime < FAANG_CONFIG.performance.apiResponseP95 ? 'optimal' : 'acceptable'
         });
-        
+
         // Mantener compatibilidad frontend Dragon2
         res.send(`
             <script>
@@ -2157,20 +2011,20 @@ app.post("/analizar-imagen-publico", uploadRateLimit, upload.single("archivo"), 
                 window.location.href = "/analizar-imagen-publico.html";
             </script>
         `);
-        
+
     } catch (error) {
         const totalTime = performanceHooks.performance.now() - startTime;
-        
-        dragon.agoniza('Error análisis público FAANG', error, MODULE_NAME, 'ANALYZE_PUBLIC_ERROR', { 
+
+        dragon.agoniza('Error análisis público FAANG', error, MODULE_NAME, 'ANALYZE_PUBLIC_ERROR', {
             correlationId,
             imagenId,
             totalTime: Math.round(totalTime * 100) / 100,
             fileType: req.file?.mimetype || 'unknown',
             error: error.message
         });
-        
+
         performanceMonitor.incrementErrorCount('public_analysis_error');
-        
+
         // Cleanup file on error
         if (req.file?.path) {
             try {
@@ -2182,9 +2036,9 @@ app.post("/analizar-imagen-publico", uploadRateLimit, upload.single("archivo"), 
                 });
             }
         }
-        
+
         const statusCode = error instanceof FileUploadError ? error.statusCode : 500;
-        res.status(statusCode).json({ 
+        res.status(statusCode).json({
             error: "Error en el servidor",
             correlationId,
             timestamp: new Date().toISOString(),
@@ -2200,44 +2054,44 @@ app.post("/guardar-entrenamiento", uploadRateLimit, upload.single("archivo"), as
     const correlationId = req.correlationId;
     const startTime = performanceHooks.performance.now();
     const imagenId = uuidv4();
-    
-    dragon.respira('Guardando para entrenamiento FAANG', MODULE_NAME, 'TRAINING_START', { 
+
+    dragon.respira('Guardando para entrenamiento FAANG', MODULE_NAME, 'TRAINING_START', {
         correlationId,
         imagenId,
         ip: req.ip
     });
-    
+
     try {
         // File validation
         if (!req.file) {
-            dragon.sePreocupa('No training file uploaded', MODULE_NAME, 'TRAINING_NO_FILE', { 
+            dragon.sePreocupa('No training file uploaded', MODULE_NAME, 'TRAINING_NO_FILE', {
                 correlationId,
                 imagenId
             });
-            
+
             performanceMonitor.incrementErrorCount('training_no_file');
-            return res.status(400).json({ 
+            return res.status(400).json({
                 error: "No se ha subido ningún archivo.",
-                correlationId 
+                correlationId
             });
         }
-        
+
         // Label validation
         const etiqueta = req.body.etiqueta;
         if (!["humano", "ai"].includes(etiqueta)) {
-            dragon.sePreocupa(`Etiqueta inválida en entrenamiento: ${etiqueta}`, MODULE_NAME, 'TRAINING_INVALID_LABEL', { 
+            dragon.sePreocupa(`Etiqueta inválida en entrenamiento: ${etiqueta}`, MODULE_NAME, 'TRAINING_INVALID_LABEL', {
                 correlationId,
                 imagenId,
                 etiqueta
             });
-            
+
             performanceMonitor.incrementErrorCount('training_invalid_label');
-            return res.status(400).json({ 
+            return res.status(400).json({
                 error: "Etiqueta no válida. Debe ser 'humano' o 'ai'.",
-                correlationId 
+                correlationId
             });
         }
-        
+
         // Determine file type and directory
         let tipoArchivo = 'general';
         if (FAANG_CONFIG.files.allowedImageTypes.includes(req.file.mimetype)) {
@@ -2247,31 +2101,31 @@ app.post("/guardar-entrenamiento", uploadRateLimit, upload.single("archivo"), as
         } else if (FAANG_CONFIG.files.allowedVideoTypes.includes(req.file.mimetype)) {
             tipoArchivo = 'video';
         }
-        
+
         const destinoBase = FAANG_CONFIG.files.trainingPath;
         const destino = path.join(destinoBase, tipoArchivo, etiqueta === "humano" ? "humanos" : "ai");
-        
+
         // Ensure training directory exists
         if (!fs.existsSync(destino)) {
             fs.mkdirSync(destino, { recursive: true, mode: 0o755 });
-            dragon.sonrie(`Directorio entrenamiento creado: ${destino}`, MODULE_NAME, 'TRAINING_DIR_CREATE', { 
+            dragon.sonrie(`Directorio entrenamiento creado: ${destino}`, MODULE_NAME, 'TRAINING_DIR_CREATE', {
                 correlationId,
                 path: destino
             });
         }
-        
+
         // Generate unique filename for training
         const timestamp = Date.now();
         const ext = path.extname(req.file.originalname);
         const baseName = path.basename(req.file.originalname, ext);
         const trainingFileName = `${baseName}-${timestamp}-${correlationId.substring(0, 8)}${ext}`;
         const filePath = path.join(destino, trainingFileName);
-        
+
         // Move file to training directory
         await new Promise((resolve, reject) => {
             fs.rename(req.file.path, filePath, (err) => {
                 if (err) {
-                    dragon.agoniza('Error moviendo archivo entrenamiento', err, MODULE_NAME, 'TRAINING_MOVE_ERROR', { 
+                    dragon.agoniza('Error moviendo archivo entrenamiento', err, MODULE_NAME, 'TRAINING_MOVE_ERROR', {
                         correlationId,
                         source: req.file.path,
                         destination: filePath
@@ -2282,18 +2136,18 @@ app.post("/guardar-entrenamiento", uploadRateLimit, upload.single("archivo"), as
                 }
             });
         });
-        
-        dragon.sonrie(`Archivo guardado para entrenamiento: ${filePath}`, MODULE_NAME, 'TRAINING_SAVED', { 
+
+        dragon.sonrie(`Archivo guardado para entrenamiento: ${filePath}`, MODULE_NAME, 'TRAINING_SAVED', {
             correlationId,
             imagenId,
             tipoArchivo,
             etiqueta,
             filePath
         });
-        
+
         // Analyze file for training data
         const resultadoAnalisis = await routeToAnalyzer(filePath, correlationId, imagenId, req.file);
-        
+
         // Save training data with enhanced metadata
         const trainingEntry = {
             input: resultadoAnalisis.resultadoDetallado || resultadoAnalisis.resultado?.basico || [],
@@ -2314,11 +2168,11 @@ app.post("/guardar-entrenamiento", uploadRateLimit, upload.single("archivo"), as
                 processingTime: resultadoAnalisis.metadata?.processingTime || 0
             }
         };
-        
+
         // Append to training data file
         const datosRedesPath = './datosRedes.json';
         let trainingData = [];
-        
+
         try {
             if (fs.existsSync(datosRedesPath)) {
                 const rawData = fs.readFileSync(datosRedesPath, 'utf-8');
@@ -2333,9 +2187,9 @@ app.post("/guardar-entrenamiento", uploadRateLimit, upload.single("archivo"), as
             });
             trainingData = [];
         }
-        
+
         trainingData.push(trainingEntry);
-        
+
         try {
             fs.writeFileSync(datosRedesPath, JSON.stringify(trainingData, null, 2), 'utf-8');
         } catch (writeError) {
@@ -2345,10 +2199,10 @@ app.post("/guardar-entrenamiento", uploadRateLimit, upload.single("archivo"), as
             });
             throw writeError;
         }
-        
+
         const totalTime = performanceHooks.performance.now() - startTime;
-        
-        dragon.zen('Entrenamiento guardado perfectamente FAANG', MODULE_NAME, 'TRAINING_COMPLETE', { 
+
+        dragon.zen('Entrenamiento guardado perfectamente FAANG', MODULE_NAME, 'TRAINING_COMPLETE', {
             correlationId,
             imagenId,
             tipoArchivo,
@@ -2356,7 +2210,7 @@ app.post("/guardar-entrenamiento", uploadRateLimit, upload.single("archivo"), as
             totalTime: Math.round(totalTime * 100) / 100,
             trainingDataSize: trainingData.length
         });
-        
+
         // Mantener compatibilidad frontend
         res.send(`
             <script>
@@ -2366,19 +2220,19 @@ app.post("/guardar-entrenamiento", uploadRateLimit, upload.single("archivo"), as
                 window.location.href = "/analizar-imagen-publico.html";
             </script>
         `);
-        
+
     } catch (error) {
         const totalTime = performanceHooks.performance.now() - startTime;
-        
-        dragon.agoniza('Error general entrenamiento FAANG', error, MODULE_NAME, 'TRAINING_GENERAL_ERROR', { 
+
+        dragon.agoniza('Error general entrenamiento FAANG', error, MODULE_NAME, 'TRAINING_GENERAL_ERROR', {
             correlationId,
             imagenId,
             totalTime: Math.round(totalTime * 100) / 100,
             error: error.message
         });
-        
+
         performanceMonitor.incrementErrorCount('training_general_error');
-        
+
         // Cleanup on error
         if (req.file?.path && fs.existsSync(req.file.path)) {
             try {
@@ -2390,8 +2244,8 @@ app.post("/guardar-entrenamiento", uploadRateLimit, upload.single("archivo"), as
                 });
             }
         }
-        
-        res.status(500).json({ 
+
+        res.status(500).json({
             error: "Error en el servidor.",
             correlationId,
             timestamp: new Date().toISOString()
@@ -2409,70 +2263,70 @@ app.post("/analizar-imagen", authMiddleware, uploadRateLimit, upload.single("arc
     const userId = req.usuario.id;
     const startTime = performanceHooks.performance.now();
     const imagenId = uuidv4();
-    
+
     // Performance mark for auth analysis
     performanceHooks.performance.mark(`express:auth:analysis:${correlationId}:start`);
-    
-    dragon.respira('Análisis autenticado iniciado FAANG', MODULE_NAME, 'ANALYZE_AUTH_START', { 
+
+    dragon.respira('Análisis autenticado iniciado FAANG', MODULE_NAME, 'ANALYZE_AUTH_START', {
         correlationId,
         userId,
         imagenId,
         userEmail: req.usuario.email
     });
-    
+
     try {
         // File validation
         if (!req.file) {
-            dragon.sePreocupa('No authenticated file uploaded', MODULE_NAME, 'ANALYZE_AUTH_NO_FILE', { 
+            dragon.sePreocupa('No authenticated file uploaded', MODULE_NAME, 'ANALYZE_AUTH_NO_FILE', {
                 correlationId,
                 userId,
-                imagenId 
+                imagenId
             });
-            
+
             performanceMonitor.incrementErrorCount('auth_no_file');
-            return res.status(400).json({ 
+            return res.status(400).json({
                 error: "No se ha subido ningún archivo.",
-                correlationId 
+                correlationId
             });
         }
-        
+
         const filePath = req.file.path;
-        
+
         // Calculate file hash for duplicate detection
         const hashStartTime = performanceHooks.performance.now();
         const hashArchivo = calcularHashArchivo(filePath);
         const hashTime = performanceHooks.performance.now() - hashStartTime;
-        
+
         dragon.respira('Hash archivo calculado', MODULE_NAME, 'FILE_HASH_CALCULATED', {
             correlationId,
             userId,
             hashTime: Math.round(hashTime * 100) / 100,
             hash: hashArchivo.substring(0, 16) + '...' // Partial hash for logging
         });
-        
+
         // Check for duplicates with performance monitoring
         const duplicateCheckStart = performanceHooks.performance.now();
-        
+
         performanceHooks.performance.mark(`express:database:duplicate_check:${correlationId}:start`);
-        
+
         const duplicado = await AnalisisArchivo.findOne({ usuarioId: userId, hashArchivo });
-        
+
         performanceHooks.performance.mark(`express:database:duplicate_check:${correlationId}:end`);
-        performanceHooks.performance.measure(`express:database:duplicate_check:${correlationId}`, 
-                                              `express:database:duplicate_check:${correlationId}:start`, 
+        performanceHooks.performance.measure(`express:database:duplicate_check:${correlationId}`,
+                                              `express:database:duplicate_check:${correlationId}:start`,
                                               `express:database:duplicate_check:${correlationId}:end`);
-        
+
         const duplicateCheckTime = performanceHooks.performance.now() - duplicateCheckStart;
-        
+
         if (duplicado) {
-            dragon.respira('Archivo duplicado detectado FAANG', MODULE_NAME, 'ANALYZE_AUTH_DUPLICATE', { 
+            dragon.respira('Archivo duplicado detectado FAANG', MODULE_NAME, 'ANALYZE_AUTH_DUPLICATE', {
                 correlationId,
                 userId,
                 imagenId,
                 duplicateId: duplicado._id,
                 duplicateCheckTime: Math.round(duplicateCheckTime * 100) / 100
             });
-            
+
             // Cleanup uploaded file
             try {
                 fs.unlinkSync(filePath);
@@ -2482,44 +2336,44 @@ app.post("/analizar-imagen", authMiddleware, uploadRateLimit, upload.single("arc
                     cleanupError: cleanupError.message
                 });
             }
-            
-            return res.status(409).json({ 
-                error: "Este archivo ya fue analizado previamente.", 
+
+            return res.status(409).json({
+                error: "Este archivo ya fue analizado previamente.",
                 analisis: duplicado,
                 correlationId,
                 duplicateTimestamp: duplicado.createdAt
             });
         }
-        
+
         // Route to analyzer
         const analisis = await routeToAnalyzer(filePath, correlationId, imagenId, req.file, userId);
-        
+
         // Validation of analysis result
         if (!analisis || !analisis.resultado || !analisis.resultado.basico) {
-            dragon.agoniza('Análisis inválido retornado - auth', new Error('Invalid analysis'), MODULE_NAME, 'ANALYZE_AUTH_INVALID', { 
+            dragon.agoniza('Análisis inválido retornado - auth', new Error('Invalid analysis'), MODULE_NAME, 'ANALYZE_AUTH_INVALID', {
                 correlationId,
                 userId,
                 imagenId,
                 resultStructure: Object.keys(analisis || {})
             });
-            
+
             performanceMonitor.incrementErrorCount('auth_invalid_analysis');
-            return res.status(500).json({ 
+            return res.status(500).json({
                 error: "El análisis no devolvió datos válidos.",
-                correlationId 
+                correlationId
             });
         }
-        
+
         // Save analysis to database with performance monitoring
         const dbSaveStart = performanceHooks.performance.now();
-        
+
         performanceHooks.performance.mark(`express:database:save_analysis:${correlationId}:start`);
-        
+
         const nuevoAnalisis = new AnalisisArchivo({
             usuarioId: userId,
             nombreArchivo: req.file.filename,
             nombreOriginal: req.file.originalname,
-            tipo: FAANG_CONFIG.files.allowedImageTypes.includes(req.file.mimetype) ? "imagen" : 
+            tipo: FAANG_CONFIG.files.allowedImageTypes.includes(req.file.mimetype) ? "imagen" :
                   FAANG_CONFIG.files.allowedPdfTypes.includes(req.file.mimetype) ? "pdf" : "video",
             resultado: analisis.resultado,
             hashArchivo,
@@ -2536,25 +2390,25 @@ app.post("/analizar-imagen", authMiddleware, uploadRateLimit, upload.single("arc
                 userAgent: req.headers['user-agent']?.substring(0, 100)
             }
         });
-        
+
         await nuevoAnalisis.save();
-        
+
         performanceHooks.performance.mark(`express:database:save_analysis:${correlationId}:end`);
-        performanceHooks.performance.measure(`express:database:save_analysis:${correlationId}`, 
-                                              `express:database:save_analysis:${correlationId}:start`, 
+        performanceHooks.performance.measure(`express:database:save_analysis:${correlationId}`,
+                                              `express:database:save_analysis:${correlationId}:start`,
                                               `express:database:save_analysis:${correlationId}:end`);
-        
+
         const dbSaveTime = performanceHooks.performance.now() - dbSaveStart;
-        
+
         // Performance mark for auth analysis end
         performanceHooks.performance.mark(`express:auth:analysis:${correlationId}:end`);
-        performanceHooks.performance.measure(`express:auth:analysis:${correlationId}`, 
-                                              `express:auth:analysis:${correlationId}:start`, 
+        performanceHooks.performance.measure(`express:auth:analysis:${correlationId}`,
+                                              `express:auth:analysis:${correlationId}:start`,
                                               `express:auth:analysis:${correlationId}:end`);
-        
+
         const totalTime = performanceHooks.performance.now() - startTime;
-        
-        dragon.zen('Análisis autenticado completado perfectamente FAANG', MODULE_NAME, 'ANALYZE_AUTH_SUCCESS', { 
+
+        dragon.zen('Análisis autenticado completado perfectamente FAANG', MODULE_NAME, 'ANALYZE_AUTH_SUCCESS', {
             correlationId,
             userId,
             imagenId,
@@ -2565,7 +2419,7 @@ app.post("/analizar-imagen", authMiddleware, uploadRateLimit, upload.single("arc
             hashTime: Math.round(hashTime * 100) / 100,
             performance: totalTime < FAANG_CONFIG.performance.apiResponseP95 ? 'optimal' : 'acceptable'
         });
-        
+
         res.json({
             mensaje: "Análisis completado y guardado.",
             resultado: analisis.resultado,
@@ -2580,12 +2434,12 @@ app.post("/analizar-imagen", authMiddleware, uploadRateLimit, upload.single("arc
                 version: VERSION_MODULO
             }
         });
-        
+
     } catch (error) {
         const totalTime = performanceHooks.performance.now() - startTime;
-        
+
         performanceHooks.performance.mark(`express:auth:analysis:${correlationId}:error`);
-        
+
         dragon.agoniza('Error análisis autenticado FAANG', error, MODULE_NAME, 'ANALYZE_AUTH_ERROR', {
             correlationId,
             userId,
@@ -2594,9 +2448,9 @@ app.post("/analizar-imagen", authMiddleware, uploadRateLimit, upload.single("arc
             error: error.message,
             stack: error.stack
         });
-        
+
         performanceMonitor.incrementErrorCount('auth_analysis_error');
-        
+
         // Cleanup file on error
         if (req.file?.path) {
             try {
@@ -2608,9 +2462,9 @@ app.post("/analizar-imagen", authMiddleware, uploadRateLimit, upload.single("arc
                 });
             }
         }
-        
+
         const statusCode = error instanceof DragonServerError ? error.statusCode : 500;
-        res.status(statusCode).json({ 
+        res.status(statusCode).json({
             error: "Error en el servidor",
             correlationId,
             timestamp: new Date().toISOString(),
@@ -2639,16 +2493,16 @@ dragon.respira('Routes FAANG integradas', MODULE_NAME, 'ROUTES_INTEGRATED', {
 app.get("/health", async (req, res) => {
     const startTime = performanceHooks.performance.now();
     const correlationId = req.correlationId;
-    
+
     try {
-        dragon.respira('Health check iniciado FAANG', MODULE_NAME, 'HEALTH_CHECK_START', { 
+        dragon.respira('Health check iniciado FAANG', MODULE_NAME, 'HEALTH_CHECK_START', {
             correlationId,
             timestamp: new Date().toISOString()
         });
-        
+
         // Check service states with timeout
         const healthPromises = [];
-        
+
         // Redis health check
         healthPromises.push(
             Promise.race([
@@ -2656,17 +2510,17 @@ app.get("/health", async (req, res) => {
                 new Promise(resolve => setTimeout(() => resolve({ redis: 'timeout' }), 1000))
             ])
         );
-        
-        // MongoDB health check
-        healthPromises.push(
-            Promise.race([
-                mongoose.connection.db.admin().ping().then(() => ({ mongodb: 'healthy' })).catch(() => ({ mongodb: 'unhealthy' })),
-                new Promise(resolve => setTimeout(() => resolve({ mongodb: 'timeout' }), 1000))
-            ])
-        );
-        
+
+        // MongoDB health check - DISABLED TEMPORARILY
+// healthPromises.push(
+//     Promise.race([
+//         mongoose.connection.db.admin().ping().then(() => ({ mongodb: 'healthy' })).catch(() => ({ mongodb: 'unhealthy' })),
+//         new Promise(resolve => setTimeout(() => resolve({ mongodb: 'timeout' }), 1000))
+//     ])
+// );
+
         const healthResults = await Promise.allSettled(healthPromises);
-        
+
         // Aggregate health results
         const healthData = healthResults.reduce((acc, result) => {
             if (result.status === 'fulfilled') {
@@ -2674,17 +2528,17 @@ app.get("/health", async (req, res) => {
             }
             return acc;
         }, {});
-        
+
         // Performance metrics
         const performanceSummary = performanceMonitor.getSummary();
         const memoryUsage = process.memoryUsage();
-        
+
         const status = {
             status: "ok",
             timestamp: new Date().toISOString(),
             version: VERSION_MODULO,
             correlationId,
-            
+
             // Service health
             services: {
                 redis: healthData.redis || 'unknown',
@@ -2693,7 +2547,7 @@ app.get("/health", async (req, res) => {
                 redSuperior: serviceState.redSuperior.status,
                 sensorFactory: serviceState.sensorFactory.status
             },
-            
+
             // Performance metrics
             performance: {
                 requests: {
@@ -2712,7 +2566,7 @@ app.get("/health", async (req, res) => {
                 uptime: Math.round(process.uptime()),
                 nodeVersion: process.version
             },
-            
+
             // Service details
             serviceStates: {
                 servidorCentral: {
@@ -2727,52 +2581,52 @@ app.get("/health", async (req, res) => {
                 }
             }
         };
-        
+
         // Determine overall health status
-        const unhealthyServices = Object.values(status.services).filter(s => 
+        const unhealthyServices = Object.values(status.services).filter(s =>
             s === 'unhealthy' || s === 'error' || s === 'timeout'
         );
-        
+
         if (unhealthyServices.length > 0) {
             status.status = unhealthyServices.length >= 2 ? "critical" : "degraded";
         }
-        
+
         // Check performance thresholds
         if (performanceSummary.requests.p95 > FAANG_CONFIG.performance.apiResponseP95 * 1.5) {
             status.status = status.status === "ok" ? "degraded" : status.status;
         }
-        
+
         if (status.performance.memory.heapUsagePercent > FAANG_CONFIG.memory.maxHeapUsage) {
             status.status = status.status === "ok" ? "degraded" : status.status;
         }
-        
+
         const healthCheckTime = performanceHooks.performance.now() - startTime;
         status.healthCheckTime = Math.round(healthCheckTime * 100) / 100;
-        
-        const httpStatus = status.status === "ok" ? 200 : 
+
+        const httpStatus = status.status === "ok" ? 200 :
                           status.status === "degraded" ? 200 : 503;
-        
-        dragon.respira('Health check completado FAANG', MODULE_NAME, 'HEALTH_CHECK_COMPLETE', { 
+
+        dragon.respira('Health check completado FAANG', MODULE_NAME, 'HEALTH_CHECK_COMPLETE', {
             correlationId,
             status: status.status,
             healthCheckTime: status.healthCheckTime,
             httpStatus,
             unhealthyServices: unhealthyServices.length
         });
-        
+
         res.status(httpStatus).json(status);
-        
+
     } catch (error) {
         const healthCheckTime = performanceHooks.performance.now() - startTime;
-        
+
         dragon.agoniza('Error en health check FAANG', error, MODULE_NAME, 'HEALTH_CHECK_ERROR', {
             correlationId,
             healthCheckTime: Math.round(healthCheckTime * 100) / 100,
             error: error.message
         });
-        
+
         performanceMonitor.incrementErrorCount('health_check_error');
-        
+
         res.status(500).json({
             status: "error",
             timestamp: new Date().toISOString(),
@@ -2791,20 +2645,20 @@ app.get("/health", async (req, res) => {
 app.use((err, req, res, next) => {
     const correlationId = req.correlationId || uuidv4();
     const errorId = uuidv4();
-    
+
     // Enhanced error classification
     let statusCode = 500;
     let errorCategory = 'server_error';
     let severity = 'medium';
-    
+
     if (err instanceof multer.MulterError) {
         errorCategory = 'multer_error';
         severity = 'low';
-        
+
         switch (err.code) {
             case 'LIMIT_FILE_SIZE':
                 statusCode = 413;
-                dragon.sePreocupa(`Multer file size limit: ${err.message}`, MODULE_NAME, 'MULTER_FILE_SIZE', { 
+                dragon.sePreocupa(`Multer file size limit: ${err.message}`, MODULE_NAME, 'MULTER_FILE_SIZE', {
                     correlationId,
                     errorId,
                     field: err.field,
@@ -2813,7 +2667,7 @@ app.use((err, req, res, next) => {
                 break;
             case 'LIMIT_FILE_COUNT':
                 statusCode = 400;
-                dragon.sePreocupa(`Multer file count limit: ${err.message}`, MODULE_NAME, 'MULTER_FILE_COUNT', { 
+                dragon.sePreocupa(`Multer file count limit: ${err.message}`, MODULE_NAME, 'MULTER_FILE_COUNT', {
                     correlationId,
                     errorId,
                     field: err.field,
@@ -2822,7 +2676,7 @@ app.use((err, req, res, next) => {
                 break;
             case 'LIMIT_UNEXPECTED_FILE':
                 statusCode = 400;
-                dragon.sePreocupa(`Multer unexpected file: ${err.message}`, MODULE_NAME, 'MULTER_UNEXPECTED_FILE', { 
+                dragon.sePreocupa(`Multer unexpected file: ${err.message}`, MODULE_NAME, 'MULTER_UNEXPECTED_FILE', {
                     correlationId,
                     errorId,
                     field: err.field
@@ -2830,17 +2684,17 @@ app.use((err, req, res, next) => {
                 break;
             default:
                 statusCode = 400;
-                dragon.sePreocupa(`Multer error: ${err.message}`, MODULE_NAME, 'MULTER_GENERAL', { 
+                dragon.sePreocupa(`Multer error: ${err.message}`, MODULE_NAME, 'MULTER_GENERAL', {
                     correlationId,
                     errorId,
                     code: err.code,
                     field: err.field
                 });
         }
-        
+
         performanceMonitor.incrementErrorCount(`multer_${err.code.toLowerCase()}`);
-        
-        return res.status(statusCode).json({ 
+
+        return res.status(statusCode).json({
             error: `Error al subir archivo: ${err.message}`,
             correlationId,
             errorId,
@@ -2848,13 +2702,13 @@ app.use((err, req, res, next) => {
             timestamp: new Date().toISOString()
         });
     }
-    
+
     if (err instanceof DragonServerError) {
         statusCode = err.statusCode;
         errorCategory = err.code;
         severity = err.severity;
-        
-        dragon.agoniza('Dragon Server Error', err, MODULE_NAME, 'DRAGON_SERVER_ERROR', { 
+
+        dragon.agoniza('Dragon Server Error', err, MODULE_NAME, 'DRAGON_SERVER_ERROR', {
             correlationId,
             errorId,
             statusCode,
@@ -2863,33 +2717,33 @@ app.use((err, req, res, next) => {
             userId: err.userId,
             retryable: err.retryable
         });
-        
+
     } else if (err.name === 'ValidationError') {
         statusCode = 400;
         errorCategory = 'validation_error';
         severity = 'low';
-        
+
         dragon.sePreocupa('Validation error', MODULE_NAME, 'VALIDATION_ERROR', {
             correlationId,
             errorId,
             validationErrors: err.errors
         });
-        
+
     } else if (err.name === 'MongoError' || err.name === 'MongooseError') {
         statusCode = 500;
         errorCategory = 'database_error';
         severity = 'high';
-        
+
         dragon.agoniza('Database error', err, MODULE_NAME, 'DATABASE_ERROR', {
             correlationId,
             errorId,
             dbError: err.message,
             code: err.code
         });
-        
+
     } else {
         // Generic server error
-        dragon.agoniza('Global Express error FAANG', err, MODULE_NAME, 'EXPRESS_ERROR', { 
+        dragon.agoniza('Global Express error FAANG', err, MODULE_NAME, 'EXPRESS_ERROR', {
             correlationId,
             errorId,
             url: req.originalUrl,
@@ -2899,13 +2753,13 @@ app.use((err, req, res, next) => {
             severity
         });
     }
-    
+
     performanceMonitor.incrementErrorCount(errorCategory);
-    
+
     // Increment endpoint-specific error count
     const endpoint = req.route?.path || req.path || 'unknown';
     performanceMonitor.incrementEndpointError(endpoint);
-    
+
     const errorResponse = {
         error: err.message || "Error interno del servidor",
         correlationId,
@@ -2914,19 +2768,19 @@ app.use((err, req, res, next) => {
         timestamp: new Date().toISOString(),
         severity
     };
-    
+
     // Add additional info in development
     if (process.env.NODE_ENV === 'development') {
         errorResponse.stack = err.stack;
         errorResponse.details = err.metadata || {};
     }
-    
+
     // Add retry information for retryable errors
     if (err.retryable) {
         errorResponse.retryable = true;
         errorResponse.retryAfter = 30; // seconds
     }
-    
+
     res.status(statusCode).json(errorResponse);
 });
 
@@ -2935,164 +2789,51 @@ app.use((err, req, res, next) => {
 /**
  * FAANG: Enhanced server startup con comprehensive initialization
  */
+/**
+ * FAANG: Enhanced server startup
+ */
 const startServer = async () => {
     const serverStartTime = Date.now();
-    
+
     try {
-        dragon.respira('Iniciando servidor Dragon3 FAANG', MODULE_NAME, 'SERVER_START_INIT', {
+        dragon.respira('🚀 Iniciando servidor Dragon3 FAANG Enterprise', MODULE_NAME, 'SERVER_START', {
             port: PORT,
-            environment: process.env.NODE_ENV || 'development',
             version: VERSION_MODULO,
-            nodeVersion: process.version
+            environment: process.env.NODE_ENV || 'development'
         });
-        
-        // Initialize database first
-        const dbInitialized = await initializeDatabaseConnection();
-        
-        if (dbInitialized) {
-            serviceState.mongodb.status = 'ready';
-            serviceState.mongodb.lastCheck = new Date().toISOString();
-        } else {
-            serviceState.mongodb.status = 'degraded';
-            serviceState.mongodb.lastCheck = new Date().toISOString();
-        }
-        
+
         // Start HTTP server
-        const server = app.listen(PORT, () => {
+        const server = app.listen(PORT, '0.0.0.0', () => {
             const startupTime = Date.now() - serverStartTime;
             
-            dragon.zen(`Dragon3 server ZEN en puerto ${PORT} - Multitype ready FAANG`, MODULE_NAME, 'SERVER_START_SUCCESS', {
+            dragon.zen(`🚀 ✅ DRAGON3 SERVIDOR FAANG INICIADO EN PUERTO ${PORT}`, MODULE_NAME, 'SERVER_READY', {
                 port: PORT,
-                environment: process.env.NODE_ENV || 'development',
+                startupTime: `${startupTime}ms`,
                 version: VERSION_MODULO,
-                startupTime,
                 services: {
                     express: 'ready',
-                    redis: serviceState.redis.status,
                     mongodb: serviceState.mongodb.status,
-                    servidorCentral: serviceState.servidorCentral.status,
-                    redSuperior: serviceState.redSuperior.status
-                },
-                features: [
-                    'multitype_analysis',
-                    'faang_performance_monitoring',
-                    'circuit_breaker_patterns',
-                    'enhanced_security',
-                    'comprehensive_logging',
-                    'health_monitoring'
-                ]
+                    redis: serviceState.redis.status
+                }
             });
+
+            console.log(`\n🐲 ====================================`);
+            console.log(`🚀 Dragon3 FAANG servidor ZEN puerto ${PORT}`);
+            console.log(`📊 Health: http://localhost:${PORT}/health`);
+            console.log(`🔍 Análisis: http://localhost:${PORT}/analizar-imagen-publico.html`);
+            console.log(`⚡ Performance: P95 <200ms target`);
+            console.log(`🐲 ====================================\n`);
         });
-        
-        // Enhanced server error handling
-        server.on('error', (error) => {
-            dragon.agoniza('Server error crítico', error, MODULE_NAME, 'SERVER_ERROR', {
-                port: PORT,
-                error: error.message,
-                code: error.code,
-                severity: 'critical'
-            });
-        });
-        
-        // Graceful shutdown handlers
-        const gracefulShutdown = async (signal) => {
-            const shutdownStartTime = Date.now();
-            
-            dragon.respira(`${signal} recibido - iniciando graceful shutdown FAANG`, MODULE_NAME, 'SHUTDOWN_START', {
-                signal,
-                uptime: Math.round(process.uptime()),
-                activeConnections: server._connections || 0
-            });
-            
-            try {
-                // Stop accepting new connections
-                server.close(async () => {
-                    dragon.respira('HTTP server cerrado', MODULE_NAME, 'HTTP_SERVER_CLOSED');
-                    
-                    // Close database connections
-                    try {
-                        await mongoose.connection.close();
-                        dragon.respira('MongoDB connection cerrada', MODULE_NAME, 'MONGODB_CLOSED');
-                    } catch (dbError) {
-                        dragon.sePreocupa('Error cerrando MongoDB', MODULE_NAME, 'MONGODB_CLOSE_ERROR', {
-                            error: dbError.message
-                        });
-                    }
-                    
-                    // Close Redis connections
-                    try {
-                        await Promise.all([
-                            redis.quit(),
-                            redisPublisher.quit(),
-                            redisSubscriber.quit()
-                        ]);
-                        dragon.respira('Redis connections cerradas', MODULE_NAME, 'REDIS_CLOSED');
-                    } catch (redisError) {
-                        dragon.sePreocupa('Error cerrando Redis', MODULE_NAME, 'REDIS_CLOSE_ERROR', {
-                            error: redisError.message
-                        });
-                    }
-                    
-                    // Close ServidorCentral if exists
-                    if (serviceState.servidorCentral.instance && 
-                        typeof serviceState.servidorCentral.instance.gracefulShutdown === 'function') {
-                        try {
-                            await serviceState.servidorCentral.instance.gracefulShutdown();
-                            dragon.respira('ServidorCentral cerrado gracefully', MODULE_NAME, 'SERVIDOR_CENTRAL_CLOSED');
-                        } catch (scError) {
-                            dragon.sePreocupa('Error cerrando ServidorCentral', MODULE_NAME, 'SERVIDOR_CENTRAL_CLOSE_ERROR', {
-                                error: scError.message
-                            });
-                        }
-                    }
-                    
-                    const shutdownTime = Date.now() - shutdownStartTime;
-                    
-                    dragon.zen('Servidor cerrado gracefully FAANG', MODULE_NAME, 'SHUTDOWN_COMPLETE', {
-                        signal,
-                        shutdownTime,
-                        totalUptime: Math.round(process.uptime())
-                    });
-                    
-                    process.exit(0);
-                });
-                
-                // Force exit if graceful shutdown takes too long
-                setTimeout(() => {
-                    dragon.agoniza('Graceful shutdown timeout - forcing exit', new Error('Shutdown Timeout'), MODULE_NAME, 'SHUTDOWN_TIMEOUT', {
-                        signal,
-                        timeout: 30000
-                    });
-                    process.exit(1);
-                }, 30000); // 30 second timeout
-                
-            } catch (shutdownError) {
-                dragon.agoniza('Error durante graceful shutdown', shutdownError, MODULE_NAME, 'SHUTDOWN_ERROR', {
-                    signal,
-                    error: shutdownError.message
-                });
-                process.exit(1);
-            }
-        };
-        
-        // Register shutdown handlers
-        process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
-        process.on('SIGINT', () => gracefulShutdown('SIGINT'));
-        
-        // Keep server reference for potential external access
+
         return server;
-        
-    } catch (startupError) {
+
+    } catch (error) {
         const startupTime = Date.now() - serverStartTime;
-        
-        dragon.agoniza('Error crítico iniciando servidor FAANG', startupError, MODULE_NAME, 'SERVER_START_ERROR', {
-            port: PORT,
-            startupTime,
-            error: startupError.message,
-            stack: startupError.stack,
-            severity: 'critical'
+        dragon.agoniza('❌ Error crítico iniciando servidor Dragon3 FAANG', error, MODULE_NAME, 'SERVER_ERROR', {
+            startupTime: `${startupTime}ms`,
+            port: PORT
         });
-        
+        console.error(`❌ Error iniciando servidor FAANG en puerto ${PORT}:`, error.message);
         process.exit(1);
     }
 };
@@ -3107,18 +2848,18 @@ export { app, serverInstance, serviceState, performanceMonitor };
  * ====================================================================
  * DRAGON3 FAANG - SERVER EXPRESS DOCUMENTATION
  * ====================================================================
- * 
+ *
  * DESCRIPCIÓN:
  * Servidor Express enterprise-grade con estándares FAANG para manejo
  * multitype analysis (imagen/PDF/video), autenticación JWT, y coordinación
  * completa con servicios Dragon3. P95 <200ms, 99.9% uptime garantizados.
- * 
+ *
  * EXPORTS PRINCIPALES:
  * - app (Express): Aplicación Express configurada
  * - serverInstance (Server): Instancia servidor HTTP
  * - serviceState (Object): Estado servicios en tiempo real
  * - performanceMonitor (Class): Monitor performance FAANG
- * 
+ *
  * API ENDPOINTS:
  * - POST /analizar-imagen-publico: Análisis público multitype
  * - POST /guardar-entrenamiento: Guardar datos entrenamiento
@@ -3126,7 +2867,7 @@ export { app, serverInstance, serviceState, performanceMonitor };
  * - GET /health: Health check comprehensive
  * - /auth/*: Rutas autenticación (login, register, etc.)
  * - /archivos/*: Rutas gestión archivos autenticadas
- * 
+ *
  * FAANG FEATURES IMPLEMENTADAS:
  * ✅ Real-time P95/P99 performance tracking
  * ✅ Circuit breaker patterns automatic recovery
@@ -3140,7 +2881,7 @@ export { app, serverInstance, serviceState, performanceMonitor };
  * ✅ Correlation ID tracking end-to-end
  * ✅ File upload security comprehensive
  * ✅ Database performance monitoring
- * 
+ *
  * MULTITYPE SUPPORT:
  * - Imágenes: JPEG, PNG, WebP
  * - PDFs: Application/PDF
@@ -3148,7 +2889,7 @@ export { app, serverInstance, serviceState, performanceMonitor };
  * - Automatic routing based on MIME type
  * - Type-specific directory organization
  * - Enhanced validation per type
- * 
+ *
  * SECURITY FEATURES:
  * - Helmet security headers
  * - CORS origin validation
@@ -3157,7 +2898,7 @@ export { app, serverInstance, serviceState, performanceMonitor };
  * - JWT authentication robust
  * - Input sanitization comprehensive
  * - Error information filtering
- * 
+ *
  * MONITORING & OBSERVABILITY:
  * - Performance metrics real-time
  * - Error tracking categorized
@@ -3166,23 +2907,23 @@ export { app, serverInstance, serviceState, performanceMonitor };
  * - Database performance tracking
  * - Service state management
  * - Correlation ID end-to-end tracking
- * 
+ *
  * CONFIGURACIÓN:
  * Todas las configuraciones via environment variables con defaults.
  * Ver FAANG_CONFIG object para opciones completas.
- * 
+ *
  * INTEGRATION FLOW:
- * Frontend → Express Routes → File Upload → Type Detection → 
- * Analyzer Routing → analizadorImagen/PDF/Video → servidorCentral → 
+ * Frontend → Express Routes → File Upload → Type Detection →
+ * Analyzer Routing → analizadorImagen/PDF/Video → servidorCentral →
  * Redis → Red Superior → Response
- * 
+ *
  * ERROR HANDLING:
  * - Comprehensive error classification
  * - Graceful degradation modes
  * - Automatic retry logic
  * - Detailed error logging
  * - User-friendly error responses
- * 
+ *
  * ====================================================================
  */
 

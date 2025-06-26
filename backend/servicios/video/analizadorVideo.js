@@ -7,6 +7,7 @@
  * @date 2025-04-15
  */
 
+import dragon from '../../utilidades/logger.js';
 import logger from '../../utilidades/logger.js';
 import redis from '../../utilidades/redis.js';
 import fs from 'fs/promises';
@@ -81,14 +82,14 @@ class GestorStreamsVideo {
 
             this.iniciarConsumersVideo();
 
-            dragon.info('Redis Streams Video inicializados Dragon3', {
+            dragon.respira('Redis Streams Video inicializados Dragon3', {
                 modulo: NOMBRE_MODULO,
                 streams: Object.keys(STREAMS_VIDEO),
                 consumerGroups: Object.keys(CONSUMER_GROUPS_VIDEO)
             });
 
         } catch (error) {
-            dragon.error('Error inicializando Redis Streams Video Dragon3', {
+            dragon.agoniza('Error inicializando Redis Streams Video Dragon3', {
                 modulo: NOMBRE_MODULO,
                 error: error.message,
                 stack: error.stack
@@ -108,7 +109,7 @@ class GestorStreamsVideo {
         this.consumerSuperiorVideo();
         this.consumerStatusVideo();
 
-        dragon.info('Consumers Video bidireccionales iniciados Dragon3', {
+        dragon.respira('Consumers Video bidireccionales iniciados Dragon3', {
             modulo: NOMBRE_MODULO,
             consumers: ['espejo-video', 'superior-video', 'status-video']
         });
@@ -133,7 +134,7 @@ class GestorStreamsVideo {
 
             } catch (error) {
                 if (error.message !== 'Connection is closed.') {
-                    dragon.warn('Error consumer espejo Video Dragon3', {
+                    dragon.seEnfada('Error consumer espejo Video Dragon3', {
                         modulo: NOMBRE_MODULO,
                         error: error.message
                     });
@@ -162,7 +163,7 @@ class GestorStreamsVideo {
 
             } catch (error) {
                 if (error.message !== 'Connection is closed.') {
-                    dragon.warn('Error consumer superior Video Dragon3', {
+                    dragon.seEnfada('Error consumer superior Video Dragon3', {
                         modulo: NOMBRE_MODULO,
                         error: error.message
                     });
@@ -191,7 +192,7 @@ class GestorStreamsVideo {
 
             } catch (error) {
                 if (error.message !== 'Connection is closed.') {
-                    dragon.warn('Error consumer status Video Dragon3', {
+                    dragon.seEnfada('Error consumer status Video Dragon3', {
                         modulo: NOMBRE_MODULO,
                         error: error.message
                     });
@@ -223,14 +224,14 @@ class GestorStreamsVideo {
 
                 await redis.xack(STREAMS_VIDEO.RESPONSE_ESPEJO, CONSUMER_GROUPS_VIDEO.ESPEJO_PROCESSORS, id);
 
-                dragon.info('Respuesta espejo Video procesada Dragon3', {
+                dragon.respira('Respuesta espejo Video procesada Dragon3', {
                     modulo: NOMBRE_MODULO,
                     archivoId,
                     messageId: id
                 });
 
             } catch (error) {
-                dragon.error('Error procesando mensaje espejo Video Dragon3', {
+                dragon.agoniza('Error procesando mensaje espejo Video Dragon3', {
                     modulo: NOMBRE_MODULO,
                     messageId: id,
                     error: error.message
@@ -261,14 +262,14 @@ class GestorStreamsVideo {
 
                 await redis.xack(STREAMS_VIDEO.RESPONSE_SUPERIOR, CONSUMER_GROUPS_VIDEO.SUPERIOR_PROCESSORS, id);
 
-                dragon.info('Respuesta superior Video procesada Dragon3', {
+                dragon.respira('Respuesta superior Video procesada Dragon3', {
                     modulo: NOMBRE_MODULO,
                     archivoId,
                     messageId: id
                 });
 
             } catch (error) {
-                dragon.error('Error procesando mensaje superior Video Dragon3', {
+                dragon.agoniza('Error procesando mensaje superior Video Dragon3', {
                     modulo: NOMBRE_MODULO,
                     messageId: id,
                     error: error.message
@@ -295,7 +296,7 @@ class GestorStreamsVideo {
                 await redis.xack(STREAMS_VIDEO.STATUS_UPDATES, CONSUMER_GROUPS_VIDEO.STATUS_MONITORS, id);
 
             } catch (error) {
-                dragon.error('Error procesando mensaje status Video Dragon3', {
+                dragon.agoniza('Error procesando mensaje status Video Dragon3', {
                     modulo: NOMBRE_MODULO,
                     messageId: id,
                     error: error.message
@@ -334,7 +335,7 @@ class GestorStreamsVideo {
                         };
                         
                     } catch (error) {
-                        dragon.warn('Error cargando analizador Video Dragon3', {
+                        dragon.seEnfada('Error cargando analizador Video Dragon3', {
                             modulo: NOMBRE_MODULO,
                             analizador: nombreAnalizador,
                             error: error.message
@@ -345,7 +346,7 @@ class GestorStreamsVideo {
             
             this.analizadoresVideoCargados = analizadoresVideo;
             
-            dragon.info('Analizadores Video cargados Dragon3', {
+            dragon.respira('Analizadores Video cargados Dragon3', {
                 modulo: NOMBRE_MODULO,
                 totalAnalizadoresVideo: Object.keys(analizadoresVideo).length,
                 analizadoresVideo: Object.keys(analizadoresVideo)
@@ -372,7 +373,7 @@ class GestorStreamsVideo {
             try {
                 await fs.access(directorioRedesEspejoVideo);
             } catch {
-                dragon.warn('Directorio redes espejo Video no existe Dragon3', {
+                dragon.seEnfada('Directorio redes espejo Video no existe Dragon3', {
                     modulo: NOMBRE_MODULO,
                     directorio: directorioRedesEspejoVideo
                 });
@@ -398,7 +399,7 @@ class GestorStreamsVideo {
                         };
                         
                     } catch (error) {
-                        dragon.warn('Error cargando red espejo Video Dragon3', {
+                        dragon.seEnfada('Error cargando red espejo Video Dragon3', {
                             modulo: NOMBRE_MODULO,
                             redEspejo: nombreRed,
                             error: error.message
@@ -409,7 +410,7 @@ class GestorStreamsVideo {
             
             this.redesEspejoVideoCargadas = redesEspejoVideo;
             
-            dragon.info('Redes espejo Video cargadas Dragon3', {
+            dragon.respira('Redes espejo Video cargadas Dragon3', {
                 modulo: NOMBRE_MODULO,
                 totalRedesEspejoVideo: Object.keys(redesEspejoVideo).length,
                 redesEspejoVideo: Object.keys(redesEspejoVideo)
@@ -461,7 +462,7 @@ class GestorStreamsVideo {
                 resultado.cacheHit = true;
                 resultado.timestamp = new Date().toISOString();
 
-                dragon.info('Cache Hit Video Dragon3', {
+                dragon.respira('Cache Hit Video Dragon3', {
                     modulo: NOMBRE_MODULO,
                     archivoId,
                     hashVideo: hashVideo.substring(0, 24)
@@ -473,7 +474,7 @@ class GestorStreamsVideo {
             return null;
 
         } catch (error) {
-            dragon.warn('Error verificando cache Video Dragon3', {
+            dragon.seEnfada('Error verificando cache Video Dragon3', {
                 modulo: NOMBRE_MODULO,
                 archivoId,
                 error: error.message
@@ -504,7 +505,7 @@ class GestorStreamsVideo {
             });
 
         } catch (error) {
-            dragon.warn('Error guardando cache Video Dragon3', {
+            dragon.seEnfada('Error guardando cache Video Dragon3', {
                 modulo: NOMBRE_MODULO,
                 archivoId,
                 error: error.message
@@ -534,7 +535,7 @@ class GestorStreamsVideo {
                 correlationId
             });
 
-            dragon.info('Request Video enviado via stream Dragon3', {
+            dragon.respira('Request Video enviado via stream Dragon3', {
                 modulo: NOMBRE_MODULO,
                 archivoId,
                 correlationId,
@@ -602,7 +603,7 @@ class GestorStreamsVideo {
             await redis.expire(sessionKey, 3600);
 
         } catch (error) {
-            dragon.warn('Error actualizando tracking Video Dragon3', {
+            dragon.seEnfada('Error actualizando tracking Video Dragon3', {
                 modulo: NOMBRE_MODULO,
                 archivoId,
                 etapa,
@@ -631,7 +632,7 @@ class GestorStreamsVideo {
             }, 600000); // 10 minutos delay para videos
 
         } catch (error) {
-            dragon.warn('Error cleanup Video Dragon3', {
+            dragon.seEnfada('Error cleanup Video Dragon3', {
                 modulo: NOMBRE_MODULO,
                 archivoId,
                 error: error.message
@@ -679,7 +680,7 @@ export async function analizarVideo(parametros) {
     } catch (error) {
         healthMonitor.registrarError(error, 'analizarVideo');
         
-        dragon.error('Error análisis Video Streams Dragon3', {
+        dragon.agoniza('Error análisis Video Streams Dragon3', {
             modulo: NOMBRE_MODULO,
             archivoId,
             correlationId,
@@ -777,7 +778,7 @@ async function ejecutarAnalisisStreamsVideo(parametros, hashVideo, tiempoInicio)
         healthMonitor.registrarMetrica('analisis_video_tiempo', tiempoTotal);
         healthMonitor.registrarMetrica('analisis_video_exitoso', 1);
         
-        dragon.info('Análisis Video Streams completado Dragon3', {
+        dragon.respira('Análisis Video Streams completado Dragon3', {
             modulo: NOMBRE_MODULO,
             archivoId,
             correlationId,
@@ -851,7 +852,7 @@ async function ejecutarAnalizadoresVideo(parametros) {
                 }
                 
             } catch (error) {
-                dragon.warn('Error analizador Video específico Dragon3', {
+                dragon.seEnfada('Error analizador Video específico Dragon3', {
                     modulo: NOMBRE_MODULO,
                     analizador: nombre,
                     archivoId,
@@ -868,7 +869,7 @@ async function ejecutarAnalizadoresVideo(parametros) {
         
         resultados.tiempoAnalisis = Date.now() - tiempoInicio;
         
-        dragon.info('Analizadores Video locales completados Dragon3', {
+        dragon.respira('Analizadores Video locales completados Dragon3', {
             modulo: NOMBRE_MODULO,
             archivoId,
             analizadoresEjecutados: resultados.analizadoresEjecutados,
@@ -885,12 +886,12 @@ async function ejecutarAnalizadoresVideo(parametros) {
 
 // Graceful shutdown Video
 process.on('SIGTERM', async () => {
-    dragon.info('Shutdown analizadorVideo Dragon3 iniciado');
+    dragon.respira('Shutdown analizadorVideo Dragon3 iniciado');
     gestorStreamsVideo.consumersRunning = false;
 });
 
 process.on('SIGINT', async () => {
-    dragon.info('Shutdown analizadorVideo Dragon3 iniciado');
+    dragon.respira('Shutdown analizadorVideo Dragon3 iniciado');
     gestorStreamsVideo.consumersRunning = false;
 });
 

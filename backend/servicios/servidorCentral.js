@@ -2,18 +2,18 @@
  * ====================================================================
  * DRAGON3 - SERVIDOR CENTRAL WEBSOCKET FAANG ENTERPRISE
  * ====================================================================
- * 
+ *
  * Archivo: servicios/servidorCentral.js
  * Proyecto: Dragon3 - Sistema Autentificación IA Enterprise
  * Versión: 3.0.0-FAANG
  * Fecha: 2025-04-15
  * Autor: Gustavo Herráiz - Lead Architect
- * 
+ *
  * DESCRIPCIÓN:
  * Servidor central WebSocket con estándares FAANG enterprise para comunicación
  * en tiempo real entre analizadores, Red Superior y frontend. Optimizado para
  * P95 <200ms, 99.9% uptime, observabilidad enterprise y patterns de reliability.
- * 
+ *
  * FAANG ENHANCEMENTS:
  * - Real-time P95/P99 performance tracking con alerting
  * - Circuit breaker patterns enterprise-grade
@@ -25,14 +25,14 @@
  * - Health monitoring proactivo
  * - Connection pooling enterprise
  * - Rate limiting y backpressure handling
- * 
+ *
  * COMPATIBILIDAD DRAGON2:
  * ✅ WebSocketServer core functionality preservado
  * ✅ Redis pub/sub integration mantenido
  * ✅ Red Superior communication compatible
  * ✅ Message structure preservada
  * ✅ CAMPOS_SUPERIOR_KEYS order mantenido
- * 
+ *
  * MÉTRICAS OBJETIVO FAANG:
  * - WebSocket connection: P95 <100ms, P99 <200ms
  * - Message processing: P95 <50ms, P99 <100ms
@@ -41,17 +41,17 @@
  * - Memory usage: <200MB per 1000 connections
  * - Error rate: <0.5%
  * - Uptime: 99.9%
- * 
+ *
  * ARCHITECTURE FLOW:
  * Frontend → server.js → analizadorImagen.js → servidorCentral.js → Redis → Red Superior
- * 
+ *
  * SLA COMPLIANCE:
  * - Latency: P95 <200ms end-to-end
  * - Availability: 99.9% uptime
  * - Throughput: 1000+ concurrent connections
  * - Error handling: <1% error rate
  * - Security: Multi-layer validation
- * 
+ *
  * ====================================================================
  */
 
@@ -74,25 +74,25 @@ try {
     const redSuperiorModule = await import("../redSuperior/redSuperior.js");
     RedSuperior = redSuperiorModule.default;
     publicarExplicacionRedis = redSuperiorModule.publicarExplicacionRedis;
-    
+
     dragon.sonrie("Red Superior cargada exitosamente", "servidorCentral", "RED_SUPERIOR_LOADED", {
         version: redSuperiorModule.version || '1.0.0',
         hasPublicarExplicacion: typeof publicarExplicacionRedis === 'function'
     });
-    
+
 } catch (error) {
     dragon.sePreocupa("Red Superior no disponible - usando enhanced mocks FAANG", "servidorCentral", "RED_SUPERIOR_MOCK", {
         error: error.message,
         fallback: 'enhanced_mock_implementation'
     });
-    
-    RedSuperior = { 
+
+    RedSuperior = {
         iniciar: async () => {
             dragon.respira("Mock Red Superior iniciada", "servidorCentral", "MOCK_RED_SUPERIOR_START");
             return true;
         }
     };
-    
+
     publicarExplicacionRedis = async (redis, imagenId, explicacion) => {
         dragon.respira("Mock publicar explicación Redis", "servidorCentral", "MOCK_EXPLICACION_REDIS", {
             imagenId,
@@ -118,7 +118,7 @@ const FAANG_CONFIG = {
         memoryLimitMB: parseInt(process.env.WEBSOCKET_MEMORY_LIMIT_MB) || 200,
         gcThreshold: parseInt(process.env.GC_THRESHOLD_MB) || 150
     },
-    
+
     // Connection management (Enterprise scaling)
     connections: {
         maxConnections: parseInt(process.env.MAX_WEBSOCKET_CONNECTIONS) || 1000,
@@ -128,7 +128,7 @@ const FAANG_CONFIG = {
         rateLimitWindow: parseInt(process.env.RATE_LIMIT_WINDOW_MS) || 60000,
         rateLimitMessages: parseInt(process.env.RATE_LIMIT_MESSAGES) || 100
     },
-    
+
     // Circuit breaker settings (Reliability engineering)
     circuitBreaker: {
         enabled: process.env.WEBSOCKET_CIRCUIT_BREAKER_ENABLED !== 'false',
@@ -137,7 +137,7 @@ const FAANG_CONFIG = {
         monitoringWindow: parseInt(process.env.WEBSOCKET_MONITORING_WINDOW_MS) || 300000, // 5 min
         halfOpenMaxRequests: parseInt(process.env.WEBSOCKET_HALF_OPEN_MAX) || 5
     },
-    
+
     // Security settings (Enterprise security)
     security: {
         enableConnectionValidation: process.env.WEBSOCKET_CONNECTION_VALIDATION !== 'false',
@@ -147,7 +147,7 @@ const FAANG_CONFIG = {
         rateLimitEnabled: process.env.RATE_LIMIT_ENABLED !== 'false',
         securityHeaders: process.env.SECURITY_HEADERS_ENABLED !== 'false'
     },
-    
+
     // Memory management (Performance optimization)
     memory: {
         gcInterval: parseInt(process.env.GC_MONITORING_INTERVAL_MS) || 30000,
@@ -156,7 +156,7 @@ const FAANG_CONFIG = {
         connectionMemoryThreshold: parseInt(process.env.CONNECTION_MEMORY_THRESHOLD_MB) || 50,
         forceGCEnabled: process.env.FORCE_GC_ENABLED !== 'false'
     },
-    
+
     // Monitoring settings (FAANG observability)
     monitoring: {
         healthCheckInterval: parseInt(process.env.HEALTH_CHECK_INTERVAL_MS) || 60000,
@@ -182,7 +182,7 @@ const CHANNELS = {
     RED_SUPERIOR: "dragon3:redSuperior:datosConsolidados",
     SERVIDOR_CENTRAL: "dragon3:servidorCentral",
     HEARTBEAT: "dragon3:heartbeat",
-    
+
     // FAANG: Enhanced monitoring channels
     PERFORMANCE_METRICS: "dragon3:performance:websocket",
     ERROR_ALERTS: "dragon3:error:websocket",
@@ -196,7 +196,7 @@ const CHANNELS = {
  */
 const CAMPOS_SUPERIOR_KEYS = [
     "RedExif_score",
-    "RedSignatures_score", 
+    "RedSignatures_score",
     "RedTexture_score",
     "RedDefinicion_score",
     "RedArtefactos_score",
@@ -238,27 +238,27 @@ class DragonWebSocketError extends Error {
         this.metadata = metadata;
         this.retryable = false;
         this.alertRequired = severity === 'critical' || severity === 'high';
-        
+
         if (Error.captureStackTrace) {
             Error.captureStackTrace(this, this.constructor);
         }
     }
-    
+
     setCorrelationId(correlationId) {
         this.correlationId = correlationId;
         return this;
     }
-    
+
     setConnectionId(connectionId) {
         this.connectionId = connectionId;
         return this;
     }
-    
+
     setRetryable(retryable = true) {
         this.retryable = retryable;
         return this;
     }
-    
+
     toJSON() {
         return {
             name: this.name,
@@ -357,11 +357,11 @@ class WebSocketPerformanceMonitor {
             errorCounts: new Map(),
             rateLimitViolations: []
         };
-        
+
         this.performanceObserver = new performanceHooks.PerformanceObserver((list) => {
             this.handlePerformanceEntries(list.getEntries());
         });
-        
+
         this.alertThresholds = {
             connectionP95: FAANG_CONFIG.performance.websocketConnectionP95,
             connectionP99: FAANG_CONFIG.performance.websocketConnectionP99,
@@ -370,39 +370,39 @@ class WebSocketPerformanceMonitor {
             redisPubSubP95: FAANG_CONFIG.performance.redisPubSubP95,
             memoryUsage: FAANG_CONFIG.memory.maxHeapUsage
         };
-        
+
         this.lastAlertTimes = new Map();
         this.alertCooldown = 60000; // 1 minute cooldown
-        
+
         this.startMonitoring();
     }
-    
+
     startMonitoring() {
         if (FAANG_CONFIG.monitoring.performanceLogging) {
             this.performanceObserver.observe({ entryTypes: ['measure', 'mark'] });
         }
-        
+
         // Memory monitoring específico para WebSockets
         setInterval(() => {
             this.collectMemoryMetrics();
         }, FAANG_CONFIG.memory.gcInterval);
-        
+
         // Performance summary logging
         setInterval(() => {
             this.logPerformanceSummary();
         }, FAANG_CONFIG.monitoring.metricsReportInterval);
-        
+
         dragon.sonrie('WebSocket Performance Monitor FAANG iniciado', 'servidorCentral', 'PERFORMANCE_MONITOR_START', {
             version: VERSION_MODULO,
             alertThresholds: this.alertThresholds,
             monitoringEnabled: FAANG_CONFIG.monitoring.performanceLogging
         });
     }
-    
+
     handlePerformanceEntries(entries) {
         for (const entry of entries) {
             const duration = entry.duration;
-            
+
             if (entry.name.startsWith('websocket:connection:')) {
                 this.recordConnectionTime(duration, entry.name);
             } else if (entry.name.startsWith('websocket:message:')) {
@@ -414,85 +414,85 @@ class WebSocketPerformanceMonitor {
             }
         }
     }
-    
+
     recordConnectionTime(duration, operationName) {
         this.metrics.connectionTimes.push({
             duration,
             timestamp: Date.now(),
             operation: operationName
         });
-        
+
         // Keep only last 1000 measurements
         if (this.metrics.connectionTimes.length > 1000) {
             this.metrics.connectionTimes = this.metrics.connectionTimes.slice(-1000);
         }
-        
+
         // P95 violation detection
         if (duration > this.alertThresholds.connectionP95) {
             this.handlePerformanceViolation('connection_p95', duration, this.alertThresholds.connectionP95, operationName);
         }
-        
+
         // P99 violation detection
         if (duration > this.alertThresholds.connectionP99) {
             this.handlePerformanceViolation('connection_p99', duration, this.alertThresholds.connectionP99, operationName);
         }
     }
-    
+
     recordMessageProcessingTime(duration, operationName) {
         this.metrics.messageProcessingTimes.push({
             duration,
             timestamp: Date.now(),
             operation: operationName
         });
-        
+
         if (this.metrics.messageProcessingTimes.length > 1000) {
             this.metrics.messageProcessingTimes = this.metrics.messageProcessingTimes.slice(-1000);
         }
-        
+
         if (duration > this.alertThresholds.messageProcessingP95) {
             this.handlePerformanceViolation('message_processing_p95', duration, this.alertThresholds.messageProcessingP95, operationName);
         }
     }
-    
+
     recordRedisPubSubTime(duration, operationName) {
         this.metrics.redisPubSubTimes.push({
             duration,
             timestamp: Date.now(),
             operation: operationName
         });
-        
+
         if (this.metrics.redisPubSubTimes.length > 500) {
             this.metrics.redisPubSubTimes = this.metrics.redisPubSubTimes.slice(-500);
         }
-        
+
         if (duration > this.alertThresholds.redisPubSubP95) {
             this.handlePerformanceViolation('redis_pubsub_p95', duration, this.alertThresholds.redisPubSubP95, operationName);
         }
     }
-    
+
     recordDisconnectionTime(duration, operationName) {
         this.metrics.disconnectionTimes.push({
             duration,
             timestamp: Date.now(),
             operation: operationName
         });
-        
+
         if (this.metrics.disconnectionTimes.length > 500) {
             this.metrics.disconnectionTimes = this.metrics.disconnectionTimes.slice(-500);
         }
     }
-    
+
     handlePerformanceViolation(metric, actualValue, threshold, operationName) {
         const alertKey = `${metric}_violation`;
         const lastAlert = this.lastAlertTimes.get(alertKey);
         const now = Date.now();
-        
+
         if (lastAlert && (now - lastAlert) < this.alertCooldown) {
             return;
         }
-        
+
         this.lastAlertTimes.set(alertKey, now);
-        
+
         dragon.mideRendimiento(`websocket_${metric}_violation`, actualValue, 'servidorCentral', {
             metric,
             threshold,
@@ -503,40 +503,40 @@ class WebSocketPerformanceMonitor {
             severity: actualValue > threshold * 1.5 ? 'critical' : 'high'
         });
     }
-    
+
     collectMemoryMetrics() {
         const memoryUsage = process.memoryUsage();
         const heapUsedMB = memoryUsage.heapUsed / 1024 / 1024;
         const heapTotalMB = memoryUsage.heapTotal / 1024 / 1024;
         const heapUsagePercent = (heapUsedMB / heapTotalMB) * 100;
-        
+
         const memoryMetric = {
             heapUsedMB: Math.round(heapUsedMB * 100) / 100,
             heapTotalMB: Math.round(heapTotalMB * 100) / 100,
             heapUsagePercent: Math.round(heapUsagePercent * 100) / 100,
             timestamp: Date.now()
         };
-        
+
         this.metrics.memoryUsage.push(memoryMetric);
-        
+
         if (this.metrics.memoryUsage.length > 100) {
             this.metrics.memoryUsage = this.metrics.memoryUsage.slice(-100);
         }
-        
+
         // Memory pressure detection
         if (heapUsagePercent > this.alertThresholds.memoryUsage) {
             this.handleMemoryPressure(heapUsagePercent, heapUsedMB, memoryMetric);
         }
-        
+
         // Proactive GC triggering
-        if (heapUsedMB > FAANG_CONFIG.performance.gcThreshold && 
-            FAANG_CONFIG.memory.forceGCEnabled && 
+        if (heapUsedMB > FAANG_CONFIG.performance.gcThreshold &&
+            FAANG_CONFIG.memory.forceGCEnabled &&
             global.gc) {
-            
+
             const gcStartTime = Date.now();
             global.gc();
             const gcDuration = Date.now() - gcStartTime;
-            
+
             dragon.respira('GC triggered - WebSocket memory pressure relief', 'servidorCentral', 'GC_WEBSOCKET_TRIGGER', {
                 beforeHeapMB: heapUsedMB,
                 gcDuration,
@@ -545,20 +545,20 @@ class WebSocketPerformanceMonitor {
             });
         }
     }
-    
+
     handleMemoryPressure(heapUsagePercent, heapUsedMB, memoryMetric) {
         const alertKey = 'websocket_memory_pressure';
         const lastAlert = this.lastAlertTimes.get(alertKey);
         const now = Date.now();
-        
+
         if (lastAlert && (now - lastAlert) < this.alertCooldown) {
             return;
         }
-        
+
         this.lastAlertTimes.set(alertKey, now);
-        
+
         const severity = heapUsagePercent > this.alertThresholds.memoryUsage * 1.2 ? 'critical' : 'high';
-        
+
         dragon.sePreocupa(`WebSocket memory pressure detected: ${heapUsagePercent.toFixed(1)}%`, 'servidorCentral', 'WEBSOCKET_MEMORY_PRESSURE', {
             heapUsagePercent,
             heapUsedMB,
@@ -567,40 +567,40 @@ class WebSocketPerformanceMonitor {
             memoryBreakdown: memoryMetric
         });
     }
-    
+
     logPerformanceSummary() {
         const summary = this.getSummary();
-        
+
         dragon.respira('WebSocket performance summary FAANG', 'servidorCentral', 'WEBSOCKET_PERFORMANCE_SUMMARY', {
             summary,
             version: VERSION_MODULO,
             timestamp: new Date().toISOString()
         });
     }
-    
+
     getP95Time(metricArray) {
         if (metricArray.length === 0) return 0;
         const durations = metricArray.map(m => m.duration || m).sort((a, b) => a - b);
         const index = Math.floor(durations.length * 0.95);
         return durations[index] || 0;
     }
-    
+
     getP99Time(metricArray) {
         if (metricArray.length === 0) return 0;
         const durations = metricArray.map(m => m.duration || m).sort((a, b) => a - b);
         const index = Math.floor(durations.length * 0.99);
         return durations[index] || 0;
     }
-    
+
     getAverageTime(metricArray) {
         if (metricArray.length === 0) return 0;
         const durations = metricArray.map(m => m.duration || m);
         return durations.reduce((sum, val) => sum + val, 0) / durations.length;
     }
-    
+
     getSummary() {
         const currentMemory = process.memoryUsage();
-        
+
         return {
             connections: {
                 p95: Math.round(this.getP95Time(this.metrics.connectionTimes) * 100) / 100,
@@ -634,12 +634,12 @@ class WebSocketPerformanceMonitor {
             }
         };
     }
-    
+
     incrementErrorCount(errorType) {
         const current = this.metrics.errorCounts.get(errorType) || 0;
         this.metrics.errorCounts.set(errorType, current + 1);
     }
-    
+
     recordRateLimitViolation(connectionId, currentRate, limit) {
         this.metrics.rateLimitViolations.push({
             connectionId,
@@ -647,7 +647,7 @@ class WebSocketPerformanceMonitor {
             limit,
             timestamp: Date.now()
         });
-        
+
         // Keep only last 1000 violations
         if (this.metrics.rateLimitViolations.length > 1000) {
             this.metrics.rateLimitViolations = this.metrics.rateLimitViolations.slice(-1000);
@@ -669,7 +669,7 @@ class WebSocketCircuitBreaker {
         this.recoveryTime = config.recoveryTime || FAANG_CONFIG.circuitBreaker.recoveryTime;
         this.monitoringWindow = config.monitoringWindow || FAANG_CONFIG.circuitBreaker.monitoringWindow;
         this.halfOpenMaxRequests = config.halfOpenMaxRequests || FAANG_CONFIG.circuitBreaker.halfOpenMaxRequests;
-        
+
         // Circuit breaker state
         this.state = 'CLOSED'; // CLOSED, OPEN, HALF_OPEN
         this.failures = 0;
@@ -677,7 +677,7 @@ class WebSocketCircuitBreaker {
         this.lastFailureTime = null;
         this.lastSuccessTime = null;
         this.halfOpenRequests = 0;
-        
+
         // Performance and error tracking
         this.metrics = {
             totalRequests: 0,
@@ -688,16 +688,16 @@ class WebSocketCircuitBreaker {
             errorsByType: new Map(),
             responseTimeHistory: []
         };
-        
+
         this.startMonitoring();
     }
-    
+
     startMonitoring() {
         // Clean up old metrics periodically
         setInterval(() => {
             this.cleanupMetrics();
         }, this.monitoringWindow);
-        
+
         dragon.sonrie('WebSocket Circuit Breaker FAANG iniciado', 'servidorCentral', 'CIRCUIT_BREAKER_INIT', {
             name: this.name,
             errorThreshold: this.errorThreshold,
@@ -706,22 +706,22 @@ class WebSocketCircuitBreaker {
             version: VERSION_MODULO
         });
     }
-    
+
     cleanupMetrics() {
         const now = Date.now();
         const cutoff = now - this.monitoringWindow;
-        
+
         // Keep only recent state transitions
         this.metrics.stateTransitions = this.metrics.stateTransitions.filter(st => st.timestamp > cutoff);
-        
+
         // Keep only recent response times
         this.metrics.responseTimeHistory = this.metrics.responseTimeHistory.filter(rt => rt.timestamp > cutoff);
     }
-    
+
     async executeOperation(operation, operationName = 'websocket_operation', metadata = {}) {
         const startTime = Date.now();
         this.metrics.totalRequests++;
-        
+
         // Check circuit state
         if (this.state === 'OPEN') {
             if (this.shouldAttemptReset()) {
@@ -740,11 +740,11 @@ class WebSocketCircuitBreaker {
                         ...metadata
                     }
                 );
-                
+
                 throw error;
             }
         }
-        
+
         if (this.state === 'HALF_OPEN') {
             if (this.halfOpenRequests >= this.halfOpenMaxRequests) {
                 const error = new DragonWebSocketError(
@@ -760,37 +760,37 @@ class WebSocketCircuitBreaker {
                         ...metadata
                     }
                 );
-                
+
                 throw error;
             }
             this.halfOpenRequests++;
         }
-        
+
         try {
             const result = await operation();
             const duration = Date.now() - startTime;
             this.onSuccess(duration, operationName, metadata);
             return result;
-            
+
         } catch (error) {
             const duration = Date.now() - startTime;
             this.onFailure(error, duration, operationName, metadata);
             throw error;
         }
     }
-    
+
     onSuccess(duration, operationName, metadata) {
         this.successes++;
         this.metrics.totalSuccesses++;
         this.lastSuccessTime = Date.now();
-        
+
         // Record response time
         this.metrics.responseTimeHistory.push({
             duration,
             timestamp: this.lastSuccessTime,
             operation: operationName
         });
-        
+
         if (this.state === 'HALF_OPEN') {
             if (this.successes >= this.halfOpenMaxRequests) {
                 this.transitionTo('CLOSED');
@@ -798,7 +798,7 @@ class WebSocketCircuitBreaker {
         } else if (this.state === 'CLOSED') {
             this.failures = 0; // Reset failure count on success
         }
-        
+
         dragon.respira('Circuit breaker operation success', 'servidorCentral', 'CIRCUIT_BREAKER_SUCCESS', {
             name: this.name,
             operationName,
@@ -808,23 +808,23 @@ class WebSocketCircuitBreaker {
             failures: this.failures
         });
     }
-    
+
     onFailure(error, duration, operationName, metadata) {
         this.failures++;
         this.metrics.totalFailures++;
         this.lastFailureTime = Date.now();
-        
+
         // Track error types
         const errorType = error.code || error.name || 'UnknownError';
         const errorCount = this.metrics.errorsByType.get(errorType) || 0;
         this.metrics.errorsByType.set(errorType, errorCount + 1);
-        
+
         if (this.state === 'HALF_OPEN') {
             this.transitionTo('OPEN');
         } else if (this.state === 'CLOSED' && this.failures >= this.errorThreshold) {
             this.transitionTo('OPEN');
         }
-        
+
         dragon.sePreocupa('Circuit breaker operation failure', 'servidorCentral', 'CIRCUIT_BREAKER_FAILURE', {
             name: this.name,
             operationName,
@@ -836,17 +836,17 @@ class WebSocketCircuitBreaker {
             error: error.message
         });
     }
-    
+
     shouldAttemptReset() {
         if (this.lastFailureTime === null) return false;
         return (Date.now() - this.lastFailureTime) >= this.recoveryTime;
     }
-    
+
     transitionTo(newState) {
         const oldState = this.state;
         this.state = newState;
         const timestamp = Date.now();
-        
+
         this.metrics.stateTransitions.push({
             from: oldState,
             to: newState,
@@ -854,9 +854,9 @@ class WebSocketCircuitBreaker {
             failures: this.failures,
             successes: this.successes
         });
-        
+
         this.metrics.lastStateChange = timestamp;
-        
+
         // Reset counters based on new state
         if (newState === 'CLOSED') {
             this.failures = 0;
@@ -866,7 +866,7 @@ class WebSocketCircuitBreaker {
             this.halfOpenRequests = 0;
             this.successes = 0;
         }
-        
+
         dragon.sonrie(`WebSocket circuit breaker state transition: ${oldState} → ${newState}`, 'servidorCentral', 'CIRCUIT_BREAKER_STATE_CHANGE', {
             name: this.name,
             oldState,
@@ -876,7 +876,7 @@ class WebSocketCircuitBreaker {
             timestamp: new Date(timestamp).toISOString()
         });
     }
-    
+
     getState() {
         return {
             state: this.state,
@@ -892,7 +892,7 @@ class WebSocketCircuitBreaker {
             }
         };
     }
-    
+
     reset() {
         this.transitionTo('CLOSED');
         this.failures = 0;
@@ -900,7 +900,7 @@ class WebSocketCircuitBreaker {
         this.halfOpenRequests = 0;
         this.lastFailureTime = null;
         this.lastSuccessTime = null;
-        
+
         dragon.sonrie('WebSocket circuit breaker manually reset', 'servidorCentral', 'CIRCUIT_BREAKER_MANUAL_RESET', {
             name: this.name
         });
@@ -926,24 +926,24 @@ class WebSocketSecurityValidator {
             'confirm(',
             'prompt('
         ]);
-        
+
         this.blockedIPs = new Set();
         this.connectionAttempts = new Map(); // IP -> { count, firstAttempt, lastAttempt }
         this.messageValidationCache = new Map();
-        
+
         this.initializeSecurityPatterns();
         this.startThreatMonitoring();
     }
-    
+
     initializeSecurityPatterns() {
         // Load additional patterns from environment
         const additionalPatterns = process.env.WEBSOCKET_SECURITY_PATTERNS?.split(',') || [];
         additionalPatterns.forEach(pattern => this.suspiciousPatterns.add(pattern.trim()));
-        
+
         // Load blocked IPs from environment
         const blockedIPs = process.env.WEBSOCKET_BLOCKED_IPS?.split(',') || [];
         blockedIPs.forEach(ip => this.blockedIPs.add(ip.trim()));
-        
+
         dragon.respira('WebSocket security patterns initialized', 'servidorCentral', 'SECURITY_INIT', {
             patternsCount: this.suspiciousPatterns.size,
             blockedIPsCount: this.blockedIPs.size,
@@ -951,29 +951,29 @@ class WebSocketSecurityValidator {
             version: VERSION_MODULO
         });
     }
-    
+
     startThreatMonitoring() {
         // Clean connection attempts cache periodically
         setInterval(() => {
             this.cleanupConnectionAttempts();
         }, 300000); // 5 minutes
-        
+
         // Clean message validation cache periodically
         setInterval(() => {
             this.cleanupValidationCache();
         }, 600000); // 10 minutes
     }
-    
+
     cleanupConnectionAttempts() {
         const now = Date.now();
         const maxAge = 3600000; // 1 hour
-        
+
         for (const [ip, data] of this.connectionAttempts.entries()) {
             if (now - data.lastAttempt > maxAge) {
                 this.connectionAttempts.delete(ip);
             }
         }
-        
+
         if (this.connectionAttempts.size > 0) {
             dragon.respira('Connection attempts cache cleaned', 'servidorCentral', 'SECURITY_CACHE_CLEANUP', {
                 remainingEntries: this.connectionAttempts.size,
@@ -981,24 +981,24 @@ class WebSocketSecurityValidator {
             });
         }
     }
-    
+
     cleanupValidationCache() {
         const now = Date.now();
         const maxAge = 600000; // 10 minutes
-        
+
         for (const [key, data] of this.messageValidationCache.entries()) {
             if (now - data.timestamp > maxAge) {
                 this.messageValidationCache.delete(key);
             }
         }
     }
-    
+
     async validateConnection(req, connectionId) {
         const startTime = performanceHooks.performance.now();
         const clientIP = req.socket.remoteAddress;
         const userAgent = req.headers['user-agent'] || '';
         const origin = req.headers.origin || '';
-        
+
         try {
             // IP blacklist check
             if (this.blockedIPs.has(clientIP)) {
@@ -1014,25 +1014,25 @@ class WebSocketSecurityValidator {
                     }
                 );
             }
-            
+
             // Connection rate limiting per IP
             await this.checkConnectionRateLimit(clientIP);
-            
+
             // Origin validation if enabled
             if (FAANG_CONFIG.security.allowedOrigins[0] !== '*') {
                 await this.validateOrigin(origin, connectionId);
             }
-            
+
             // User agent validation
             await this.validateUserAgent(userAgent, connectionId);
-            
+
             // Security headers validation if enabled
             if (FAANG_CONFIG.security.securityHeaders) {
                 await this.validateSecurityHeaders(req.headers, connectionId);
             }
-            
+
             const duration = performanceHooks.performance.now() - startTime;
-            
+
             dragon.sonrie('WebSocket connection security validation passed', 'servidorCentral', 'CONNECTION_SECURITY_VALIDATED', {
                 connectionId,
                 clientIP: this.maskIP(clientIP),
@@ -1041,7 +1041,7 @@ class WebSocketSecurityValidator {
                 duration: Math.round(duration * 100) / 100,
                 validationsPassed: ['ip_check', 'rate_limit', 'origin', 'user_agent', 'headers']
             });
-            
+
             return {
                 valid: true,
                 clientIP,
@@ -1050,10 +1050,10 @@ class WebSocketSecurityValidator {
                 duration: Math.round(duration * 100) / 100,
                 securityLevel: 'validated'
             };
-            
+
         } catch (error) {
             const duration = performanceHooks.performance.now() - startTime;
-            
+
             dragon.agoniza('WebSocket connection security validation failed', error, 'servidorCentral', 'CONNECTION_SECURITY_VIOLATION', {
                 connectionId,
                 clientIP: this.maskIP(clientIP),
@@ -1062,22 +1062,22 @@ class WebSocketSecurityValidator {
                 duration: Math.round(duration * 100) / 100,
                 validationType: error.code || 'unknown'
             });
-            
+
             throw error;
         }
     }
-    
+
     async checkConnectionRateLimit(clientIP) {
         const now = Date.now();
         const windowMs = 60000; // 1 minute window
         const maxConnections = 10; // Max 10 connections per minute per IP
-        
+
         const attempts = this.connectionAttempts.get(clientIP) || {
             count: 0,
             firstAttempt: now,
             lastAttempt: now
         };
-        
+
         // Reset if window expired
         if (now - attempts.firstAttempt > windowMs) {
             attempts.count = 1;
@@ -1087,9 +1087,9 @@ class WebSocketSecurityValidator {
             attempts.count++;
             attempts.lastAttempt = now;
         }
-        
+
         this.connectionAttempts.set(clientIP, attempts);
-        
+
         if (attempts.count > maxConnections) {
             throw new DragonWebSocketError(
                 `Connection rate limit exceeded for IP: ${attempts.count}/${maxConnections} in ${windowMs}ms`,
@@ -1106,7 +1106,7 @@ class WebSocketSecurityValidator {
             );
         }
     }
-    
+
     async validateOrigin(origin, connectionId) {
         if (!origin) {
             throw new DragonWebSocketError(
@@ -1117,7 +1117,7 @@ class WebSocketSecurityValidator {
                 { connectionId }
             );
         }
-        
+
         const isAllowed = FAANG_CONFIG.security.allowedOrigins.some(allowedOrigin => {
             if (allowedOrigin === '*') return true;
             if (allowedOrigin.startsWith('*.')) {
@@ -1126,7 +1126,7 @@ class WebSocketSecurityValidator {
             }
             return origin === allowedOrigin;
         });
-        
+
         if (!isAllowed) {
             throw new DragonWebSocketError(
                 `Origin not allowed: ${origin}`,
@@ -1141,7 +1141,7 @@ class WebSocketSecurityValidator {
             );
         }
     }
-    
+
     async validateUserAgent(userAgent, connectionId) {
         if (!userAgent || userAgent.length < 10) {
             throw new DragonWebSocketError(
@@ -1155,13 +1155,13 @@ class WebSocketSecurityValidator {
                 }
             );
         }
-        
+
         // Check for suspicious patterns in user agent
         const suspiciousUAPatterns = ['bot', 'crawler', 'spider', 'scraper'];
-        const hasSuspiciousPattern = suspiciousUAPatterns.some(pattern => 
+        const hasSuspiciousPattern = suspiciousUAPatterns.some(pattern =>
             userAgent.toLowerCase().includes(pattern)
         );
-        
+
         if (hasSuspiciousPattern) {
             dragon.sePreocupa('Suspicious user agent detected', 'servidorCentral', 'SUSPICIOUS_USER_AGENT_DETECTED', {
                 userAgent: userAgent.substring(0, 100),
@@ -1170,11 +1170,11 @@ class WebSocketSecurityValidator {
             });
         }
     }
-    
+
     async validateSecurityHeaders(headers, connectionId) {
         const requiredHeaders = ['user-agent', 'host'];
         const missingHeaders = requiredHeaders.filter(header => !headers[header]);
-        
+
         if (missingHeaders.length > 0) {
             throw new DragonWebSocketError(
                 `Missing required headers: ${missingHeaders.join(', ')}`,
@@ -1188,10 +1188,10 @@ class WebSocketSecurityValidator {
             );
         }
     }
-    
+
     async validateMessage(message, connectionId) {
         const startTime = performanceHooks.performance.now();
-        
+
         try {
             // Message size validation
             if (message.length > FAANG_CONFIG.security.maxMessageSize) {
@@ -1206,39 +1206,39 @@ class WebSocketSecurityValidator {
                     }
                 );
             }
-            
+
             // Content validation if enabled
             if (FAANG_CONFIG.security.enableMessageValidation) {
                 await this.validateMessageContent(message, connectionId);
             }
-            
+
             const duration = performanceHooks.performance.now() - startTime;
-            
+
             return {
                 valid: true,
                 messageSize: message.length,
                 duration: Math.round(duration * 100) / 100,
                 threatLevel: 'clean'
             };
-            
+
         } catch (error) {
             const duration = performanceHooks.performance.now() - startTime;
-            
+
             dragon.agoniza('Message security validation failed', error, 'servidorCentral', 'MESSAGE_SECURITY_VIOLATION', {
                 connectionId,
                 messageSize: message.length,
                 duration: Math.round(duration * 100) / 100,
                 validationType: error.code || 'unknown'
             });
-            
+
             throw error;
         }
     }
-    
+
     async validateMessageContent(message, connectionId) {
         // Check for suspicious patterns
         const messageText = message.toLowerCase();
-        
+
         for (const pattern of this.suspiciousPatterns) {
             if (messageText.includes(pattern.toLowerCase())) {
                 throw new MessageProcessingError(
@@ -1253,11 +1253,11 @@ class WebSocketSecurityValidator {
                 );
             }
         }
-        
+
         // JSON validation for structured messages
         try {
             const parsed = JSON.parse(message);
-            
+
             // Check for deeply nested objects (DoS protection)
             const depth = this.getObjectDepth(parsed);
             if (depth > 10) {
@@ -1272,7 +1272,7 @@ class WebSocketSecurityValidator {
                     }
                 );
             }
-            
+
         } catch (jsonError) {
             if (jsonError instanceof MessageProcessingError) {
                 throw jsonError;
@@ -1284,11 +1284,11 @@ class WebSocketSecurityValidator {
             });
         }
     }
-    
+
     getObjectDepth(obj, depth = 0) {
         if (depth > 10) return depth; // Prevent stack overflow
         if (obj === null || typeof obj !== 'object') return depth;
-        
+
         let maxDepth = depth;
         for (const key in obj) {
             if (obj.hasOwnProperty(key)) {
@@ -1298,7 +1298,7 @@ class WebSocketSecurityValidator {
         }
         return maxDepth;
     }
-    
+
     maskIP(ip) {
         // Mask IP for privacy in logs
         if (!ip) return 'unknown';
@@ -1308,17 +1308,17 @@ class WebSocketSecurityValidator {
         }
         return ip.substring(0, Math.floor(ip.length / 2)) + 'xxx';
     }
-    
+
     blockIP(ip, reason = 'security_violation') {
         this.blockedIPs.add(ip);
-        
+
         dragon.respira('IP added to blocklist', 'servidorCentral', 'IP_BLOCKED', {
             ip: this.maskIP(ip),
             reason,
             totalBlocked: this.blockedIPs.size
         });
     }
-    
+
     unblockIP(ip) {
         if (this.blockedIPs.delete(ip)) {
             dragon.respira('IP removed from blocklist', 'servidorCentral', 'IP_UNBLOCKED', {
@@ -1327,7 +1327,7 @@ class WebSocketSecurityValidator {
             });
         }
     }
-    
+
     getSecuritySummary() {
         return {
             suspiciousPatterns: this.suspiciousPatterns.size,
@@ -1357,10 +1357,10 @@ class WebSocketConnectionManager {
         this.connections = new Map(); // connectionId -> connectionInfo
         this.connectionsByIP = new Map(); // IP -> Set of connectionIds
         this.heartbeatInterval = null;
-        
+
         // Rate limiting per connection
         this.rateLimiter = new Map(); // connectionId -> { messageCount, resetTime }
-        
+
         // Performance metrics
         this.metrics = {
             totalConnections: 0,
@@ -1370,36 +1370,36 @@ class WebSocketConnectionManager {
             disconnectionReasons: new Map(),
             rateLimitViolations: 0
         };
-        
+
         this.startConnectionMonitoring();
     }
-    
+
     startConnectionMonitoring() {
         // Heartbeat monitoring
         this.heartbeatInterval = setInterval(() => {
             this.performHeartbeatCheck();
         }, FAANG_CONFIG.connections.heartbeatInterval);
-        
+
         // Connection cleanup
         setInterval(() => {
             this.cleanupInactiveConnections();
         }, FAANG_CONFIG.connections.inactiveTimeout);
-        
+
         // Rate limiter cleanup
         setInterval(() => {
             this.cleanupRateLimiter();
         }, FAANG_CONFIG.connections.rateLimitWindow);
-        
+
         dragon.sonrie('WebSocket Connection Manager FAANG iniciado', 'servidorCentral', 'CONNECTION_MANAGER_INIT', {
             maxConnections: this.maxConnections,
             heartbeatInterval: FAANG_CONFIG.connections.heartbeatInterval,
             version: VERSION_MODULO
         });
     }
-    
+
     async addConnection(ws, connectionId, clientIP, securityValidation) {
         const startTime = Date.now();
-        
+
         try {
             // Check connection limits
             if (this.connections.size >= this.maxConnections) {
@@ -1413,11 +1413,11 @@ class WebSocketConnectionManager {
                     }
                 );
             }
-            
+
             // Check connections per IP limit
             const connectionsFromIP = this.connectionsByIP.get(clientIP) || new Set();
             const maxConnectionsPerIP = 10; // Configurable limit
-            
+
             if (connectionsFromIP.size >= maxConnectionsPerIP) {
                 throw new ConnectionError(
                     `Too many connections from IP: ${connectionsFromIP.size}/${maxConnectionsPerIP}`,
@@ -1429,7 +1429,7 @@ class WebSocketConnectionManager {
                     }
                 );
             }
-            
+
             // Create connection info
             const connectionInfo = {
                 id: connectionId,
@@ -1444,26 +1444,26 @@ class WebSocketConnectionManager {
                 status: 'active',
                 rateLimitResets: 0
             };
-            
+
             // Add to tracking maps
             this.connections.set(connectionId, connectionInfo);
             connectionsFromIP.add(connectionId);
             this.connectionsByIP.set(clientIP, connectionsFromIP);
-            
+
             // Update metrics
             this.metrics.totalConnections++;
             this.metrics.activeConnections = this.connections.size;
-            
+
             if (this.connections.size > this.metrics.peakConnections) {
                 this.metrics.peakConnections = this.connections.size;
             }
-            
+
             // Initialize rate limiter for this connection
             this.rateLimiter.set(connectionId, {
                 messageCount: 0,
                 resetTime: Date.now() + FAANG_CONFIG.connections.rateLimitWindow
             });
-            
+
             dragon.sonrie('WebSocket connection added to manager', 'servidorCentral', 'CONNECTION_ADDED', {
                 connectionId,
                 clientIP: this.maskIP(clientIP),
@@ -1471,9 +1471,9 @@ class WebSocketConnectionManager {
                 connectionsFromIP: connectionsFromIP.size,
                 peakConnections: this.metrics.peakConnections
             });
-            
+
             return connectionInfo;
-            
+
         } catch (error) {
             dragon.agoniza('Error adding WebSocket connection', error, 'servidorCentral', 'CONNECTION_ADD_ERROR', {
                 connectionId,
@@ -1481,15 +1481,15 @@ class WebSocketConnectionManager {
                 totalConnections: this.connections.size,
                 error: error.message
             });
-            
+
             throw error;
         }
     }
-    
+
     removeConnection(connectionId, reason = 'normal_close') {
         const startTime = Date.now();
         const connectionInfo = this.connections.get(connectionId);
-        
+
         if (!connectionInfo) {
             dragon.sePreocupa('Attempted to remove non-existent connection', 'servidorCentral', 'CONNECTION_NOT_FOUND', {
                 connectionId,
@@ -1497,21 +1497,21 @@ class WebSocketConnectionManager {
             });
             return false;
         }
-        
+
         try {
             // Calculate connection duration
             const duration = startTime - connectionInfo.connectTime;
             this.metrics.connectionDurations.push(duration);
-            
+
             // Keep only last 1000 durations
             if (this.metrics.connectionDurations.length > 1000) {
                 this.metrics.connectionDurations = this.metrics.connectionDurations.slice(-1000);
             }
-            
+
             // Update disconnection reason metrics
             const reasonCount = this.metrics.disconnectionReasons.get(reason) || 0;
             this.metrics.disconnectionReasons.set(reason, reasonCount + 1);
-            
+
             // Remove from IP tracking
             const connectionsFromIP = this.connectionsByIP.get(connectionInfo.clientIP);
             if (connectionsFromIP) {
@@ -1520,14 +1520,14 @@ class WebSocketConnectionManager {
                     this.connectionsByIP.delete(connectionInfo.clientIP);
                 }
             }
-            
+
             // Remove from main tracking
             this.connections.delete(connectionId);
             this.rateLimiter.delete(connectionId);
-            
+
             // Update metrics
             this.metrics.activeConnections = this.connections.size;
-            
+
             dragon.respira('WebSocket connection removed from manager', 'servidorCentral', 'CONNECTION_REMOVED', {
                 connectionId,
                 clientIP: this.maskIP(connectionInfo.clientIP),
@@ -1537,20 +1537,20 @@ class WebSocketConnectionManager {
                 errorCount: connectionInfo.errorCount,
                 remainingConnections: this.connections.size
             });
-            
+
             return true;
-            
+
         } catch (error) {
             dragon.agoniza('Error removing WebSocket connection', error, 'servidorCentral', 'CONNECTION_REMOVE_ERROR', {
                 connectionId,
                 reason,
                 error: error.message
             });
-            
+
             return false;
         }
     }
-    
+
     updateConnectionActivity(connectionId) {
         const connectionInfo = this.connections.get(connectionId);
         if (connectionInfo) {
@@ -1558,29 +1558,29 @@ class WebSocketConnectionManager {
             connectionInfo.messageCount++;
         }
     }
-    
+
     checkRateLimit(connectionId) {
         const rateLimitInfo = this.rateLimiter.get(connectionId);
         if (!rateLimitInfo) {
             return true; // Allow if no rate limit info exists
         }
-        
+
         const now = Date.now();
-        
+
         // Reset if window expired
         if (now >= rateLimitInfo.resetTime) {
             rateLimitInfo.messageCount = 1;
             rateLimitInfo.resetTime = now + FAANG_CONFIG.connections.rateLimitWindow;
             return true;
         }
-        
+
         // Check limit
         if (rateLimitInfo.messageCount >= FAANG_CONFIG.connections.rateLimitMessages) {
             this.metrics.rateLimitViolations++;
-            
+
             const connectionInfo = this.connections.get(connectionId);
             const timeToReset = rateLimitInfo.resetTime - now;
-            
+
             throw new RateLimitError(
                 `Rate limit exceeded: ${rateLimitInfo.messageCount}/${FAANG_CONFIG.connections.rateLimitMessages}`,
                 connectionId,
@@ -1593,19 +1593,19 @@ class WebSocketConnectionManager {
                 }
             );
         }
-        
+
         rateLimitInfo.messageCount++;
         return true;
     }
-    
+
     performHeartbeatCheck() {
         const now = Date.now();
         const heartbeatTimeout = FAANG_CONFIG.connections.heartbeatInterval * 2; // 2x interval
         const inactiveConnections = [];
-        
+
         for (const [connectionId, connectionInfo] of this.connections.entries()) {
             const timeSinceLastActivity = now - connectionInfo.lastActivity;
-            
+
             if (timeSinceLastActivity > heartbeatTimeout) {
                 inactiveConnections.push(connectionId);
             } else if (connectionInfo.ws && connectionInfo.ws.readyState === 1) {
@@ -1622,7 +1622,7 @@ class WebSocketConnectionManager {
                 }
             }
         }
-        
+
         // Close inactive connections
         for (const connectionId of inactiveConnections) {
             const connectionInfo = this.connections.get(connectionId);
@@ -1638,7 +1638,7 @@ class WebSocketConnectionManager {
             }
             this.removeConnection(connectionId, 'heartbeat_timeout');
         }
-        
+
         if (inactiveConnections.length > 0) {
             dragon.respira('Heartbeat check completed', 'servidorCentral', 'HEARTBEAT_CHECK', {
                 totalConnections: this.connections.size,
@@ -1647,24 +1647,24 @@ class WebSocketConnectionManager {
             });
         }
     }
-    
+
     cleanupInactiveConnections() {
         const now = Date.now();
         const inactiveTimeout = FAANG_CONFIG.connections.inactiveTimeout;
         const inactiveConnections = [];
-        
+
         for (const [connectionId, connectionInfo] of this.connections.entries()) {
             const timeSinceLastActivity = now - connectionInfo.lastActivity;
-            
+
             if (timeSinceLastActivity > inactiveTimeout) {
                 inactiveConnections.push(connectionId);
             }
         }
-        
+
         for (const connectionId of inactiveConnections) {
             this.removeConnection(connectionId, 'inactive_timeout');
         }
-        
+
         if (inactiveConnections.length > 0) {
             dragon.respira('Inactive connections cleanup completed', 'servidorCentral', 'INACTIVE_CLEANUP', {
                 cleanedConnections: inactiveConnections.length,
@@ -1672,10 +1672,10 @@ class WebSocketConnectionManager {
             });
         }
     }
-    
+
     cleanupRateLimiter() {
         const now = Date.now();
-        
+
         for (const [connectionId, rateLimitInfo] of this.rateLimiter.entries()) {
             if (now >= rateLimitInfo.resetTime) {
                 rateLimitInfo.messageCount = 0;
@@ -1683,7 +1683,7 @@ class WebSocketConnectionManager {
             }
         }
     }
-    
+
     maskIP(ip) {
         if (!ip) return 'unknown';
         const parts = ip.split('.');
@@ -1692,16 +1692,16 @@ class WebSocketConnectionManager {
         }
         return ip.substring(0, Math.floor(ip.length / 2)) + 'xxx';
     }
-    
+
     getConnectionInfo(connectionId) {
         return this.connections.get(connectionId);
     }
-    
+
     getConnectionMetrics() {
-        const avgDuration = this.metrics.connectionDurations.length > 0 
+        const avgDuration = this.metrics.connectionDurations.length > 0
             ? this.metrics.connectionDurations.reduce((sum, duration) => sum + duration, 0) / this.metrics.connectionDurations.length
             : 0;
-        
+
         return {
             totalConnections: this.metrics.totalConnections,
             activeConnections: this.metrics.activeConnections,
@@ -1713,18 +1713,18 @@ class WebSocketConnectionManager {
             utilizationPercent: Math.round((this.connections.size / this.maxConnections) * 100)
         };
     }
-    
+
     async gracefulShutdown() {
         try {
             dragon.respira('Starting WebSocket connection manager graceful shutdown', 'servidorCentral', 'CONNECTION_MANAGER_SHUTDOWN_START', {
                 activeConnections: this.connections.size
             });
-            
+
             // Clear heartbeat interval
             if (this.heartbeatInterval) {
                 clearInterval(this.heartbeatInterval);
             }
-            
+
             // Close all connections gracefully
             const closePromises = [];
             for (const [connectionId, connectionInfo] of this.connections.entries()) {
@@ -1735,13 +1735,13 @@ class WebSocketConnectionManager {
                     }));
                 }
             }
-            
+
             await Promise.all(closePromises);
-            
+
             dragon.zen('WebSocket connection manager shutdown completed', 'servidorCentral', 'CONNECTION_MANAGER_SHUTDOWN_SUCCESS', {
                 closedConnections: closePromises.length
             });
-            
+
         } catch (error) {
             dragon.agoniza('Error during connection manager shutdown', error, 'servidorCentral', 'CONNECTION_MANAGER_SHUTDOWN_ERROR');
         }
@@ -1749,18 +1749,48 @@ class WebSocketConnectionManager {
 }
 
 
+  class ServidorCentralFAANG {
+    constructor(puerto, redisPublisher = null, redisSubscriber = null) {
+        this.puerto = puerto;
+        this.redisPublicador = redisPublisher;
+        this.redisSubscriptor = redisSubscriber;
+
+        this.startTime = Date.now();
+        this.version = VERSION_MODULO;
+        this.healthStatus = {
+            websocket: 'healthy',
+            redis: 'healthy',
+            circuitBreaker: 'closed',
+            performance: 'optimal'
+        };
+
+        this.totalMessages = 0;
+        this.totalErrors = 0;
+
+        // FAANG: Componentes core
+        this.performanceMonitor = new WebSocketPerformanceMonitor();
+        this.circuitBreaker = new WebSocketCircuitBreaker();
+        this.securityValidator = new WebSocketSecurityValidator();
+        this.connectionManager = new WebSocketConnectionManager();
+
+        // DragonEye monitoring
+        this.inicializarDragonEye();
+
+        // Inicialización adicional (listeners, timers, etc)
+        this.setupEventListeners();
+    }
+
     /**
      * FAANG: Enhanced performance summary reporting
      */
     reportarResumenRendimiento() {
         try {
-            const avgMessageProcessing = this.messageProcessingTimes.length > 0 
+            const avgMessageProcessing = this.messageProcessingTimes.length > 0
                 ? this.messageProcessingTimes.reduce((sum, time) => sum + time, 0) / this.messageProcessingTimes.length
                 : 0;
-            
             const p95MessageProcessing = this.getP95Time(this.messageProcessingTimes);
             const p99MessageProcessing = this.getP99Time(this.messageProcessingTimes);
-            
+
             dragon.mideRendimiento('websocket_performance_summary', avgMessageProcessing, 'servidorCentral', {
                 averageMessageProcessing: Math.round(avgMessageProcessing * 100) / 100,
                 p95MessageProcessing: Math.round(p95MessageProcessing * 100) / 100,
@@ -1772,41 +1802,30 @@ class WebSocketConnectionManager {
                 timestamp: new Date().toISOString(),
                 version: this.version
             });
-            
         } catch (error) {
             dragon.agoniza('Error reportando resumen rendimiento FAANG', error, 'servidorCentral', 'PERFORMANCE_SUMMARY_ERROR');
         }
     }
-    
-    /**
-     * FAANG: Helper method to calculate P95 time
-     */
+
     getP95Time(timeArray) {
         if (timeArray.length === 0) return 0;
         const sorted = [...timeArray].sort((a, b) => a - b);
         const index = Math.floor(sorted.length * 0.95);
         return sorted[index] || 0;
     }
-    
-    /**
-     * FAANG: Helper method to calculate P99 time
-     */
+
     getP99Time(timeArray) {
         if (timeArray.length === 0) return 0;
         const sorted = [...timeArray].sort((a, b) => a - b);
         const index = Math.floor(sorted.length * 0.99);
         return sorted[index] || 0;
     }
-    
-    /**
-     * FAANG: Enhanced event listeners setup
-     */
+
     async setupEventListeners() {
         try {
             // Circuit breaker event handling
             this.circuitBreaker.on?.('stateChange', (data) => {
                 this.healthStatus.circuitBreaker = data.newState.toLowerCase();
-                
                 dragon.respira('WebSocket circuit breaker state changed', 'servidorCentral', 'CIRCUIT_BREAKER_STATE_CHANGE', {
                     oldState: data.oldState,
                     newState: data.newState,
@@ -1815,7 +1834,7 @@ class WebSocketConnectionManager {
                     version: this.version
                 });
             });
-            
+
             // Performance monitor alerts
             this.performanceMonitor.on?.('violation', (data) => {
                 dragon.mideRendimiento(`websocket_${data.metric}_violation`, data.actualValue, 'servidorCentral', {
@@ -1827,31 +1846,26 @@ class WebSocketConnectionManager {
                     severity: data.actualValue > data.threshold * 1.5 ? 'critical' : 'high'
                 });
             });
-            
+
             // Process exit handlers for graceful shutdown
             process.on('SIGTERM', () => {
                 dragon.respira('SIGTERM received - initiating graceful shutdown', 'servidorCentral', 'GRACEFUL_SHUTDOWN_SIGTERM');
                 this.gracefulShutdown();
             });
-            
             process.on('SIGINT', () => {
                 dragon.respira('SIGINT received - initiating graceful shutdown', 'servidorCentral', 'GRACEFUL_SHUTDOWN_SIGINT');
                 this.gracefulShutdown();
             });
-            
+
             dragon.sonrie('Event listeners FAANG configurados', 'servidorCentral', 'EVENT_LISTENERS_SETUP', {
                 handlers: ['circuitBreaker', 'performanceMonitor', 'processExit'],
                 version: this.version
             });
-            
         } catch (error) {
             dragon.agoniza('Error configurando event listeners FAANG', error, 'servidorCentral', 'EVENT_LISTENERS_ERROR');
         }
     }
-    
-    /**
-     * FAANG: Process heartbeat Redis messages
-     */
+
     async procesarHeartbeatRedis(heartbeat, messageId) {
         try {
             dragon.respira('Heartbeat Redis recibido', 'servidorCentral', 'REDIS_HEARTBEAT_RECEIVED', {
@@ -1860,12 +1874,9 @@ class WebSocketConnectionManager {
                 timestamp: heartbeat.timestamp || Date.now(),
                 componentStatus: heartbeat.status || 'unknown'
             });
-            
-            // Update component health if needed
             if (heartbeat.component && heartbeat.status) {
                 this.healthStatus[heartbeat.component] = heartbeat.status;
             }
-            
         } catch (error) {
             dragon.sePreocupa('Error procesando heartbeat Redis', 'servidorCentral', 'REDIS_HEARTBEAT_ERROR', {
                 messageId,
@@ -1873,10 +1884,7 @@ class WebSocketConnectionManager {
             });
         }
     }
-    
-    /**
-     * FAANG: Process performance metrics from Redis
-     */
+
     async procesarMetricasRedis(metricas, messageId) {
         try {
             dragon.respira('Métricas Redis recibidas', 'servidorCentral', 'REDIS_METRICS_RECEIVED', {
@@ -1885,8 +1893,6 @@ class WebSocketConnectionManager {
                 source: metricas.source || 'unknown',
                 timestamp: metricas.timestamp || Date.now()
             });
-            
-            // Process specific metric types
             if (metricas.type === 'performance_violation') {
                 dragon.mideRendimiento(`external_${metricas.metric}_violation`, metricas.value, 'servidorCentral', {
                     externalSource: metricas.source,
@@ -1896,7 +1902,6 @@ class WebSocketConnectionManager {
                     messageId
                 });
             }
-            
         } catch (error) {
             dragon.sePreocupa('Error procesando métricas Redis', 'servidorCentral', 'REDIS_METRICS_ERROR', {
                 messageId,
@@ -1904,21 +1909,14 @@ class WebSocketConnectionManager {
             });
         }
     }
-    
-    /**
-     * FAANG: Enhanced connection close handler
-     */
+
     manejarCierreConexion(connectionId, code, reason) {
         const startTime = performanceHooks.performance.now();
-        
         performanceHooks.performance.mark(`websocket:disconnect:${connectionId}:start`);
-        
         try {
             const connectionInfo = this.connectionManager.getConnectionInfo(connectionId);
-            
             if (connectionInfo) {
                 const duration = Date.now() - connectionInfo.connectTime;
-                
                 dragon.respira('Conexión WebSocket FAANG cerrada', 'servidorCentral', 'CONNECTION_CLOSED', {
                     connectionId,
                     code,
@@ -1930,25 +1928,19 @@ class WebSocketConnectionManager {
                     remainingConnections: this.connectionManager.connections.size - 1
                 });
             }
-            
-            // Remove from connection manager
             this.connectionManager.removeConnection(connectionId, this.getDisconnectionReason(code));
-            
             performanceHooks.performance.mark(`websocket:disconnect:${connectionId}:end`);
-            performanceHooks.performance.measure(`websocket:disconnect:${connectionId}`, 
-                                                  `websocket:disconnect:${connectionId}:start`, 
-                                                  `websocket:disconnect:${connectionId}:end`);
-            
+            performanceHooks.performance.measure(`websocket:disconnect:${connectionId}`,
+                `websocket:disconnect:${connectionId}:start`,
+                `websocket:disconnect:${connectionId}:end`);
             const processingTime = performanceHooks.performance.now() - startTime;
-            
-            this.DragonEye?.pulse?.('connection', { 
+            this.DragonEye?.pulse?.('connection', {
                 status: 'closed',
                 connectionId,
                 code,
                 totalConnections: this.connectionManager.connections.size,
                 processingTime: Math.round(processingTime * 100) / 100
             });
-            
         } catch (error) {
             dragon.agoniza('Error manejando cierre conexión FAANG', error, 'servidorCentral', 'CONNECTION_CLOSE_HANDLER_ERROR', {
                 connectionId,
@@ -1957,20 +1949,14 @@ class WebSocketConnectionManager {
             });
         }
     }
-    
-    /**
-     * FAANG: Enhanced connection error handler
-     */
+
     manejarErrorConexion(connectionId, error) {
         try {
             const connectionInfo = this.connectionManager.getConnectionInfo(connectionId);
-            
             if (connectionInfo) {
                 connectionInfo.errorCount++;
             }
-            
             this.performanceMonitor.incrementErrorCount('connection_error');
-            
             dragon.agoniza('Error conexión WebSocket FAANG', error, 'servidorCentral', 'CONNECTION_ERROR', {
                 connectionId,
                 errorType: error.code || error.name || 'UnknownError',
@@ -1979,15 +1965,12 @@ class WebSocketConnectionManager {
                 connectionAge: connectionInfo ? Date.now() - connectionInfo.connectTime : 0,
                 messageCount: connectionInfo ? connectionInfo.messageCount : 0
             });
-            
-            // Check if connection should be terminated based on error frequency
             if (connectionInfo && connectionInfo.errorCount > 5) {
                 dragon.sePreocupa('Connection exceeded error threshold - terminating', 'servidorCentral', 'CONNECTION_ERROR_THRESHOLD', {
                     connectionId,
                     errorCount: connectionInfo.errorCount,
                     threshold: 5
                 });
-                
                 try {
                     const ws = connectionInfo.ws;
                     if (ws && ws.readyState === 1) {
@@ -2000,7 +1983,6 @@ class WebSocketConnectionManager {
                     });
                 }
             }
-            
         } catch (handlerError) {
             dragon.agoniza('Error en connection error handler FAANG', handlerError, 'servidorCentral', 'CONNECTION_ERROR_HANDLER_ERROR', {
                 connectionId,
@@ -2009,25 +1991,19 @@ class WebSocketConnectionManager {
             });
         }
     }
-    
-    /**
-     * FAANG: Enhanced pong handler for heartbeat
-     */
+
     manejarPong(connectionId) {
         try {
             const connectionInfo = this.connectionManager.getConnectionInfo(connectionId);
-            
             if (connectionInfo) {
                 connectionInfo.lastHeartbeat = Date.now();
                 connectionInfo.lastActivity = Date.now();
-                
                 dragon.respira('Pong recibido - heartbeat confirmado', 'servidorCentral', 'HEARTBEAT_PONG_RECEIVED', {
                     connectionId,
                     clientIP: this.securityValidator.maskIP(connectionInfo.clientIP),
                     lastActivity: connectionInfo.lastActivity
                 });
             }
-            
         } catch (error) {
             dragon.sePreocupa('Error manejando pong FAANG', 'servidorCentral', 'PONG_HANDLER_ERROR', {
                 connectionId,
@@ -2035,14 +2011,10 @@ class WebSocketConnectionManager {
             });
         }
     }
-    
-    /**
-     * FAANG: Enhanced WebSocket error handler
-     */
+
     manejarErrorWebSocket(error) {
         this.performanceMonitor.incrementErrorCount('websocket_server_error');
         this.healthStatus.websocket = 'error';
-        
         dragon.agoniza('Error WebSocket server FAANG', error, 'servidorCentral', 'WEBSOCKET_ERROR', {
             errorType: error.code || error.name || 'UnknownError',
             errorMessage: error.message,
@@ -2050,37 +2022,28 @@ class WebSocketConnectionManager {
             activeConnections: this.connectionManager.connections.size,
             version: this.version
         });
-        
-        this.DragonEye?.pulse?.('websocket', { 
-            status: 'error', 
+        this.DragonEye?.pulse?.('websocket', {
+            status: 'error',
             error: error.message,
             errorType: error.code || error.name,
             port: this.puerto,
             version: this.version
         });
-        
-        // Check if we need to restart or implement recovery
         if (error.code === 'EADDRINUSE') {
             dragon.agoniza('Puerto en uso - no se puede recuperar automáticamente', error, 'servidorCentral', 'PORT_IN_USE_FATAL', {
                 puerto: this.puerto
             });
         }
     }
-    
-    /**
-     * FAANG: Enhanced Redis error handler
-     */
+
     manejarErrorRedis(error) {
         this.performanceMonitor.incrementErrorCount('redis_error');
         this.healthStatus.redis = 'error';
-        
         dragon.agoniza('Error Redis subscriber FAANG', error, 'servidorCentral', 'REDIS_ERROR', {
             errorType: error.code || error.name || 'UnknownError',
             errorMessage: error.message,
             version: this.version
         });
-        
-        // Implement Redis circuit breaker logic
         if (error.code === 'ECONNREFUSED' || error.code === 'ENOTFOUND') {
             dragon.sePreocupa('Redis connection lost - activating degraded mode', 'servidorCentral', 'REDIS_DEGRADED_MODE', {
                 errorCode: error.code,
@@ -2088,10 +2051,7 @@ class WebSocketConnectionManager {
             });
         }
     }
-    
-    /**
-     * FAANG: Helper method to determine disconnection reason
-     */
+
     getDisconnectionReason(code) {
         const reasons = {
             1000: 'normal_close',
@@ -2110,13 +2070,9 @@ class WebSocketConnectionManager {
             1014: 'bad_gateway',
             1015: 'tls_handshake'
         };
-        
         return reasons[code] || `unknown_code_${code}`;
     }
-    
-    /**
-     * FAANG: Enhanced DragonEye initialization (preservado Dragon2)
-     */
+
     inicializarDragonEye() {
         try {
             this.DragonEye = {
@@ -2132,7 +2088,6 @@ class WebSocketConnectionManager {
                             },
                             status: 'alive'
                         });
-                        
                         dragon.respira(`DragonEye pulse FAANG: ${name}`, 'servidorCentral', 'DRAGONEYE_PULSE', {
                             name,
                             metrics: {
@@ -2140,7 +2095,6 @@ class WebSocketConnectionManager {
                                 version: this.version
                             }
                         });
-                        
                     } catch (error) {
                         dragon.agoniza('DragonEye pulse falló FAANG', error, 'servidorCentral', 'DRAGONEYE_ERROR', {
                             name,
@@ -2148,24 +2102,13 @@ class WebSocketConnectionManager {
                         });
                     }
                 },
-                
-                getSensorData: (name) => {
-                    return this.DragonEye.sensor.get(name);
-                },
-                
-                getAllSensors: () => {
-                    return Object.fromEntries(this.DragonEye.sensor);
-                },
-                
-                clearSensor: (name) => {
-                    return this.DragonEye.sensor.delete(name);
-                },
-                
+                getSensorData: (name) => this.DragonEye.sensor.get(name),
+                getAllSensors: () => Object.fromEntries(this.DragonEye.sensor),
+                clearSensor: (name) => this.DragonEye.sensor.delete(name),
                 getHealth: () => {
                     const sensors = Object.fromEntries(this.DragonEye.sensor);
                     const now = Date.now();
                     const staleThreshold = 300000; // 5 minutes
-                    
                     const health = {
                         status: 'healthy',
                         sensors: Object.keys(sensors).length,
@@ -2173,30 +2116,23 @@ class WebSocketConnectionManager {
                         lastUpdate: now,
                         version: this.version
                     };
-                    
                     for (const [name, data] of Object.entries(sensors)) {
                         if (now - data.timestamp > staleThreshold) {
                             health.staleSensors++;
                         }
                     }
-                    
                     if (health.staleSensors > 0) {
                         health.status = 'degraded';
                     }
-                    
                     return health;
                 }
             };
-            
             dragon.sonrie('DragonEye monitoring FAANG inicializado', 'servidorCentral', 'DRAGONEYE_INITIALIZED', {
                 features: ['pulse', 'getSensorData', 'getAllSensors', 'clearSensor', 'getHealth'],
                 version: this.version
             });
-            
         } catch (error) {
             dragon.agoniza('Error inicializando DragonEye FAANG', error, 'servidorCentral', 'DRAGONEYE_INIT_ERROR');
-            
-            // Fallback DragonEye
             this.DragonEye = {
                 pulse: () => {},
                 getSensorData: () => null,
@@ -2207,13 +2143,8 @@ class WebSocketConnectionManager {
         }
     }
 
-
-    /**
-     * FAANG: Get active components count for health monitoring
-     */
     getActiveComponentsCount() {
         let count = 0;
-        
         try {
             if (this.wss && this.wss.readyState !== this.wss.CLOSED) count++;
             if (this.redisPublicador && this.redisPublicador.status === 'ready') count++;
@@ -2223,9 +2154,7 @@ class WebSocketConnectionManager {
             if (this.securityValidator) count++;
             if (this.connectionManager) count++;
             if (this.DragonEye) count++;
-            
             return count;
-            
         } catch (error) {
             dragon.sePreocupa('Error contando componentes activos', 'servidorCentral', 'ACTIVE_COMPONENTS_COUNT_ERROR', {
                 error: error.message
@@ -2233,10 +2162,7 @@ class WebSocketConnectionManager {
             return 0;
         }
     }
-    
-    /**
-     * FAANG: Enhanced health status getter
-     */
+
     async getHealthStatus() {
         try {
             const connectionMetrics = this.connectionManager.getConnectionMetrics();
@@ -2244,54 +2170,45 @@ class WebSocketConnectionManager {
             const securitySummary = this.securityValidator.getSecuritySummary();
             const circuitBreakerState = this.circuitBreaker.getState();
             const dragonEyeHealth = this.DragonEye.getHealth();
-            
+
             const uptime = Date.now() - this.startTime;
             const errorRate = this.totalErrors / Math.max(this.totalMessages, 1);
-            
+
             // Determine overall health status
             let overallStatus = 'excellent';
             const issues = [];
-            
             if (errorRate > 0.05) {
                 overallStatus = 'degraded';
                 issues.push('high_error_rate');
             }
-            
             if (connectionMetrics.utilizationPercent > 90) {
                 overallStatus = 'stressed';
                 issues.push('high_connection_utilization');
             }
-            
             if (circuitBreakerState.state === 'OPEN') {
                 overallStatus = 'degraded';
                 issues.push('circuit_breaker_open');
             }
-            
             if (this.healthStatus.redis === 'error' || this.healthStatus.redis === 'disconnected') {
                 overallStatus = 'degraded';
                 issues.push('redis_connectivity');
             }
-            
             if (this.healthStatus.websocket === 'error') {
                 overallStatus = 'critical';
                 issues.push('websocket_server_error');
             }
-            
             if (performanceSummary.memory.currentHeapPercent > 85) {
                 overallStatus = 'stressed';
                 issues.push('high_memory_usage');
             }
-            
+
             const healthData = {
-                // Overall status
                 status: overallStatus,
                 issues,
                 timestamp: new Date().toISOString(),
                 uptime: Math.round(uptime / 1000), // seconds
                 version: this.version,
                 module: NOMBRE_MODULO,
-                
-                // Component health
                 components: {
                     websocket: {
                         status: this.healthStatus.websocket,
@@ -2336,8 +2253,6 @@ class WebSocketConnectionManager {
                         health: dragonEyeHealth
                     }
                 },
-                
-                // Performance metrics
                 performance: {
                     totalMessages: this.totalMessages,
                     totalErrors: this.totalErrors,
@@ -2360,8 +2275,6 @@ class WebSocketConnectionManager {
                         threshold: FAANG_CONFIG.memory.maxHeapUsage
                     }
                 },
-                
-                // Configuration
                 config: {
                     maxConnections: FAANG_CONFIG.connections.maxConnections,
                     circuitBreakerEnabled: FAANG_CONFIG.circuitBreaker.enabled,
@@ -2373,17 +2286,12 @@ class WebSocketConnectionManager {
                         redisPubSubP95: FAANG_CONFIG.performance.redisPubSubP95
                     }
                 },
-                
-                // Active components count
                 activeComponents: this.getActiveComponentsCount(),
-                totalComponentsExpected: 8 // websocket, redis pub/sub, perf monitor, circuit breaker, security, connection manager, dragon eye
+                totalComponentsExpected: 8
             };
-            
             return healthData;
-            
         } catch (error) {
             dragon.agoniza('Error obteniendo health status FAANG', error, 'servidorCentral', 'HEALTH_STATUS_ERROR');
-            
             return {
                 status: 'error',
                 error: error.message,
@@ -2395,13 +2303,9 @@ class WebSocketConnectionManager {
             };
         }
     }
-    
-    /**
-     * FAANG: Enhanced graceful shutdown with comprehensive cleanup
-     */
+
     async gracefulShutdown() {
         const shutdownStartTime = Date.now();
-        
         try {
             dragon.respira('Iniciando graceful shutdown Servidor Central FAANG', 'servidorCentral', 'SHUTDOWN_START', {
                 activeConnections: this.connectionManager.connections.size,
@@ -2410,23 +2314,16 @@ class WebSocketConnectionManager {
                 uptime: Math.round((Date.now() - this.startTime) / 1000),
                 version: this.version
             });
-            
-            // Step 1: Stop accepting new connections
             if (this.wss) {
                 this.wss.close();
                 dragon.respira('WebSocket server cerrado - no se aceptan nuevas conexiones', 'servidorCentral', 'SHUTDOWN_WEBSOCKET_CLOSED');
             }
-            
-            // Step 2: Gracefully close all active connections
             if (this.connectionManager) {
                 await this.connectionManager.gracefulShutdown();
                 dragon.respira('Connection manager shutdown completado', 'servidorCentral', 'SHUTDOWN_CONNECTION_MANAGER');
             }
-            
-            // Step 3: Stop performance monitoring
             if (this.performanceMonitor) {
                 try {
-                    // Log final performance summary
                     const finalSummary = this.performanceMonitor.getSummary();
                     dragon.respira('Performance monitor final summary', 'servidorCentral', 'SHUTDOWN_PERFORMANCE_SUMMARY', {
                         finalSummary,
@@ -2438,10 +2335,7 @@ class WebSocketConnectionManager {
                     });
                 }
             }
-            
-            // Step 4: Close Redis connections
             const redisClosePromises = [];
-            
             if (this.redisSubscriptor) {
                 redisClosePromises.push(
                     this.redisSubscriptor.quit().catch(error => {
@@ -2451,7 +2345,6 @@ class WebSocketConnectionManager {
                     })
                 );
             }
-            
             if (this.redisPublicador && this.redisPublicador !== this.redisSubscriptor) {
                 redisClosePromises.push(
                     this.redisPublicador.quit().catch(error => {
@@ -2461,33 +2354,22 @@ class WebSocketConnectionManager {
                     })
                 );
             }
-            
-            // Wait for Redis connections to close
             if (redisClosePromises.length > 0) {
                 await Promise.allSettled(redisClosePromises);
                 dragon.respira('Redis connections closed', 'servidorCentral', 'SHUTDOWN_REDIS_CLOSED', {
                     connectionsCount: redisClosePromises.length
                 });
             }
-            
-            // Step 5: Clear intervals and timeouts
             try {
-                // Clear any remaining intervals that might be running
-                // (Most should be cleared by component shutdowns)
-                
-                // Force garbage collection if available
                 if (global.gc && FAANG_CONFIG.memory.forceGCEnabled) {
                     global.gc();
                     dragon.respira('Forced garbage collection during shutdown', 'servidorCentral', 'SHUTDOWN_GC_FORCED');
                 }
-                
             } catch (cleanupError) {
                 dragon.sePreocupa('Error during cleanup phase', 'servidorCentral', 'SHUTDOWN_CLEANUP_ERROR', {
                     error: cleanupError.message
                 });
             }
-            
-            // Step 6: Final DragonEye pulse
             if (this.DragonEye) {
                 this.DragonEye.pulse('shutdown', {
                     status: 'completed',
@@ -2495,9 +2377,7 @@ class WebSocketConnectionManager {
                     version: this.version
                 });
             }
-            
             const shutdownDuration = Date.now() - shutdownStartTime;
-            
             dragon.zen('Servidor Central FAANG cerrado correctamente', 'servidorCentral', 'SHUTDOWN_SUCCESS', {
                 shutdownDuration,
                 totalMessages: this.totalMessages,
@@ -2506,50 +2386,37 @@ class WebSocketConnectionManager {
                 uptime: Math.round((shutdownStartTime - this.startTime) / 1000),
                 version: this.version
             });
-            
         } catch (error) {
             const shutdownDuration = Date.now() - shutdownStartTime;
-            
             dragon.agoniza('Error durante graceful shutdown FAANG', error, 'servidorCentral', 'SHUTDOWN_ERROR', {
                 shutdownDuration,
                 phase: 'unknown',
                 error: error.message,
                 version: this.version
             });
-            
-            // Force exit if graceful shutdown fails
             setTimeout(() => {
                 dragon.agoniza('Forzando salida después de error en shutdown', new Error('Forced exit'), 'servidorCentral', 'SHUTDOWN_FORCED_EXIT');
                 process.exit(1);
-            }, 5000); // 5 second timeout
+            }, 5000);
         }
     }
-    
-    /**
-     * FAANG: Get comprehensive server metrics for external monitoring
-     */
+
     getServerMetrics() {
         try {
             const connectionMetrics = this.connectionManager.getConnectionMetrics();
             const performanceSummary = this.performanceMonitor.getSummary();
             const securitySummary = this.securityValidator.getSecuritySummary();
             const circuitBreakerState = this.circuitBreaker.getState();
-            
             const uptime = Date.now() - this.startTime;
             const errorRate = this.totalErrors / Math.max(this.totalMessages, 1);
-            
             return {
                 timestamp: new Date().toISOString(),
                 version: this.version,
                 module: NOMBRE_MODULO,
-                
-                // Core metrics
                 uptime: Math.round(uptime / 1000),
                 totalMessages: this.totalMessages,
                 totalErrors: this.totalErrors,
                 errorRate: Number(errorRate.toFixed(4)),
-                
-                // Connection metrics
                 connections: {
                     active: connectionMetrics.activeConnections,
                     peak: connectionMetrics.peakConnections,
@@ -2558,8 +2425,6 @@ class WebSocketConnectionManager {
                     averageDuration: connectionMetrics.averageConnectionDuration,
                     rateLimitViolations: connectionMetrics.rateLimitViolations
                 },
-                
-                // Performance metrics
                 performance: {
                     messageProcessing: {
                         average: performanceSummary.messageProcessing.average,
@@ -2585,24 +2450,18 @@ class WebSocketConnectionManager {
                         compliance: performanceSummary.redisPubSub.p95 < FAANG_CONFIG.performance.redisPubSubP95
                     }
                 },
-                
-                // Memory metrics
                 memory: {
                     heapUsedMB: performanceSummary.memory.currentHeapMB,
                     heapPercent: performanceSummary.memory.currentHeapPercent,
                     threshold: FAANG_CONFIG.memory.maxHeapUsage,
                     compliance: performanceSummary.memory.currentHeapPercent < FAANG_CONFIG.memory.maxHeapUsage
                 },
-                
-                // Security metrics
                 security: {
                     blockedIPs: securitySummary.blockedIPs,
                     suspiciousPatterns: securitySummary.suspiciousPatterns,
                     connectionAttempts: securitySummary.connectionAttempts,
                     validationEnabled: FAANG_CONFIG.security.enableConnectionValidation
                 },
-                
-                // Circuit breaker metrics
                 circuitBreaker: {
                     state: circuitBreakerState.state,
                     failures: circuitBreakerState.failures,
@@ -2611,8 +2470,6 @@ class WebSocketConnectionManager {
                     totalRequests: circuitBreakerState.metrics.totalRequests,
                     enabled: FAANG_CONFIG.circuitBreaker.enabled
                 },
-                
-                // Health status
                 health: {
                     websocket: this.healthStatus.websocket,
                     redis: this.healthStatus.redis,
@@ -2620,8 +2477,6 @@ class WebSocketConnectionManager {
                     performance: this.healthStatus.performance,
                     overall: this.getOverallHealthScore()
                 },
-                
-                // SLA compliance
                 slaCompliance: {
                     availability: this.calculateAvailability(),
                     latency: {
@@ -2629,14 +2484,12 @@ class WebSocketConnectionManager {
                         connectionP95: performanceSummary.connections.p95 < FAANG_CONFIG.performance.websocketConnectionP95,
                         redisPubSubP95: performanceSummary.redisPubSub.p95 < FAANG_CONFIG.performance.redisPubSubP95
                     },
-                    errorRate: errorRate < 0.01, // <1% error rate target
-                    throughput: this.totalMessages > 0 ? (this.totalMessages / (uptime / 1000)) : 0 // messages per second
+                    errorRate: errorRate < 0.01,
+                    throughput: this.totalMessages > 0 ? (this.totalMessages / (uptime / 1000)) : 0
                 }
             };
-            
         } catch (error) {
             dragon.agoniza('Error obteniendo server metrics FAANG', error, 'servidorCentral', 'SERVER_METRICS_ERROR');
-            
             return {
                 timestamp: new Date().toISOString(),
                 version: this.version,
@@ -2646,47 +2499,30 @@ class WebSocketConnectionManager {
             };
         }
     }
-    
-    /**
-     * FAANG: Calculate overall health score (0-100)
-     */
+
     getOverallHealthScore() {
         try {
             let score = 100;
-            
-            // WebSocket health (20 points)
             if (this.healthStatus.websocket === 'error') score -= 20;
             else if (this.healthStatus.websocket === 'degraded') score -= 10;
-            
-            // Redis health (20 points)
             if (this.healthStatus.redis === 'error') score -= 20;
             else if (this.healthStatus.redis === 'disconnected') score -= 15;
             else if (this.healthStatus.redis === 'reconnecting') score -= 5;
-            
-            // Circuit breaker health (15 points)
             if (this.circuitBreaker.getState().state === 'OPEN') score -= 15;
             else if (this.circuitBreaker.getState().state === 'HALF_OPEN') score -= 5;
-            
-            // Error rate health (15 points)
             const errorRate = this.totalErrors / Math.max(this.totalMessages, 1);
-            if (errorRate > 0.05) score -= 15; // >5%
-            else if (errorRate > 0.02) score -= 10; // >2%
-            else if (errorRate > 0.01) score -= 5; // >1%
-            
-            // Connection utilization health (15 points)
+            if (errorRate > 0.05) score -= 15;
+            else if (errorRate > 0.02) score -= 10;
+            else if (errorRate > 0.01) score -= 5;
             const utilization = this.connectionManager.getConnectionMetrics().utilizationPercent;
             if (utilization > 95) score -= 15;
             else if (utilization > 85) score -= 10;
             else if (utilization > 75) score -= 5;
-            
-            // Memory health (15 points)
             const memoryPercent = this.performanceMonitor.getSummary().memory.currentHeapPercent;
             if (memoryPercent > 90) score -= 15;
             else if (memoryPercent > 80) score -= 10;
             else if (memoryPercent > 70) score -= 5;
-            
             return Math.max(0, Math.min(100, score));
-            
         } catch (error) {
             dragon.sePreocupa('Error calculando health score', 'servidorCentral', 'HEALTH_SCORE_ERROR', {
                 error: error.message
@@ -2694,20 +2530,14 @@ class WebSocketConnectionManager {
             return 0;
         }
     }
-    
-    /**
-     * FAANG: Calculate availability percentage
-     */
+
     calculateAvailability() {
         try {
             const uptime = Date.now() - this.startTime;
-            const totalDowntime = 0; // Would track actual downtime in production
-            
+            const totalDowntime = 0;
             if (uptime === 0) return 100;
-            
             const availability = ((uptime - totalDowntime) / uptime) * 100;
             return Math.max(0, Math.min(100, Number(availability.toFixed(3))));
-            
         } catch (error) {
             dragon.sePreocupa('Error calculando availability', 'servidorCentral', 'AVAILABILITY_CALC_ERROR', {
                 error: error.message
@@ -2728,7 +2558,7 @@ class WebSocketConnectionManager {
  */
 export async function crearServidorCentralFAANG(puerto, redisPublisher = null, redisSubscriber = null, config = {}) {
     const startTime = performanceHooks.performance.now();
-    
+
     try {
         dragon.respira('Creando Servidor Central FAANG', 'servidorCentral', 'FACTORY_CREATE_START', {
             puerto,
@@ -2737,7 +2567,7 @@ export async function crearServidorCentralFAANG(puerto, redisPublisher = null, r
             config: Object.keys(config),
             version: VERSION_MODULO
         });
-        
+
         // Validate configuration
         if (!puerto || puerto < 1 || puerto > 65535) {
             throw new DragonWebSocketError(
@@ -2748,40 +2578,40 @@ export async function crearServidorCentralFAANG(puerto, redisPublisher = null, r
                 { puerto, validRange: '1-65535' }
             );
         }
-        
+
         // Create enhanced instance
         const servidor = new ServidorCentralFAANG(puerto, redisPublisher, redisSubscriber);
-        
+
         // Apply additional configuration if provided
         if (config.maxConnections) {
             servidor.connectionManager.maxConnections = config.maxConnections;
         }
-        
+
         if (config.circuitBreakerConfig) {
             // Apply circuit breaker configuration
             Object.assign(servidor.circuitBreaker, config.circuitBreakerConfig);
         }
-        
+
         const createTime = performanceHooks.performance.now() - startTime;
-        
+
         dragon.sonrie('Servidor Central FAANG creado exitosamente', 'servidorCentral', 'FACTORY_CREATE_SUCCESS', {
             puerto,
             createTime: Math.round(createTime * 100) / 100,
             activeComponents: servidor.getActiveComponentsCount(),
             version: VERSION_MODULO
         });
-        
+
         return servidor;
-        
+
     } catch (error) {
         const createTime = performanceHooks.performance.now() - startTime;
-        
+
         dragon.agoniza('Error creando Servidor Central FAANG', error, 'servidorCentral', 'FACTORY_CREATE_ERROR', {
             puerto,
             createTime: Math.round(createTime * 100) / 100,
             error: error.message
         });
-        
+
         throw error;
     }
 }
@@ -2800,18 +2630,18 @@ export async function healthCheck(servidorCentral) {
                 'configuration'
             );
         }
-        
+
         const healthStatus = await servidorCentral.getHealthStatus();
-        
+
         // Determine HTTP status code based on health
         let httpStatus = 200; // OK
-        
+
         if (healthStatus.status === 'degraded' || healthStatus.status === 'stressed') {
             httpStatus = 503; // Service Unavailable
         } else if (healthStatus.status === 'critical' || healthStatus.status === 'error') {
             httpStatus = 503; // Service Unavailable
         }
-        
+
         return {
             httpStatus,
             body: healthStatus,
@@ -2822,10 +2652,10 @@ export async function healthCheck(servidorCentral) {
                 'X-Health-Check-Timestamp': new Date().toISOString()
             }
         };
-        
+
     } catch (error) {
         dragon.agoniza('Error en health check endpoint', error, 'servidorCentral', 'HEALTH_CHECK_ENDPOINT_ERROR');
-        
+
         return {
             httpStatus: 500,
             body: {
@@ -2856,12 +2686,12 @@ export async function metricsEndpoint(servidorCentral) {
                 'configuration'
             );
         }
-        
+
         const metrics = servidorCentral.getServerMetrics();
-        
+
         // Format for Prometheus if requested
         const prometheusMetrics = formatPrometheusMetrics(metrics);
-        
+
         return {
             httpStatus: 200,
             body: {
@@ -2876,10 +2706,10 @@ export async function metricsEndpoint(servidorCentral) {
                 'X-Metrics-Timestamp': new Date().toISOString()
             }
         };
-        
+
     } catch (error) {
         dragon.agoniza('Error en metrics endpoint', error, 'servidorCentral', 'METRICS_ENDPOINT_ERROR');
-        
+
         return {
             httpStatus: 500,
             body: {
@@ -2901,53 +2731,53 @@ function formatPrometheusMetrics(metrics) {
     try {
         const lines = [];
         const timestamp = Date.now();
-        
+
         // Help and type definitions
         lines.push('# HELP websocket_connections_active Current number of active WebSocket connections');
         lines.push('# TYPE websocket_connections_active gauge');
         lines.push(`websocket_connections_active{version="${metrics.version}"} ${metrics.connections.active} ${timestamp}`);
-        
+
         lines.push('# HELP websocket_connections_total Total number of connections since startup');
         lines.push('# TYPE websocket_connections_total counter');
         lines.push(`websocket_connections_total{version="${metrics.version}"} ${metrics.connections.total} ${timestamp}`);
-        
+
         lines.push('# HELP websocket_messages_total Total number of messages processed');
         lines.push('# TYPE websocket_messages_total counter');
         lines.push(`websocket_messages_total{version="${metrics.version}"} ${metrics.totalMessages} ${timestamp}`);
-        
+
         lines.push('# HELP websocket_errors_total Total number of errors');
         lines.push('# TYPE websocket_errors_total counter');
         lines.push(`websocket_errors_total{version="${metrics.version}"} ${metrics.totalErrors} ${timestamp}`);
-        
+
         lines.push('# HELP websocket_error_rate Current error rate');
         lines.push('# TYPE websocket_error_rate gauge');
         lines.push(`websocket_error_rate{version="${metrics.version}"} ${metrics.errorRate} ${timestamp}`);
-        
+
         lines.push('# HELP websocket_message_processing_duration_ms Message processing duration in milliseconds');
         lines.push('# TYPE websocket_message_processing_duration_ms histogram');
         lines.push(`websocket_message_processing_duration_ms{quantile="0.95",version="${metrics.version}"} ${metrics.performance.messageProcessing.p95} ${timestamp}`);
         lines.push(`websocket_message_processing_duration_ms{quantile="0.99",version="${metrics.version}"} ${metrics.performance.messageProcessing.p99} ${timestamp}`);
-        
+
         lines.push('# HELP websocket_memory_heap_used_mb Memory heap used in MB');
         lines.push('# TYPE websocket_memory_heap_used_mb gauge');
         lines.push(`websocket_memory_heap_used_mb{version="${metrics.version}"} ${metrics.memory.heapUsedMB} ${timestamp}`);
-        
+
         lines.push('# HELP websocket_circuit_breaker_state Circuit breaker state (0=closed, 1=half_open, 2=open)');
         lines.push('# TYPE websocket_circuit_breaker_state gauge');
         const cbState = metrics.circuitBreaker.state === 'CLOSED' ? 0 : metrics.circuitBreaker.state === 'HALF_OPEN' ? 1 : 2;
         lines.push(`websocket_circuit_breaker_state{version="${metrics.version}"} ${cbState} ${timestamp}`);
-        
+
         lines.push('# HELP websocket_uptime_seconds Server uptime in seconds');
         lines.push('# TYPE websocket_uptime_seconds counter');
         lines.push(`websocket_uptime_seconds{version="${metrics.version}"} ${metrics.uptime} ${timestamp}`);
-        
+
         return lines.join('\n');
-        
+
     } catch (error) {
         dragon.sePreocupa('Error formateando métricas Prometheus', 'servidorCentral', 'PROMETHEUS_FORMAT_ERROR', {
             error: error.message
         });
-        
+
         return '# Error formatting Prometheus metrics\n';
     }
 }
@@ -2957,13 +2787,13 @@ function formatPrometheusMetrics(metrics) {
  */
 export async function gracefulShutdownServer(servidorCentral, timeoutMs = 30000) {
     const shutdownStartTime = Date.now();
-    
+
     try {
         dragon.respira('Iniciando graceful shutdown externo', 'servidorCentral', 'EXTERNAL_SHUTDOWN_START', {
             timeoutMs,
             version: VERSION_MODULO
         });
-        
+
         if (!servidorCentral || typeof servidorCentral.gracefulShutdown !== 'function') {
             throw new DragonWebSocketError(
                 'Instancia de servidor central inválida',
@@ -2972,7 +2802,7 @@ export async function gracefulShutdownServer(servidorCentral, timeoutMs = 30000)
                 'configuration'
             );
         }
-        
+
         // Create shutdown promise with timeout
         const shutdownPromise = servidorCentral.gracefulShutdown();
         const timeoutPromise = new Promise((_, reject) => {
@@ -2986,32 +2816,32 @@ export async function gracefulShutdownServer(servidorCentral, timeoutMs = 30000)
                 ));
             }, timeoutMs);
         });
-        
+
         // Race shutdown vs timeout
         await Promise.race([shutdownPromise, timeoutPromise]);
-        
+
         const shutdownDuration = Date.now() - shutdownStartTime;
-        
+
         dragon.zen('Graceful shutdown externo completado', 'servidorCentral', 'EXTERNAL_SHUTDOWN_SUCCESS', {
             shutdownDuration,
             version: VERSION_MODULO
         });
-        
+
         return {
             success: true,
             duration: shutdownDuration,
             message: 'Graceful shutdown completed successfully'
         };
-        
+
     } catch (error) {
         const shutdownDuration = Date.now() - shutdownStartTime;
-        
+
         dragon.agoniza('Error en graceful shutdown externo', error, 'servidorCentral', 'EXTERNAL_SHUTDOWN_ERROR', {
             shutdownDuration,
             error: error.message,
             version: VERSION_MODULO
         });
-        
+
         return {
             success: false,
             duration: shutdownDuration,
@@ -3034,9 +2864,9 @@ export function getConnectionInfo(servidorCentral, connectionId) {
                 'configuration'
             );
         }
-        
+
         const connectionInfo = servidorCentral.connectionManager.getConnectionInfo(connectionId);
-        
+
         if (!connectionInfo) {
             return {
                 found: false,
@@ -3044,7 +2874,7 @@ export function getConnectionInfo(servidorCentral, connectionId) {
                 message: 'Connection not found'
             };
         }
-        
+
         // Mask sensitive information
         return {
             found: true,
@@ -3058,13 +2888,13 @@ export function getConnectionInfo(servidorCentral, connectionId) {
             duration: Date.now() - connectionInfo.connectTime,
             securityValidated: !!connectionInfo.securityValidation
         };
-        
+
     } catch (error) {
         dragon.sePreocupa('Error obteniendo connection info', 'servidorCentral', 'CONNECTION_INFO_ERROR', {
             connectionId,
             error: error.message
         });
-        
+
         return {
             found: false,
             connectionId,
@@ -3084,14 +2914,14 @@ export function getConnectionInfo(servidorCentral, connectionId) {
 class ServidorCentral extends ServidorCentralFAANG {
     constructor(puerto, redisPublisher = null, redisSubscriber = null) {
         super(puerto, redisPublisher, redisSubscriber);
-        
+
         dragon.respira('ServidorCentral legacy compatibility mode activado', 'servidorCentral', 'LEGACY_COMPATIBILITY_MODE', {
             puerto,
             version: this.version,
             mode: 'dragon2_compatible'
         });
     }
-    
+
     // Dragon2 compatibility methods
     async procesarAnalisis(datos) {
         try {
@@ -3101,7 +2931,7 @@ class ServidorCentral extends ServidorCentralFAANG {
             throw error;
         }
     }
-    
+
     obtenerEstadoRedes() {
         try {
             return this.datosRedes;
@@ -3112,7 +2942,7 @@ class ServidorCentral extends ServidorCentralFAANG {
             return [];
         }
     }
-    
+
     limpiarDatos() {
         try {
             this.datosRedes = [];
@@ -3136,7 +2966,7 @@ export { ServidorCentralFAANG };
 export default ServidorCentral;
 
 // Enhanced classes for testing and monitoring
-export { 
+export {
     WebSocketPerformanceMonitor,
     WebSocketCircuitBreaker,
     WebSocketSecurityValidator,
@@ -3152,24 +2982,18 @@ export {
 export { FAANG_CONFIG, CHANNELS, CAMPOS_SUPERIOR_KEYS };
 
 // Utility exports
-export { 
-    crearServidorCentralFAANG,
-    healthCheck,
-    metricsEndpoint,
-    gracefulShutdownServer,
-    getConnectionInfo
-};
+
 
 /**
  * ====================================================================
  * DRAGON3 FAANG - SERVIDOR CENTRAL WEBSOCKET DOCUMENTATION
  * ====================================================================
- * 
+ *
  * DESCRIPCIÓN:
  * Servidor central WebSocket enterprise-grade con estándares FAANG para
  * comunicación tiempo real entre analizadores, Red Superior y frontend.
  * Optimizado para P95 <200ms, 99.9% uptime y observabilidad completa.
- * 
+ *
  * EXPORTS PRINCIPALES:
  * - ServidorCentralFAANG (class): Servidor principal FAANG
  * - ServidorCentral (class): Compatibilidad Dragon2
@@ -3177,14 +3001,14 @@ export {
  * - healthCheck (function): Health check endpoint
  * - metricsEndpoint (function): Metrics endpoint
  * - gracefulShutdownServer (function): Graceful shutdown
- * 
+ *
  * COMPATIBILIDAD:
  * - Dragon2 API completamente compatible
  * - server.js integration ready
  * - analizadorImagen.js integration ready
  * - Redis pub/sub bidirectional
  * - Red Superior communication preserved
- * 
+ *
  * PERFORMANCE TARGETS FAANG:
  * - WebSocket connection: P95 <100ms, P99 <200ms
  * - Message processing: P95 <50ms, P99 <100ms
@@ -3193,7 +3017,7 @@ export {
  * - Error rate: <0.5%
  * - Uptime: 99.9%
  * - Concurrent connections: 1000+
- * 
+ *
  * FAANG FEATURES:
  * ✅ Real-time P95/P99 performance monitoring
  * ✅ Circuit breaker patterns enterprise-grade
@@ -3207,13 +3031,13 @@ export {
  * ✅ Prometheus metrics integration
  * ✅ Structured logging correlation IDs
  * ✅ WebSocket compression optimization
- * 
+ *
  * MONITORING ENDPOINTS:
  * - /health: Health status JSON
  * - /metrics: Performance metrics + Prometheus
  * - /connections: Active connections info
  * - DragonEye: Real-time sensor data
- * 
+ *
  * SECURITY FEATURES:
  * - IP blacklisting automatic
  * - Origin validation configurable
@@ -3221,7 +3045,7 @@ export {
  * - Rate limiting per connection/IP
  * - Connection validation multi-step
  * - XSS protection patterns
- * 
+ *
  * RELIABILITY PATTERNS:
  * - Circuit breaker automatic recovery
  * - Connection heartbeat monitoring
@@ -3229,30 +3053,30 @@ export {
  * - Redis fallback modes
  * - Error recovery automatic
  * - Memory pressure handling
- * 
+ *
  * CONFIGURACIÓN:
  * Todas las configuraciones via environment variables con defaults sensibles.
  * Ver FAANG_CONFIG object para opciones completas de configuración.
- * 
+ *
  * USAGE EXAMPLE:
  * ```javascript
  * import { crearServidorCentralFAANG, healthCheck } from './servidorCentral.js';
- * 
+ *
  * const servidor = await crearServidorCentralFAANG(8080, redisPublisher, redisSubscriber);
  * const health = await healthCheck(servidor);
- * 
+ *
  * // Legacy compatibility
  * import ServidorCentral from './servidorCentral.js';
  * const servidorLegacy = new ServidorCentral(8080, redisPublisher, redisSubscriber);
  * ```
- * 
+ *
  * INTEGRATION:
  * - Frontend: WebSocket client connects to puerto
  * - server.js: Uses ServidorCentral for analysis coordination
  * - analizadorImagen.js: Publishes results via Redis
  * - Red Superior: Receives consolidated data via Redis
  * - Monitoring: Health and metrics endpoints
- * 
+ *
  * ====================================================================
  */
 

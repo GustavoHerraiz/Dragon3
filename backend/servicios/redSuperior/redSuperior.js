@@ -2,26 +2,26 @@
  * ═══════════════════════════════════════════════════════════════════════════════
  * RED SUPERIOR - SISTEMA DE ANÁLISIS DISTRIBUIDO CON GPU
  * ═══════════════════════════════════════════════════════════════════════════════
- * 
+ *
  * Proyecto: Dragon3 (AI Image Auth System)
  * Autor: Gustavo Herraiz (@GustavoHerraiz)
  * Versión: 2.1.0
  * Fecha: 2025-04-15
- * 
+ *
  * DESCRIPCIÓN:
  * Sistema de red neuronal distribuida con optimizaciones FAANG nivel enterprise.
  * Maneja predicciones de autenticidad de imágenes con aceleración GPU, procesamiento
  * por lotes, cache inteligente y monitoreo completo de métricas.
- * 
+ *
  * ARQUITECTURA:
  * Frontend → server.js → analizadorImagen.js → servidorCentral.js → redSuperior.js → Analyzers
- * 
+ *
  * OBJETIVOS DE RENDIMIENTO:
  * - P95 latencia: <200ms
  * - Uptime: 99.9%
  * - Tasa de errores: <1%
  * - Throughput: >1000 predicciones/segundo
- * 
+ *
  * CARACTERÍSTICAS ENTERPRISE:
  * ✅ Aceleración GPU/WebGL con TensorFlow.js
  * ✅ Procesamiento por lotes optimizado con concurrencia controlada
@@ -33,7 +33,7 @@
  * ✅ Monitoreo de memory leaks y performance
  * ✅ Circuit breaker y retry con exponential backoff
  * ✅ Manejo completo de errores y excepciones
- * 
+ *
  * UBICACIÓN: /var/www/ProyectoDragon/redSuperior.js
  * ═══════════════════════════════════════════════════════════════════════════════
  */
@@ -160,7 +160,7 @@ const ESTADOS_SISTEMA = {
  */
 const TIPOS_ALERTA = {
   CRITICA: 'critica',
-  ALTA: 'alta', 
+  ALTA: 'alta',
   MEDIA: 'media',
   BAJA: 'baja',
   INFO: 'info'
@@ -175,24 +175,24 @@ const CODIGOS_ERROR = {
   INIT_GPU_FAILED: 'E002',
   INIT_MODEL_FAILED: 'E003',
   INIT_CACHE_FAILED: 'E004',
-  
+
   // Errores de predicción
   PREDICTION_INVALID_INPUT: 'E101',
   PREDICTION_TIMEOUT: 'E102',
   PREDICTION_GPU_ERROR: 'E103',
   PREDICTION_MODEL_ERROR: 'E104',
-  
+
   // Errores de batch
   BATCH_SIZE_INVALID: 'E201',
   BATCH_TIMEOUT: 'E202',
   BATCH_CONCURRENCY_LIMIT: 'E203',
-  
+
   // Errores de sistema
   MEMORY_LIMIT_EXCEEDED: 'E301',
   CPU_LIMIT_EXCEEDED: 'E302',
   DISK_SPACE_LOW: 'E303',
   HEALTH_CHECK_FAILED: 'E304',
-  
+
   // Errores de red/comunicación
   NETWORK_TIMEOUT: 'E401',
   NETWORK_CONNECTION_FAILED: 'E402',
@@ -230,19 +230,19 @@ const METRICAS_DEFAULT = {
 /**
  * Formateador personalizado para logs estructurados
  */
-const formatoLogPersonalizado = winston.format.printf(({ 
-  timestamp, 
-  level, 
-  message, 
-  service, 
-  operation, 
+const formatoLogPersonalizado = winston.format.printf(({
+  timestamp,
+  level,
+  message,
+  service,
+  operation,
   requestId,
   userId,
-  metrics, 
+  metrics,
   error,
   stack,
   context,
-  ...meta 
+  ...meta
 }) => {
   const logEntry = {
     '@timestamp': timestamp,
@@ -254,7 +254,7 @@ const formatoLogPersonalizado = winston.format.printf(({
     ...(requestId && { requestId }),
     ...(userId && { userId }),
     ...(metrics && { metrics }),
-    ...(error && { 
+    ...(error && {
       error: {
         message: error.message || error,
         name: error.name,
@@ -284,13 +284,13 @@ const logger = winston.createLogger({
     winston.format.errors({ stack: true }),
     formatoLogPersonalizado
   ),
-  defaultMeta: { 
+  defaultMeta: {
     service: 'redSuperior',
     version: CONFIG.RED_SUPERIOR.VERSION
   },
   transports: [
     // Log de errores separado
-    new winston.transports.File({ 
+    new winston.transports.File({
       filename: path.join(CONFIG.LOGGING.LOG_DIR, CONFIG.LOGGING.ERROR_LOG),
       level: 'error',
       maxsize: CONFIG.LOGGING.MAX_FILE_SIZE,
@@ -300,14 +300,14 @@ const logger = winston.createLogger({
         formatoLogPersonalizado
       )
     }),
-    
+
     // Log combinado general
-    new winston.transports.File({ 
+    new winston.transports.File({
       filename: path.join(CONFIG.LOGGING.LOG_DIR, CONFIG.LOGGING.COMBINED_LOG),
       maxsize: CONFIG.LOGGING.MAX_FILE_SIZE,
       maxFiles: CONFIG.LOGGING.MAX_FILES
     }),
-    
+
     // Log de auditoría para eventos críticos
     new winston.transports.File({
       filename: path.join(CONFIG.LOGGING.LOG_DIR, CONFIG.LOGGING.AUDIT_LOG),
@@ -341,7 +341,7 @@ const dragon = {
    * Log de información zen con métricas opcionales
    */
   zen: (message, file, operation, metrics = null, context = {}) => {
-    logger.info(message, { 
+    logger.info(message, {
       service: 'redSuperior',
       file,
       operation,
@@ -353,7 +353,7 @@ const dragon = {
   /**
    * Log de error con stack trace y contexto
    */
-  error: (message, error, operation, context = {}) => {
+  agoniza: (message, error, operation, context = {}) => {
     const errorObj = error instanceof Error ? error : new Error(error);
     logger.error(message, {
       service: 'redSuperior',
@@ -371,10 +371,46 @@ const dragon = {
   /**
    * Log de advertencia con contexto
    */
-  warn: (message, operation, context = {}) => {
+  seEnfada: (message, operation, context = {}) => {
     logger.warn(message, {
       service: 'redSuperior',
       operation,
+      context
+    });
+  },
+
+  /**
+   * Log de información respirando zen
+   */
+  respira: (message, file, operation, metrics = null, context = {}) => {
+    logger.info(message, {
+      service: 'redSuperior',
+      file,
+      operation,
+      ...(metrics && { metrics }),
+      ...(Object.keys(context).length > 0 && { context })
+    });
+  },
+
+  /**
+   * Log de preocupación
+   */
+  sePreocupa: (message, operation, context = {}) => {
+    logger.warn(message, {
+      service: 'redSuperior',
+      operation,
+      context
+    });
+  },
+
+  /**
+   * Log de sonrisa/felicidad
+   */
+  sonrie: (message, operation, context = {}) => {
+    logger.info(message, {
+      service: 'redSuperior',
+      operation,
+      level: 'happy',
       context
     });
   },
@@ -384,7 +420,7 @@ const dragon = {
    */
   debug: (message, operation, data = {}) => {
     logger.debug(message, {
-      service: 'redSuperior', 
+      service: 'redSuperior',
       operation,
       data
     });
@@ -419,6 +455,7 @@ const dragon = {
     });
   }
 };
+
 // =============================================================================
 // CLASE MANAGER DE MÉTRICAS ENTERPRISE
 // =============================================================================
@@ -430,20 +467,20 @@ const dragon = {
 class MetricasManager extends EventEmitter {
   constructor() {
     super();
-    
+
     // Estado interno de métricas
     this.metricas = structuredClone(METRICAS_DEFAULT);
     this.ventanaMinutos = CONFIG.METRICAS.WINDOW_SIZE_MINUTES;
     this.intervalos = new Map();
     this.alertasActivas = new Map();
     this.estadoSistema = ESTADOS_SISTEMA.INICIALIZANDO;
-    
+
     // Métricas de sistema
     this.inicioSistema = Date.now();
     this.ultimaLimpieza = Date.now();
-    
+
     dragon.zen('📊 MetricasManager inicializando...', 'redSuperior.js', 'MetricasManager.constructor');
-    
+
     this._iniciarRecoleccionMetricas();
     this._iniciarLimpiezaAutomatica();
   }
@@ -479,9 +516,9 @@ class MetricasManager extends EventEmitter {
       const antes = this._contarMetricas();
       this._limpiarVentanaMetricas();
       const despues = this._contarMetricas();
-      
+
       if (antes.total !== despues.total) {
-        dragon.debug('🧹 Limpieza automática ejecutada', 'limpiezaAutomatica', {
+        dragon.zen('🧹 Limpieza automática ejecutada', 'limpiezaAutomatica', {
           eliminadas: antes.total - despues.total,
           restantes: despues.total
         });
@@ -507,11 +544,11 @@ class MetricasManager extends EventEmitter {
 
     this.metricas.predicciones.push(prediccion);
     this.metricas.latencias.push(latencia);
-    
+
     if (usoGPU !== null) {
       this.metricas.usoRecursos.gpu.push({ timestamp, valor: usoGPU });
     }
-    
+
     if (usoMemoria !== null) {
       this.metricas.usoRecursos.memoria.push({ timestamp, valor: usoMemoria });
     }
@@ -568,7 +605,7 @@ class MetricasManager extends EventEmitter {
       this.metricas.cache.misses++;
     }
 
-    dragon.debug('Cache operation', 'registrarCache', {
+    dragon.zen('Cache operation', 'registrarCache', {
       hit,
       clave: clave ? crypto.createHash('sha256').update(clave).digest('hex').substring(0, 8) : null,
       tamaño,
@@ -581,8 +618,8 @@ class MetricasManager extends EventEmitter {
    */
   registrarEviccionCache(razon = 'ttl_expired', cantidadEliminada = 1) {
     this.metricas.cache.evictions += cantidadEliminada;
-    
-    dragon.debug('Cache eviction', 'registrarEviccionCache', {
+
+    dragon.zen('Cache eviction', 'registrarEviccionCache', {
       razon,
       cantidadEliminada,
       totalEvictions: this.metricas.cache.evictions
@@ -601,7 +638,7 @@ class MetricasManager extends EventEmitter {
       metadatos
     });
 
-    dragon.debug('Analizador actualizado', 'actualizarAnalizador', {
+    dragon.zen('Analizador actualizado', 'actualizarAnalizador', {
       id,
       tipo,
       estado
@@ -613,15 +650,15 @@ class MetricasManager extends EventEmitter {
    */
   calcularPercentiles(array, percentiles = CONFIG.METRICAS.PERCENTILES) {
     if (array.length === 0) return {};
-    
+
     const sorted = [...array].sort((a, b) => a - b);
     const result = {};
-    
+
     percentiles.forEach(p => {
       const index = Math.ceil((p / 100) * sorted.length) - 1;
       result[`p${p}`] = sorted[Math.max(0, index)];
     });
-    
+
     return result;
   }
 
@@ -631,16 +668,16 @@ class MetricasManager extends EventEmitter {
   obtenerResumen() {
     const ahora = Date.now();
     const ventana = this.ventanaMinutos * 60000;
-    
+
     // Filtrar métricas recientes
     const prediccionesRecientes = this.metricas.predicciones.filter(
       p => ahora - p.timestamp < ventana
     );
-    
+
     const erroresRecientes = this.metricas.errores.filter(
       e => ahora - e.timestamp < ventana
     );
-    
+
     const latenciasRecientes = prediccionesRecientes.map(p => p.latencia);
     const throughputReciente = this._calcularThroughput(prediccionesRecientes);
 
@@ -648,30 +685,30 @@ class MetricasManager extends EventEmitter {
       timestamp: ahora,
       uptime: ahora - this.inicioSistema,
       estado: this.estadoSistema,
-      
+
       // Métricas de predicciones
       predicciones: {
         total: prediccionesRecientes.length,
         porMinuto: this._calcularPorMinuto(prediccionesRecientes),
         throughput: throughputReciente
       },
-      
+
       // Métricas de errores
       errores: {
         total: erroresRecientes.length,
-        tasa: prediccionesRecientes.length > 0 ? 
+        tasa: prediccionesRecientes.length > 0 ?
           erroresRecientes.length / prediccionesRecientes.length : 0,
         porTipo: this._agruparErroresPorTipo(erroresRecientes)
       },
-      
+
       // Métricas de latencia
       latencia: {
         ...this.calcularPercentiles(latenciasRecientes),
-        promedio: latenciasRecientes.length > 0 ? 
+        promedio: latenciasRecientes.length > 0 ?
           latenciasRecientes.reduce((a, b) => a + b, 0) / latenciasRecientes.length : 0,
         mediana: this._calcularMediana(latenciasRecientes)
       },
-      
+
       // Métricas de cache
       cache: {
         hits: this.metricas.cache.hits,
@@ -680,20 +717,20 @@ class MetricasManager extends EventEmitter {
         ratio: this.obtenerRatioCache(),
         efectividad: this._calcularEfectividadCache()
       },
-      
+
       // Métricas de recursos
       recursos: {
         cpu: this._obtenerEstadoCPU(),
         memoria: this._obtenerEstadoMemoria(),
         gpu: this._obtenerEstadoGPU()
       },
-      
+
       // Estado de la red
       red: {
         analizadores: Array.from(this.metricas.red.analizadores.values()),
         conectividad: this._evaluarConectividad()
       },
-      
+
       // Alertas activas
       alertas: Array.from(this.alertasActivas.values())
     };
@@ -712,7 +749,7 @@ class MetricasManager extends EventEmitter {
    */
   _recolectarMetricasSistema() {
     const timestamp = Date.now();
-    
+
     // CPU usage
     const cpuUsage = process.cpuUsage();
     this.metricas.usoRecursos.cpu.push({
@@ -720,7 +757,7 @@ class MetricasManager extends EventEmitter {
       user: cpuUsage.user,
       system: cpuUsage.system
     });
-    
+
     // Memory usage
     const memUsage = process.memoryUsage();
     this.metricas.usoRecursos.memoria.push({
@@ -738,11 +775,11 @@ class MetricasManager extends EventEmitter {
   _actualizarThroughput() {
     const ahora = Date.now();
     const ventanaUltimoMinuto = ahora - 60000;
-    
+
     const prediccionesUltimoMinuto = this.metricas.predicciones.filter(
       p => p.timestamp > ventanaUltimoMinuto
     ).length;
-    
+
     this.metricas.throughput.push({
       timestamp: ahora,
       prediccionesPorMinuto: prediccionesUltimoMinuto
@@ -755,7 +792,7 @@ class MetricasManager extends EventEmitter {
   _evaluarAlertas() {
     const resumen = this.obtenerResumen();
     const nuevasAlertas = [];
-    
+
     // Alerta por tasa de errores
     if (resumen.errores.tasa > CONFIG.METRICAS.ALERT_THRESHOLDS.ERROR_RATE) {
       nuevasAlertas.push(this._crearAlerta(
@@ -765,7 +802,7 @@ class MetricasManager extends EventEmitter {
         { valor: resumen.errores.tasa, umbral: CONFIG.METRICAS.ALERT_THRESHOLDS.ERROR_RATE }
       ));
     }
-    
+
     // Alerta por latencia P95
     if (resumen.latencia.p95 > CONFIG.METRICAS.ALERT_THRESHOLDS.LATENCY_P95) {
       nuevasAlertas.push(this._crearAlerta(
@@ -775,7 +812,7 @@ class MetricasManager extends EventEmitter {
         { valor: resumen.latencia.p95, umbral: CONFIG.METRICAS.ALERT_THRESHOLDS.LATENCY_P95 }
       ));
     }
-    
+
     // Alerta por cache hit rate bajo
     if (resumen.cache.ratio < CONFIG.METRICAS.ALERT_THRESHOLDS.CACHE_HIT_RATE_MIN) {
       nuevasAlertas.push(this._crearAlerta(
@@ -785,21 +822,21 @@ class MetricasManager extends EventEmitter {
         { valor: resumen.cache.ratio, umbral: CONFIG.METRICAS.ALERT_THRESHOLDS.CACHE_HIT_RATE_MIN }
       ));
     }
-    
+
     // Procesar nuevas alertas
     nuevasAlertas.forEach(alerta => {
       if (!this.alertasActivas.has(alerta.id)) {
         this.alertasActivas.set(alerta.id, alerta);
         this.emit('nueva_alerta', alerta);
-        
-        dragon.warn(`🚨 Nueva alerta: ${alerta.tipo}`, 'evaluarAlertas', {
+
+        dragon.seEnfada(`🚨 Nueva alerta: ${alerta.tipo}`, 'evaluarAlertas', {
           alerta: alerta.descripcion,
           severidad: alerta.severidad,
           metadatos: alerta.metadatos
         });
       }
     });
-    
+
     // Limpiar alertas resueltas
     this._limpiarAlertasResueltas(resumen);
   }
@@ -825,7 +862,7 @@ class MetricasManager extends EventEmitter {
   _limpiarAlertasResueltas(resumen) {
     for (const [id, alerta] of this.alertasActivas.entries()) {
       let resuelto = false;
-      
+
       switch (alerta.tipo) {
         case 'ERROR_RATE_HIGH':
           resuelto = resumen.errores.tasa <= CONFIG.METRICAS.ALERT_THRESHOLDS.ERROR_RATE;
@@ -837,12 +874,12 @@ class MetricasManager extends EventEmitter {
           resuelto = resumen.cache.ratio >= CONFIG.METRICAS.ALERT_THRESHOLDS.CACHE_HIT_RATE_MIN;
           break;
       }
-      
+
       if (resuelto) {
         alerta.resuelto = true;
         alerta.timestampResolucion = Date.now();
         this.alertasActivas.delete(id);
-        
+
         dragon.zen(`✅ Alerta resuelta: ${alerta.tipo}`, 'limpiarAlertasResueltas', {
           duracion: alerta.timestampResolucion - alerta.timestamp
         });
@@ -855,19 +892,19 @@ class MetricasManager extends EventEmitter {
    */
   _limpiarVentanaMetricas() {
     const limite = Date.now() - (this.ventanaMinutos * 60000);
-    
+
     this.metricas.predicciones = this.metricas.predicciones.filter(
       p => p.timestamp > limite
     );
-    
+
     this.metricas.errores = this.metricas.errores.filter(
       e => e.timestamp > limite
     );
-    
+
     this.metricas.throughput = this.metricas.throughput.filter(
       t => t.timestamp > limite
     );
-    
+
     // Limpiar métricas de recursos
     Object.keys(this.metricas.usoRecursos).forEach(recurso => {
       if (Array.isArray(this.metricas.usoRecursos[recurso])) {
@@ -876,7 +913,7 @@ class MetricasManager extends EventEmitter {
         );
       }
     });
-    
+
     this.ultimaLimpieza = Date.now();
   }
 
@@ -900,10 +937,10 @@ class MetricasManager extends EventEmitter {
 
   _calcularThroughput(predicciones) {
     if (predicciones.length < 2) return 0;
-    
-    const tiempoTotal = Math.max(...predicciones.map(p => p.timestamp)) - 
+
+    const tiempoTotal = Math.max(...predicciones.map(p => p.timestamp)) -
                        Math.min(...predicciones.map(p => p.timestamp));
-    
+
     return tiempoTotal > 0 ? (predicciones.length / tiempoTotal) * 1000 : 0; // por segundo
   }
 
@@ -924,18 +961,18 @@ class MetricasManager extends EventEmitter {
   _calcularEfectividadCache() {
     const total = this.metricas.cache.hits + this.metricas.cache.misses;
     if (total === 0) return 1;
-    
+
     // Efectividad considera tanto hit rate como evictions
     const hitRate = this.metricas.cache.hits / total;
     const evictionPenalty = Math.min(this.metricas.cache.evictions / total, 0.5);
-    
+
     return Math.max(0, hitRate - evictionPenalty);
   }
 
   _obtenerEstadoCPU() {
     const recientes = this.metricas.usoRecursos.cpu.slice(-10);
     if (recientes.length === 0) return null;
-    
+
     const ultimo = recientes[recientes.length - 1];
     return {
       timestamp: ultimo.timestamp,
@@ -948,7 +985,7 @@ class MetricasManager extends EventEmitter {
   _obtenerEstadoMemoria() {
     const recientes = this.metricas.usoRecursos.memoria.slice(-1);
     if (recientes.length === 0) return null;
-    
+
     const ultimo = recientes[0];
     return {
       timestamp: ultimo.timestamp,
@@ -975,7 +1012,7 @@ class MetricasManager extends EventEmitter {
       }
       return { disponible: false, backend: tf.getBackend() };
     } catch (error) {
-      dragon.error('Error obteniendo estado GPU', error, 'obtenerEstadoGPU');
+      dragon.agoniza('Error obteniendo estado GPU', error, 'obtenerEstadoGPU');
       return { disponible: false, error: error.message };
     }
   }
@@ -983,11 +1020,11 @@ class MetricasManager extends EventEmitter {
   _evaluarConectividad() {
     const analizadoresActivos = Array.from(this.metricas.red.analizadores.values())
       .filter(a => a.estado === 'activo').length;
-    
+
     return {
       analizadoresActivos,
       totalAnalizadores: this.metricas.red.analizadores.size,
-      ratioConectividad: this.metricas.red.analizadores.size > 0 ? 
+      ratioConectividad: this.metricas.red.analizadores.size > 0 ?
         analizadoresActivos / this.metricas.red.analizadores.size : 0
     };
   }
@@ -995,7 +1032,7 @@ class MetricasManager extends EventEmitter {
   _esCritico(tipoError) {
     const erroresCriticos = [
       'INIT_TENSORFLOW_FAILED',
-      'INIT_GPU_FAILED', 
+      'INIT_GPU_FAILED',
       'MEMORY_LIMIT_EXCEEDED',
       'HEALTH_CHECK_FAILED'
     ];
@@ -1008,13 +1045,13 @@ class MetricasManager extends EventEmitter {
   establecerEstado(nuevoEstado) {
     const estadoAnterior = this.estadoSistema;
     this.estadoSistema = nuevoEstado;
-    
+
     dragon.audit('CAMBIO_ESTADO_SISTEMA', {
       estadoAnterior,
       nuevoEstado,
       timestamp: Date.now()
     });
-    
+
     this.emit('cambio_estado', { anterior: estadoAnterior, nuevo: nuevoEstado });
   }
 
@@ -1023,18 +1060,18 @@ class MetricasManager extends EventEmitter {
    */
   destruir() {
     dragon.zen('🧹 Destruyendo MetricasManager...', 'redSuperior.js', 'MetricasManager.destruir');
-    
+
     // Limpiar intervalos
     this.intervalos.forEach((intervalo, nombre) => {
       clearInterval(intervalo);
-      dragon.debug(`Intervalo ${nombre} limpiado`, 'destruir');
+      dragon.zen(`Intervalo ${nombre} limpiado`, 'destruir');
     });
-    
+
     this.intervalos.clear();
-    
+
     // Limpiar listeners
     this.removeAllListeners();
-    
+
     dragon.zen('✅ MetricasManager destruido correctamente', 'redSuperior.js', 'MetricasManager.destruir');
   }
 }
@@ -1055,17 +1092,17 @@ class CachePredicciones {
     this.maxSize = maxSize;
     this.metricas = null; // Se asignará desde RedSuperior
     this.intervalos = new Map();
-    
+
     // Configuración de limpieza automática
     this.ultimaLimpieza = Date.now();
     this.intervalLimpieza = ttl / 4; // Limpiar cada 1/4 del TTL
-    
+
     dragon.zen('🗄️ CachePredicciones inicializando...', 'redSuperior.js', 'CachePredicciones.constructor', {
       ttl,
       maxSize,
       intervalLimpieza: this.intervalLimpieza
     });
-    
+
     this._iniciarLimpiezaAutomatica();
   }
 
@@ -1076,10 +1113,10 @@ class CachePredicciones {
     const intervalo = setInterval(() => {
       this._ejecutarLimpiezaCompleta();
     }, this.intervalLimpieza);
-    
+
     this.intervalos.set('limpieza', intervalo);
-    
-    dragon.debug('Limpieza automática de cache iniciada', 'iniciarLimpiezaAutomatica', {
+
+    dragon.zen('Limpieza automática de cache iniciada', 'iniciarLimpiezaAutomatica', {
       intervalo: this.intervalLimpieza
     });
   }
@@ -1095,7 +1132,7 @@ class CachePredicciones {
       hash.update(JSON.stringify(featuresNormalizadas));
       return hash.digest('hex');
     } catch (error) {
-      dragon.error('Error generando clave de cache', error, 'generarClave');
+      dragon.agoniza('Error generando clave de cache', error, 'generarClave');
       return crypto.randomUUID(); // Fallback
     }
   }
@@ -1107,7 +1144,7 @@ class CachePredicciones {
     if (Array.isArray(features)) {
       return features.map(f => typeof f === 'number' ? Number(f.toFixed(6)) : f);
     }
-    
+
     if (typeof features === 'object' && features !== null) {
       const normalizado = {};
       Object.keys(features).sort().forEach(key => {
@@ -1116,7 +1153,7 @@ class CachePredicciones {
       });
       return normalizado;
     }
-    
+
     return features;
   }
 
@@ -1126,12 +1163,12 @@ class CachePredicciones {
   obtener(features) {
     const clave = this._generarClave(features);
     const entrada = this.cache.get(clave);
-    
+
     if (!entrada) {
       this.metricas?.registrarCache(false, clave);
       return null;
     }
-    
+
     // Verificar TTL
     if (Date.now() - entrada.timestamp > this.ttl) {
       this.cache.delete(clave);
@@ -1140,20 +1177,20 @@ class CachePredicciones {
       this.metricas?.registrarEviccionCache('ttl_expired', 1);
       return null;
     }
-    
+
     // Actualizar acceso para LRU
     this.accesos.set(clave, Date.now());
     entrada.accesos = (entrada.accesos || 0) + 1;
     entrada.ultimoAcceso = Date.now();
-    
+
     this.metricas?.registrarCache(true, clave, this._calcularTamañoEntrada(entrada));
-    
-    dragon.debug('Cache hit', 'obtener', {
+
+    dragon.zen('Cache hit', 'obtener', {
       clave: clave.substring(0, 8),
       accesos: entrada.accesos,
       edad: Date.now() - entrada.timestamp
     });
-    
+
     return entrada.resultado;
   }
 
@@ -1163,12 +1200,12 @@ class CachePredicciones {
   almacenar(features, resultado) {
     const clave = this._generarClave(features);
     const timestamp = Date.now();
-    
+
     // Verificar límite de tamaño antes de insertar
     if (this.cache.size >= this.maxSize) {
       this._liberarEspacio();
     }
-    
+
     const entrada = {
       resultado,
       timestamp,
@@ -1176,11 +1213,11 @@ class CachePredicciones {
       ultimoAcceso: timestamp,
       tamaño: this._calcularTamañoEntrada({ resultado })
     };
-    
+
     this.cache.set(clave, entrada);
     this.accesos.set(clave, timestamp);
-    
-    dragon.debug('Cache store', 'almacenar', {
+
+    dragon.zen('Cache store', 'almacenar', {
       clave: clave.substring(0, 8),
       tamaño: entrada.tamaño,
       totalEntradas: this.cache.size
@@ -1192,22 +1229,22 @@ class CachePredicciones {
    */
   _liberarEspacio() {
     const espacioALiberar = Math.ceil(this.maxSize * 0.1); // Liberar 10%
-    
+
     // Obtener entradas ordenadas por último acceso (LRU)
     const entradasOrdenadas = Array.from(this.accesos.entries())
       .sort((a, b) => a[1] - b[1]) // Ordenar por timestamp ascendente
       .slice(0, espacioALiberar)
       .map(([clave]) => clave);
-    
+
     // Eliminar entradas LRU
     entradasOrdenadas.forEach(clave => {
       this.cache.delete(clave);
       this.accesos.delete(clave);
     });
-    
+
     this.metricas?.registrarEviccionCache('lru_eviction', espacioALiberar);
-    
-    dragon.debug('Espacio liberado en cache', 'liberarEspacio', {
+
+    dragon.zen('Espacio liberado en cache', 'liberarEspacio', {
       entradasEliminadas: espacioALiberar,
       entradasRestantes: this.cache.size
     });
@@ -1220,7 +1257,7 @@ class CachePredicciones {
     const inicioLimpieza = Date.now();
     const tamañoInicial = this.cache.size;
     let entradasEliminadas = 0;
-    
+
     // Limpiar entradas expiradas
     for (const [clave, entrada] of this.cache.entries()) {
       if (inicioLimpieza - entrada.timestamp > this.ttl) {
@@ -1229,13 +1266,13 @@ class CachePredicciones {
         entradasEliminadas++;
       }
     }
-    
+
     this.ultimaLimpieza = inicioLimpieza;
-    
+
     if (entradasEliminadas > 0) {
       this.metricas?.registrarEviccionCache('cleanup_expired', entradasEliminadas);
-      
-      dragon.debug('Limpieza completa de cache ejecutada', 'ejecutarLimpiezaCompleta', {
+
+      dragon.zen('Limpieza completa de cache ejecutada', 'ejecutarLimpiezaCompleta', {
         tamañoInicial,
         entradasEliminadas,
         tamañoFinal: this.cache.size,
@@ -1261,7 +1298,7 @@ class CachePredicciones {
   obtenerEstadisticas() {
     const ahora = Date.now();
     const entradas = Array.from(this.cache.values());
-    
+
     return {
       tamaño: this.cache.size,
       maxSize: this.maxSize,
@@ -1270,9 +1307,9 @@ class CachePredicciones {
       ultimaLimpieza: this.ultimaLimpieza,
       estadisticasEntradas: {
         promedio: {
-          accesos: entradas.length > 0 ? 
+          accesos: entradas.length > 0 ?
             entradas.reduce((sum, e) => sum + (e.accesos || 0), 0) / entradas.length : 0,
-          edad: entradas.length > 0 ? 
+          edad: entradas.length > 0 ?
             entradas.reduce((sum, e) => sum + (ahora - e.timestamp), 0) / entradas.length : 0
         },
         total: {
@@ -1288,7 +1325,7 @@ class CachePredicciones {
    */
   invalidar(patron = null) {
     let entradasInvalidadas = 0;
-    
+
     if (patron === null) {
       // Limpiar todo el cache
       entradasInvalidadas = this.cache.size;
@@ -1304,14 +1341,14 @@ class CachePredicciones {
         }
       }
     }
-    
+
     this.metricas?.registrarEviccionCache('manual_invalidation', entradasInvalidadas);
-    
+
     dragon.zen('Cache invalidado', 'redSuperior.js', 'invalidar', {
       entradasInvalidadas,
       patron: patron ? 'patron_especifico' : 'completo'
     });
-    
+
     return entradasInvalidadas;
   }
 
@@ -1323,13 +1360,13 @@ class CachePredicciones {
       if (typeof patron === 'function') {
         return patron(entrada);
       }
-      
+
       if (typeof patron === 'object') {
-        return Object.keys(patron).every(key => 
+        return Object.keys(patron).every(key =>
           entrada.resultado[key] === patron[key]
         );
       }
-      
+
       return false;
     } catch {
       return false;
@@ -1343,33 +1380,33 @@ class CachePredicciones {
     if (!Array.isArray(featuresComunes) || typeof prediccionFn !== 'function') {
       throw new Error('Parámetros inválidos para precarga de cache');
     }
-    
+
     dragon.zen('🔄 Iniciando precarga de cache...', 'redSuperior.js', 'precargar', {
       entradas: featuresComunes.length
     });
-    
+
     let precargadas = 0;
     const inicio = Date.now();
-    
+
     for (const features of featuresComunes) {
       try {
         const resultado = await prediccionFn(features);
         this.almacenar(features, resultado);
         precargadas++;
       } catch (error) {
-        dragon.error('Error en precarga de cache', error, 'precargar', { features });
+        dragon.agoniza('Error en precarga de cache', error, 'precargar', { features });
       }
     }
-    
+
     const duracion = Date.now() - inicio;
-    
+
     dragon.zen('✅ Precarga de cache completada', 'redSuperior.js', 'precargar_completada', {
       precargadas,
       total: featuresComunes.length,
       duracion,
       tasa: precargadas / featuresComunes.length
     });
-    
+
     return { precargadas, duracion };
   }
 
@@ -1378,19 +1415,19 @@ class CachePredicciones {
    */
   destruir() {
     dragon.zen('🧹 Destruyendo CachePredicciones...', 'redSuperior.js', 'CachePredicciones.destruir');
-    
+
     // Limpiar intervalos
     this.intervalos.forEach((intervalo, nombre) => {
       clearInterval(intervalo);
-      dragon.debug(`Intervalo de cache ${nombre} limpiado`, 'destruir');
+      dragon.zen(`Intervalo de cache ${nombre} limpiado`, 'destruir');
     });
-    
+
     this.intervalos.clear();
-    
+
     // Limpiar cache
     this.cache.clear();
     this.accesos.clear();
-    
+
     dragon.zen('✅ CachePredicciones destruido correctamente', 'redSuperior.js', 'CachePredicciones.destruir');
   }
 }
@@ -1405,7 +1442,7 @@ class CachePredicciones {
 class RedSuperior extends EventEmitter {
   constructor() {
     super();
-    
+
     // Estado del sistema
     this.id = crypto.randomUUID();
     this.version = CONFIG.RED_SUPERIOR.VERSION;
@@ -1414,35 +1451,35 @@ class RedSuperior extends EventEmitter {
     this.gpuDisponible = false;
     this.backendTensorFlow = null;
     this.estadoSistema = ESTADOS_SISTEMA.INICIALIZANDO;
-    
+
     // Componentes principales
     this.metricas = new MetricasManager();
     this.cache = new CachePredicciones();
     this.cache.metricas = this.metricas;
-    
+
     // Red de analizadores distribuidos
     this.analizadores = new Map();
     this.poolConexiones = new Map();
-    
+
     // Control de concurrencia y rate limiting
     this.operacionesEnCurso = new Set();
     this.limitadorTasa = new Map(); // Por IP/usuario
     this.circuitBreaker = new Map(); // Por servicio
-    
+
     // Timestamps importantes
     this.tiempoInicializacion = null;
     this.ultimoHealthCheck = null;
     this.ultimaOperacion = null;
-    
+
     // Request correlation para trazabilidad
     this.correlacionRequests = new Map();
-    
+
     dragon.zen('🐉 Red Superior inicializando...', 'redSuperior.js', 'RedSuperior.constructor', {
       id: this.id,
       version: this.version,
       timestamp: Date.now()
     });
-    
+
     this._configurarEventListeners();
   }
 
@@ -1455,7 +1492,7 @@ class RedSuperior extends EventEmitter {
       this.emit('alerta_sistema', alerta);
       this._manejarAlertaSistema(alerta);
     });
-    
+
     this.metricas.on('cambio_estado', ({ anterior, nuevo }) => {
       dragon.audit('CAMBIO_ESTADO_RED_SUPERIOR', {
         estadoAnterior: anterior,
@@ -1463,14 +1500,14 @@ class RedSuperior extends EventEmitter {
         redSuperiorId: this.id
       });
     });
-    
+
     // Listener para limpieza automática
     this.on('cierre_iniciado', () => {
       this.estadoSistema = ESTADOS_SISTEMA.CERRANDO;
       this.metricas.establecerEstado(ESTADOS_SISTEMA.CERRANDO);
     });
-    
-    dragon.debug('Event listeners configurados', 'configurarEventListeners');
+
+    dragon.zen('Event listeners configurados', 'configurarEventListeners');
   }
 
   /**
@@ -1479,7 +1516,7 @@ class RedSuperior extends EventEmitter {
   async inicializar() {
     const inicioInicializacion = performance.now();
     const correlationId = crypto.randomUUID();
-    
+
     try {
       dragon.zen('🚀 Iniciando inicialización completa de Red Superior...', 'redSuperior.js', 'inicializar', {
         correlationId,
@@ -1487,53 +1524,53 @@ class RedSuperior extends EventEmitter {
         nodeVersion: process.version,
         platform: process.platform
       });
-      
+
       this.estadoSistema = ESTADOS_SISTEMA.INICIALIZANDO;
       this.metricas.establecerEstado(ESTADOS_SISTEMA.INICIALIZANDO);
-      
+
       // STEP 1: Inicialización de TensorFlow con GPU
       await this._inicializarTensorFlow();
-      
+
       // STEP 2: Carga del modelo de ML
       await this._cargarModelo();
-      
+
       // STEP 3: Inicialización de analizadores distribuidos
       await this._inicializarAnalizadores();
-      
+
       // STEP 4: Verificación de conectividad
       await this._verificarConectividad();
-      
+
       // STEP 5: Precarga del cache si es necesario
       await this._precargarCache();
-      
+
       // STEP 6: Verificación final del sistema
       await this._verificacionFinalSistema();
-      
+
       // Marcar como inicializado
       this.inicializado = true;
       this.tiempoInicializacion = performance.now() - inicioInicializacion;
       this.estadoSistema = ESTADOS_SISTEMA.LISTO;
       this.metricas.establecerEstado(ESTADOS_SISTEMA.LISTO);
-      
+
       const estadoFinal = await this._generarEstadoInicializacion();
-      
+
       dragon.zen('✅ Red Superior inicializada exitosamente', 'redSuperior.js', 'inicializar_exitoso', {
         correlationId,
         tiempoInicializacion: `${this.tiempoInicializacion.toFixed(2)}ms`,
         ...estadoFinal
       });
-      
+
       dragon.audit('RED_SUPERIOR_INICIALIZADA', {
         redSuperiorId: this.id,
         tiempoInicializacion: this.tiempoInicializacion,
         estadoFinal,
         correlationId
       });
-      
+
       this.emit('inicializado', estadoFinal);
-      
+
       return estadoFinal;
-      
+
     } catch (error) {
       this.estadoSistema = ESTADOS_SISTEMA.ERROR;
       this.metricas.establecerEstado(ESTADOS_SISTEMA.ERROR);
@@ -1541,12 +1578,12 @@ class RedSuperior extends EventEmitter {
         correlationId,
         tiempoTranscurrido: performance.now() - inicioInicializacion
       });
-      
-      dragon.error('❌ Error crítico inicializando Red Superior', error, 'inicializar', {
+
+      dragon.agoniza('❌ Error crítico inicializando Red Superior', error, 'inicializar', {
         correlationId,
         tiempoTranscurrido: performance.now() - inicioInicializacion
       });
-      
+
       throw new Error(`Error inicializando Red Superior: ${error.message}`);
     }
   }
@@ -1556,23 +1593,23 @@ class RedSuperior extends EventEmitter {
    */
   async _inicializarTensorFlow() {
     dragon.zen('🔧 Inicializando TensorFlow.js con configuración GPU...', 'redSuperior.js', 'inicializarTensorFlow');
-    
+
     try {
       // Esperar a que TensorFlow esté listo
       await tf.ready();
-      
+
       this.backendTensorFlow = tf.getBackend();
-      
+
       // Configuración específica por backend
       if (this.backendTensorFlow === 'webgl') {
         await this._configurarWebGL();
       } else if (this.backendTensorFlow === 'tensorflow') {
         await this._configurarTensorFlowGPU();
       }
-      
+
       // Verificar disponibilidad de GPU
       this.gpuDisponible = ['webgl', 'tensorflow'].includes(this.backendTensorFlow);
-      
+
       if (this.gpuDisponible) {
         dragon.zen('🚀 GPU acceleration activada', 'redSuperior.js', 'gpu_ready', {
           backend: this.backendTensorFlow,
@@ -1580,20 +1617,20 @@ class RedSuperior extends EventEmitter {
           memoria: this._obtenerInfoMemoriaGPU()
         });
       } else {
-        dragon.warn('⚠️ GPU no disponible, usando CPU', 'inicializarTensorFlow', {
+        dragon.seEnfada('⚠️ GPU no disponible, usando CPU', 'inicializarTensorFlow', {
           backend: this.backendTensorFlow,
           backendsSoportados: CONFIG.GPU.BACKEND_PRIORITY
         });
       }
-      
+
       // Verificar memoria disponible
       const memoriaInfo = tf.memory();
-      dragon.debug('Estado memoria TensorFlow', 'inicializarTensorFlow', {
+      dragon.zen('Estado memoria TensorFlow', 'inicializarTensorFlow', {
         tensors: memoriaInfo.numTensors,
         dataBuffers: memoriaInfo.numDataBuffers,
         bytes: memoriaInfo.numBytes
       });
-      
+
     } catch (error) {
       this.metricas.registrarError('TENSORFLOW_INIT_FAILED', error.message, error.stack, CODIGOS_ERROR.INIT_TENSORFLOW_FAILED);
       throw new Error(`Error inicializando TensorFlow: ${error.message}`);
@@ -1607,13 +1644,13 @@ class RedSuperior extends EventEmitter {
     try {
       await tf.ENV.set('WEBGL_DELETE_TEXTURE_THRESHOLD', CONFIG.GPU.WEBGL_DELETE_THRESHOLD);
       await tf.ENV.set('WEBGL_FORCE_F16_TEXTURES', CONFIG.GPU.WEBGL_FORCE_F16);
-      
-      dragon.debug('WebGL configurado', 'configurarWebGL', {
+
+      dragon.zen('WebGL configurado', 'configurarWebGL', {
         deleteThreshold: CONFIG.GPU.WEBGL_DELETE_THRESHOLD,
         forceF16: CONFIG.GPU.WEBGL_FORCE_F16
       });
     } catch (error) {
-      dragon.warn('Error configurando WebGL', 'configurarWebGL', { error: error.message });
+      dragon.seEnfada('Error configurando WebGL', 'configurarWebGL', { error: error.message });
     }
   }
 
@@ -1623,11 +1660,11 @@ class RedSuperior extends EventEmitter {
   async _configurarTensorFlowGPU() {
     try {
       // Configuraciones específicas para TensorFlow GPU si es necesario
-      dragon.debug('TensorFlow GPU configurado', 'configurarTensorFlowGPU', {
+      dragon.zen('TensorFlow GPU configurado', 'configurarTensorFlowGPU', {
         memoryFraction: CONFIG.GPU.MEMORY_FRACTION
       });
     } catch (error) {
-      dragon.warn('Error configurando TensorFlow GPU', 'configurarTensorFlowGPU', { error: error.message });
+      dragon.seEnfada('Error configurando TensorFlow GPU', 'configurarTensorFlowGPU', { error: error.message });
     }
   }
 
@@ -1636,11 +1673,11 @@ class RedSuperior extends EventEmitter {
    */
   async _cargarModelo() {
     dragon.zen('📥 Cargando modelo de Machine Learning...', 'redSuperior.js', 'cargarModelo');
-    
+
     try {
       // TODO: Reemplazar con la carga real del modelo
       // this.modelo = await tf.loadLayersModel('/ruta/al/modelo/model.json');
-      
+
       // Simulación del modelo por ahora
       this.modelo = {
         tipo: 'imagen_autenticidad_detector',
@@ -1656,10 +1693,10 @@ class RedSuperior extends EventEmitter {
           timestamp: Date.now()
         })).digest('hex')
       };
-      
+
       // Verificar integridad del modelo
       await this._verificarIntegridadModelo();
-      
+
       dragon.zen('✅ Modelo cargado exitosamente', 'redSuperior.js', 'modelo_cargado', {
         tipo: this.modelo.tipo,
         version: this.modelo.version,
@@ -1667,14 +1704,14 @@ class RedSuperior extends EventEmitter {
         precision: this.modelo.precision,
         md5: this.modelo.md5
       });
-      
+
       dragon.audit('MODELO_CARGADO', {
         modeloTipo: this.modelo.tipo,
         modeloVersion: this.modelo.version,
         modeloMd5: this.modelo.md5,
         redSuperiorId: this.id
       });
-      
+
     } catch (error) {
       this.metricas.registrarError('MODEL_LOAD_FAILED', error.message, error.stack, CODIGOS_ERROR.INIT_MODEL_FAILED);
       throw new Error(`Error cargando modelo: ${error.message}`);
@@ -1688,29 +1725,29 @@ class RedSuperior extends EventEmitter {
     if (!this.modelo) {
       throw new Error('Modelo no cargado para verificación');
     }
-    
+
     // Verificaciones básicas del modelo
     const verificaciones = [
       { nombre: 'tipo', valor: this.modelo.tipo, requerido: true },
       { nombre: 'version', valor: this.modelo.version, requerido: true },
       { nombre: 'arquitectura', valor: this.modelo.arquitectura, requerido: true }
     ];
-    
+
     for (const verificacion of verificaciones) {
       if (verificacion.requerido && !verificacion.valor) {
         throw new Error(`Modelo inválido: falta ${verificacion.nombre}`);
       }
     }
-    
+
     // Verificar que la precisión esté en rango válido
     if (this.modelo.precision < 0.8) {
-      dragon.warn('Precisión del modelo por debajo del umbral recomendado', 'verificarIntegridadModelo', {
+      dragon.seEnfada('Precisión del modelo por debajo del umbral recomendado', 'verificarIntegridadModelo', {
         precision: this.modelo.precision,
         umbralMinimo: 0.8
       });
     }
-    
-    dragon.debug('Integridad del modelo verificada', 'verificarIntegridadModelo', {
+
+    dragon.zen('Integridad del modelo verificada', 'verificarIntegridadModelo', {
       verificacionesPasadas: verificaciones.length,
       modeloValido: true
     });
@@ -1721,7 +1758,7 @@ class RedSuperior extends EventEmitter {
    */
   async _inicializarAnalizadores() {
     dragon.zen('🔗 Inicializando red de analizadores distribuidos...', 'redSuperior.js', 'inicializarAnalizadores');
-    
+
     try {
       // Configurar tipos de analizadores
       const tiposAnalizadores = [
@@ -1744,30 +1781,30 @@ class RedSuperior extends EventEmitter {
           configuracion: { verificarExif: true, timeout: 1000 }
         }
       ];
-      
+
       let totalAnalizadores = 0;
-      
+
       for (const config of tiposAnalizadores) {
         for (let i = 0; i < config.instancias; i++) {
           const analizadorId = `${config.tipo}_${i + 1}`;
           const analizador = await this._crearAnalizador(analizadorId, config);
-          
+
           this.analizadores.set(analizadorId, analizador);
           this.metricas.actualizarAnalizador(analizadorId, config.tipo, 'activo', {
             instancia: i + 1,
             configuracion: config.configuracion
           });
-          
+
           totalAnalizadores++;
         }
       }
-      
+
       dragon.zen('✅ Analizadores distribuidos inicializados', 'redSuperior.js', 'analizadores_listos', {
         totalAnalizadores,
         tipos: tiposAnalizadores.map(t => `${t.tipo}(${t.instancias})`),
         distribucion: Array.from(this.analizadores.keys())
       });
-      
+
     } catch (error) {
       this.metricas.registrarError('ANALYZERS_INIT_FAILED', error.message, error.stack);
       throw new Error(`Error inicializando analizadores: ${error.message}`);
@@ -1798,19 +1835,19 @@ class RedSuperior extends EventEmitter {
         proximoIntento: null
       }
     };
-    
+
     // Inicializar circuit breaker para este analizador
     this.circuitBreaker.set(id, {
       maxErrores: 5,
       tiempoEspera: 30000, // 30 segundos
       timeoutOperacion: config.configuracion.timeout || 5000
     });
-    
-    dragon.debug(`Analizador ${id} creado`, 'crearAnalizador', {
+
+    dragon.zen(`Analizador ${id} creado`, 'crearAnalizador', {
       tipo: config.tipo,
       configuracion: config.configuracion
     });
-    
+
     return analizador;
   }
 
@@ -1819,41 +1856,41 @@ class RedSuperior extends EventEmitter {
    */
   async _verificarConectividad() {
     dragon.zen('🌐 Verificando conectividad de la red...', 'redSuperior.js', 'verificarConectividad');
-    
+
     try {
       const verificaciones = [];
-      
+
       for (const [id, analizador] of this.analizadores.entries()) {
         try {
           const resultado = await this._pingAnalizador(id);
           verificaciones.push({ id, estado: 'conectado', latencia: resultado.latencia });
-          
+
           this.metricas.actualizarAnalizador(id, analizador.tipo, 'conectado', {
             latencia: resultado.latencia,
             ultimaPing: Date.now()
           });
-          
+
         } catch (error) {
           verificaciones.push({ id, estado: 'desconectado', error: error.message });
-          
+
           this.metricas.actualizarAnalizador(id, analizador.tipo, 'desconectado', {
             error: error.message,
             ultimoIntento: Date.now()
           });
-          
-          dragon.warn(`Analizador ${id} no responde`, 'verificarConectividad', {
+
+          dragon.seEnfada(`Analizador ${id} no responde`, 'verificarConectividad', {
             error: error.message
           });
         }
       }
-      
+
       const conectados = verificaciones.filter(v => v.estado === 'conectado').length;
       const ratio = conectados / verificaciones.length;
-      
+
       if (ratio < 0.7) {
         throw new Error(`Conectividad insuficiente: ${conectados}/${verificaciones.length} analizadores conectados`);
       }
-      
+
       dragon.zen('✅ Conectividad verificada', 'redSuperior.js', 'conectividad_ok', {
         analizadoresConectados: conectados,
         analizadoresTotales: verificaciones.length,
@@ -1862,7 +1899,7 @@ class RedSuperior extends EventEmitter {
           .filter(v => v.latencia)
           .reduce((sum, v) => sum + v.latencia, 0) / conectados || 0
       });
-      
+
     } catch (error) {
       this.metricas.registrarError('CONNECTIVITY_CHECK_FAILED', error.message, error.stack);
       throw new Error(`Error verificando conectividad: ${error.message}`);
@@ -1874,12 +1911,12 @@ class RedSuperior extends EventEmitter {
    */
   async _pingAnalizador(analizadorId) {
     const inicio = performance.now();
-    
+
     // Simulación de ping - en implementación real sería una llamada HTTP/gRPC
     await new Promise(resolve => setTimeout(resolve, Math.random() * 50 + 10));
-    
+
     const latencia = performance.now() - inicio;
-    
+
     return {
       analizadorId,
       latencia,
@@ -1893,19 +1930,19 @@ class RedSuperior extends EventEmitter {
    */
   async _precargarCache() {
     dragon.zen('⚡ Iniciando precarga de cache...', 'redSuperior.js', 'precargarCache');
-    
+
     try {
       // Patrones comunes de features para precarga
       const featuresComunes = [
         // Features típicas de imágenes auténticas
         { tipo: 'imagen', formato: 'jpg', tamaño: 'medio', calidad: 'alta' },
         { tipo: 'imagen', formato: 'png', tamaño: 'grande', calidad: 'alta' },
-        
+
         // Features típicas de imágenes sospechosas
         { tipo: 'imagen', formato: 'jpg', tamaño: 'pequeño', calidad: 'baja' },
         { tipo: 'imagen', formato: 'webp', tamaño: 'medio', calidad: 'media' }
       ];
-      
+
       if (featuresComunes.length > 0) {
         const resultado = await this.cache.precargar(featuresComunes, async (features) => {
           // Simulación de predicción para precarga
@@ -1917,19 +1954,19 @@ class RedSuperior extends EventEmitter {
             cached: true
           };
         });
-        
+
         dragon.zen('✅ Precarga de cache completada', 'redSuperior.js', 'precarga_completada', {
           entradas: resultado.precargadas,
           duracion: resultado.duracion,
           ratioExito: resultado.precargadas / featuresComunes.length
         });
       } else {
-        dragon.debug('Sin patrones para precarga de cache', 'precargarCache');
+        dragon.zen('Sin patrones para precarga de cache', 'precargarCache');
       }
-      
+
     } catch (error) {
       // Error en precarga no es crítico
-      dragon.warn('Error en precarga de cache', 'precargarCache', {
+      dragon.seEnfada('Error en precarga de cache', 'precargarCache', {
         error: error.message
       });
     }
@@ -1940,7 +1977,7 @@ class RedSuperior extends EventEmitter {
    */
   async _verificacionFinalSistema() {
     dragon.zen('🔍 Ejecutando verificación final del sistema...', 'redSuperior.js', 'verificacionFinal');
-    
+
     try {
       const verificaciones = {
         tensorflow: this.backendTensorFlow !== null,
@@ -1950,23 +1987,23 @@ class RedSuperior extends EventEmitter {
         analizadores: this.analizadores.size > 0,
         gpu: this.gpuDisponible
       };
-      
+
       const fallidas = Object.entries(verificaciones)
         .filter(([_, pasada]) => !pasada)
         .map(([nombre, _]) => nombre);
-      
+
       if (fallidas.length > 0) {
         throw new Error(`Verificaciones fallidas: ${fallidas.join(', ')}`);
       }
-      
+
       // Ejecutar test de predicción básico
       await this._testPrediccionBasico();
-      
+
       dragon.zen('✅ Verificación final exitosa', 'redSuperior.js', 'verificacion_final_ok', {
         verificaciones,
         sistemaListo: true
       });
-      
+
     } catch (error) {
       this.metricas.registrarError('SYSTEM_VERIFICATION_FAILED', error.message, error.stack);
       throw new Error(`Verificación final fallida: ${error.message}`);
@@ -1983,19 +2020,19 @@ class RedSuperior extends EventEmitter {
       tamaño: 'test',
       timestamp: Date.now()
     };
-    
+
     try {
       const resultado = await this._ejecutarPrediccion(featuresTest, 'test_basico');
-      
+
       if (!resultado || typeof resultado.confianza !== 'number') {
         throw new Error('Resultado de test inválido');
       }
-      
-      dragon.debug('Test de predicción básico exitoso', 'testPrediccionBasico', {
+
+      dragon.zen('Test de predicción básico exitoso', 'testPrediccionBasico', {
         confianza: resultado.confianza,
         categoria: resultado.categoria
       });
-      
+
     } catch (error) {
       throw new Error(`Test de predicción básico falló: ${error.message}`);
     }
@@ -2051,7 +2088,7 @@ class RedSuperior extends EventEmitter {
       }
       return null;
     } catch (error) {
-      dragon.error('Error obteniendo info memoria GPU', error, 'obtenerInfoMemoriaGPU');
+      dragon.agoniza('Error obteniendo info memoria GPU', error, 'obtenerInfoMemoriaGPU');
       return null;
     }
   }
@@ -2071,7 +2108,7 @@ class RedSuperior extends EventEmitter {
         this._manejarAlertaMedia(alerta);
         break;
       default:
-        dragon.debug('Alerta de baja prioridad recibida', 'manejarAlertaSistema', { alerta });
+        dragon.zen('Alerta de baja prioridad recibida', 'manejarAlertaSistema', { alerta });
     }
   }
 
@@ -2085,7 +2122,7 @@ class RedSuperior extends EventEmitter {
       metadatos: alerta.metadatos,
       redSuperiorId: this.id
     });
-    
+
     // Acciones automáticas para alertas críticas
     switch (alerta.tipo) {
       case 'ERROR_RATE_HIGH':
@@ -2095,7 +2132,7 @@ class RedSuperior extends EventEmitter {
         this._ejecutarLimpiezaMemoria();
         break;
       default:
-        dragon.warn('Alerta crítica sin acción automática definida', 'manejarAlertaCritica', { tipo: alerta.tipo });
+        dragon.seEnfada('Alerta crítica sin acción automática definida', 'manejarAlertaCritica', { tipo: alerta.tipo });
     }
   }
 
@@ -2103,11 +2140,11 @@ class RedSuperior extends EventEmitter {
    * Maneja alertas de prioridad alta
    */
   _manejarAlertaAlta(alerta) {
-    dragon.warn(`Alerta alta: ${alerta.descripcion}`, 'manejarAlertaAlta', {
+    dragon.seEnfada(`Alerta alta: ${alerta.descripcion}`, 'manejarAlertaAlta', {
       tipo: alerta.tipo,
       metadatos: alerta.metadatos
     });
-    
+
     // Acciones preventivas para alertas altas
     if (alerta.tipo === 'LATENCY_P95_HIGH') {
       this._optimizarRendimiento();
@@ -2118,7 +2155,7 @@ class RedSuperior extends EventEmitter {
    * Maneja alertas de prioridad media
    */
   _manejarAlertaMedia(alerta) {
-    dragon.debug(`Alerta media: ${alerta.descripcion}`, 'manejarAlertaMedia', {
+    dragon.zen(`Alerta media: ${alerta.descripcion}`, 'manejarAlertaMedia', {
       tipo: alerta.tipo
     });
   }
@@ -2129,7 +2166,7 @@ class RedSuperior extends EventEmitter {
   _activarModoSeguro() {
     this.estadoSistema = ESTADOS_SISTEMA.DEGRADADO;
     this.metricas.establecerEstado(ESTADOS_SISTEMA.DEGRADADO);
-    
+
     dragon.audit('MODO_SEGURO_ACTIVADO', {
       razon: 'alerta_critica',
       timestamp: Date.now(),
@@ -2144,27 +2181,27 @@ class RedSuperior extends EventEmitter {
     try {
       // Limpiar cache
       const entradasEliminadas = this.cache.invalidar();
-      
+
       // Limpiar métricas antiguas
       this.metricas._limpiarVentanaMetricas();
-      
+
       // Limpiar tensores de TensorFlow si es posible
       if (this.gpuDisponible && typeof tf.disposeVariables === 'function') {
         tf.disposeVariables();
       }
-      
+
       // Forzar garbage collection si está disponible
       if (global.gc) {
         global.gc();
       }
-      
+
       dragon.zen('🧹 Limpieza de memoria ejecutada', 'redSuperior.js', 'limpieza_memoria', {
         cacheEntradasEliminadas: entradasEliminadas,
         memoriaAntes: process.memoryUsage()
       });
-      
+
     } catch (error) {
-      dragon.error('Error ejecutando limpieza de memoria', error, 'ejecutarLimpiezaMemoria');
+      dragon.agoniza('Error ejecutando limpieza de memoria', error, 'ejecutarLimpiezaMemoria');
     }
   }
 
@@ -2175,17 +2212,17 @@ class RedSuperior extends EventEmitter {
     try {
       // Ajustar tamaño de batch dinámicamente
       const estadoActual = this.metricas.obtenerResumen();
-      
+
       if (estadoActual.latencia.p95 > CONFIG.METRICAS.ALERT_THRESHOLDS.LATENCY_P95) {
         // Reducir tamaño de batch para mejorar latencia
-        dragon.debug('Optimizando rendimiento: reduciendo batch size', 'optimizarRendimiento');
+        dragon.zen('Optimizando rendimiento: reduciendo batch size', 'optimizarRendimiento');
       }
-      
+
       // Limpiar operaciones en curso que puedan estar colgadas
       this._limpiarOperacionesColgadas();
-      
+
     } catch (error) {
-      dragon.error('Error optimizando rendimiento', error, 'optimizarRendimiento');
+      dragon.agoniza('Error optimizando rendimiento', error, 'optimizarRendimiento');
     }
   }
 
@@ -2195,21 +2232,21 @@ class RedSuperior extends EventEmitter {
   _limpiarOperacionesColgadas() {
     const ahora = Date.now();
     const timeout = CONFIG.RED_SUPERIOR.TIMEOUT_PREDICCION * 2; // Doble timeout
-    
+
     for (const operacionId of this.operacionesEnCurso) {
       const operacion = this.correlacionRequests.get(operacionId);
       if (operacion && (ahora - operacion.inicio) > timeout) {
         this.operacionesEnCurso.delete(operacionId);
         this.correlacionRequests.delete(operacionId);
-        
-        dragon.warn('Operación colgada limpiada', 'limpiarOperacionesColgadas', {
+
+        dragon.seEnfada('Operación colgada limpiada', 'limpiarOperacionesColgadas', {
           operacionId,
           tiempoTranscurrido: ahora - operacion.inicio
         });
       }
     }
   }
-}
+
   // =============================================================================
   // MÉTODOS DE PREDICCIÓN ENTERPRISE - CORE BUSINESS LOGIC
   // =============================================================================
@@ -2228,17 +2265,17 @@ class RedSuperior extends EventEmitter {
     const inicioBatch = performance.now();
     const batchId = crypto.randomUUID();
     const correlationId = opciones.correlationId || crypto.randomUUID();
-    
+
     try {
       // Validaciones de entrada enterprise
       this._validarParametrosBatch(featuresArray, batchSize);
-      
+
       // Verificar rate limiting por usuario/IP
       await this._verificarRateLimiting(opciones.userId, opciones.ip);
-      
+
       // Calcular tamaño de lote óptimo basado en carga actual
       const batchSizeOptimo = await this._calcularBatchSizeOptimo(batchSize, featuresArray.length);
-      
+
       dragon.zen('🔄 Iniciando batch processing enterprise', 'redSuperior.js', 'predecirBatch', {
         batchId,
         correlationId,
@@ -2270,27 +2307,27 @@ class RedSuperior extends EventEmitter {
 
       for (let i = 0; i < batches.length; i += CONCURRENCIA_MAXIMA) {
         const lotesConcurrentes = batches.slice(i, i + CONCURRENCIA_MAXIMA);
-        
+
         const promesasGrupo = lotesConcurrentes.map(async (batch, index) => {
           const loteId = `${batchId}_${i + index}`;
           const timeoutPromise = this._crearTimeoutPromise(CONFIG.RED_SUPERIOR.TIMEOUT_BATCH, loteId);
-          
+
           try {
             const resultado = await Promise.race([
               this._procesarLoteIndividual(batch, loteId, correlationId),
               timeoutPromise
             ]);
-            
+
             return resultado;
-            
+
           } catch (error) {
             erroresAcumulados++;
-            
+
             // Circuit breaker: si muchos errores, fallar rápidamente
             if (erroresAcumulados > batches.length * 0.5) {
               throw new Error(`Circuit breaker activado: demasiados errores en batch (${erroresAcumulados}/${batches.length})`);
             }
-            
+
             return batch.map(features => ({
               error: true,
               mensaje: error.message,
@@ -2302,7 +2339,7 @@ class RedSuperior extends EventEmitter {
         });
 
         const resultadosGrupo = await Promise.allSettled(promesasGrupo);
-        
+
         // Procesar resultados con manejo de errores granular
         resultadosGrupo.forEach((resultado, index) => {
           if (resultado.status === 'fulfilled') {
@@ -2310,13 +2347,13 @@ class RedSuperior extends EventEmitter {
           } else {
             erroresAcumulados++;
             const loteId = `${batchId}_${i + index}`;
-            
-            dragon.error('Error en grupo de lotes', resultado.reason, 'predecirBatch', {
+
+            dragon.agoniza('Error en grupo de lotes', resultado.reason, 'predecirBatch', {
               batchId,
               loteId,
               correlationId
             });
-            
+
             // Crear resultados de error para el lote fallido
             const loteError = lotesConcurrentes[index] || [];
             resultados.push(...loteError.map(features => ({
@@ -2330,10 +2367,10 @@ class RedSuperior extends EventEmitter {
         });
 
         lotesProcesados += lotesConcurrentes.length;
-        
+
         // Reporte de progreso enterprise
         this._reportarProgresoBatch(batchId, lotesProcesados, batches.length, erroresAcumulados, correlationId);
-        
+
         // Verificar si necesitamos throttling dinámico
         await this._aplicarThrottlingDinamico(erroresAcumulados, lotesProcesados);
       }
@@ -2398,7 +2435,7 @@ class RedSuperior extends EventEmitter {
 
     } catch (error) {
       const tiempoTranscurrido = performance.now() - inicioBatch;
-      
+
       this.metricas.registrarError('BATCH_PROCESSING_FAILED', error.message, error.stack, CODIGOS_ERROR.BATCH_TIMEOUT, {
         batchId,
         correlationId,
@@ -2406,7 +2443,7 @@ class RedSuperior extends EventEmitter {
         itemsTotal: featuresArray.length
       });
 
-      dragon.error('❌ Error crítico en batch processing', error, 'predecirBatch', {
+      dragon.agoniza('❌ Error crítico en batch processing', error, 'predecirBatch', {
         batchId,
         correlationId,
         tiempoTranscurrido,
@@ -2414,7 +2451,7 @@ class RedSuperior extends EventEmitter {
       });
 
       throw new Error(`Error en batch processing: ${error.message}`);
-      
+
     } finally {
       // Limpiar tracking de operación
       this.operacionesEnCurso.delete(batchId);
@@ -2422,6 +2459,7 @@ class RedSuperior extends EventEmitter {
       this.ultimaOperacion = Date.now();
     }
   }
+
 
   /**
    * Predicción individual con cache, métricas y circuit breaker
@@ -2440,14 +2478,14 @@ class RedSuperior extends EventEmitter {
     try {
       // Validaciones enterprise
       this._validarParametrosPrediccion(features, opciones);
-      
+
       // Verificar rate limiting
       await this._verificarRateLimiting(opciones.userId, opciones.ip);
 
       // Verificar circuit breaker del sistema
       this._verificarCircuitBreaker('sistema');
 
-      dragon.debug('🔮 Iniciando predicción individual', 'predecir', {
+      dragon.zen('🔮 Iniciando predicción individual', 'predecir', {
         prediccionId,
         correlationId,
         userId: opciones.userId,
@@ -2469,7 +2507,7 @@ class RedSuperior extends EventEmitter {
         resultado = this.cache.obtener(features);
         if (resultado !== null) {
           const latencia = performance.now() - inicioPrediccion;
-          
+
           this.metricas.registrarPrediccion(latencia, null, null, {
             prediccionId,
             tipo: 'cache_hit',
@@ -2507,7 +2545,7 @@ class RedSuperior extends EventEmitter {
       }
 
       const latencia = performance.now() - inicioPrediccion;
-      
+
       // Registrar métricas detalladas
       this.metricas.registrarPrediccion(latencia, this._obtenerUsoGPU(), this._obtenerUsoMemoria(), {
         prediccionId,
@@ -2530,7 +2568,7 @@ class RedSuperior extends EventEmitter {
 
     } catch (error) {
       const latencia = performance.now() - inicioPrediccion;
-      
+
       this.metricas.registrarError('PREDICTION_FAILED', error.message, error.stack, CODIGOS_ERROR.PREDICTION_MODEL_ERROR, {
         prediccionId,
         correlationId,
@@ -2538,7 +2576,7 @@ class RedSuperior extends EventEmitter {
         features: this._sanitizarFeatures(features)
       });
 
-      dragon.error('❌ Error en predicción individual', error, 'predecir', {
+      dragon.agoniza('❌ Error en predicción individual', error, 'predecir', {
         prediccionId,
         correlationId,
         latencia,
@@ -2546,7 +2584,7 @@ class RedSuperior extends EventEmitter {
       });
 
       throw new Error(`Error en predicción: ${error.message}`);
-      
+
     } finally {
       // Limpiar tracking
       this.operacionesEnCurso.delete(prediccionId);
@@ -2601,7 +2639,7 @@ class RedSuperior extends EventEmitter {
    */
   async _calcularBatchSizeOptimo(batchSizeOriginal, totalItems) {
     const metricas = this.metricas.obtenerResumen();
-    
+
     // Factores que afectan el tamaño óptimo
     const factorLatencia = metricas.latencia.p95 > CONFIG.METRICAS.ALERT_THRESHOLDS.LATENCY_P95 ? 0.7 : 1.0;
     const factorCarga = this.operacionesEnCurso.size > 5 ? 0.8 : 1.0;
@@ -2609,15 +2647,15 @@ class RedSuperior extends EventEmitter {
     const factorGPU = this.gpuDisponible ? 1.2 : 0.8;
 
     const factorTotal = factorLatencia * factorCarga * factorMemoria * factorGPU;
-    
+
     let batchSizeOptimo = Math.floor(batchSizeOriginal * factorTotal);
-    
+
     // Aplicar límites
     batchSizeOptimo = Math.max(CONFIG.RED_SUPERIOR.BATCH_SIZE_MIN, batchSizeOptimo);
     batchSizeOptimo = Math.min(CONFIG.RED_SUPERIOR.BATCH_SIZE_MAX, batchSizeOptimo);
     batchSizeOptimo = Math.min(totalItems, batchSizeOptimo);
 
-    dragon.debug('Batch size optimizado calculado', 'calcularBatchSizeOptimo', {
+    dragon.zen('Batch size optimizado calculado', 'calcularBatchSizeOptimo', {
       original: batchSizeOriginal,
       optimizado: batchSizeOptimo,
       factores: { factorLatencia, factorCarga, factorMemoria, factorGPU, factorTotal },
@@ -2657,27 +2695,27 @@ class RedSuperior extends EventEmitter {
    */
   _crearBatchesInteligentes(featuresArray, batchSize) {
     const batches = [];
-    
+
     // Análisis preliminar de features para optimizar distribución
     const tiposFeatures = this._analizarTiposFeatures(featuresArray);
-    
+
     // Crear lotes balanceados por tipo de feature si es posible
     if (tiposFeatures.length > 1) {
       return this._crearBatchesBalanceados(featuresArray, batchSize, tiposFeatures);
     }
-    
+
     // Lotes simples si no hay diversidad de tipos
     for (let i = 0; i < featuresArray.length; i += batchSize) {
       batches.push(featuresArray.slice(i, i + batchSize));
     }
-    
-    dragon.debug('Lotes inteligentes creados', 'crearBatchesInteligentes', {
+
+    dragon.zen('Lotes inteligentes creados', 'crearBatchesInteligentes', {
       totalItems: featuresArray.length,
       batchSize,
       totalBatches: batches.length,
       tiposFeatures: tiposFeatures.length
     });
-    
+
     return batches;
   }
 
@@ -2686,14 +2724,14 @@ class RedSuperior extends EventEmitter {
    */
   _analizarTiposFeatures(featuresArray) {
     const tipos = new Set();
-    
+
     featuresArray.forEach(features => {
       if (features && typeof features === 'object') {
         const tipo = features.tipo || features.format || features.category || 'unknown';
         tipos.add(tipo);
       }
     });
-    
+
     return Array.from(tipos);
   }
 
@@ -2703,42 +2741,42 @@ class RedSuperior extends EventEmitter {
   _crearBatchesBalanceados(featuresArray, batchSize, tipos) {
     const batches = [];
     const porTipo = {};
-    
+
     // Agrupar por tipo
     tipos.forEach(tipo => {
-      porTipo[tipo] = featuresArray.filter(f => 
+      porTipo[tipo] = featuresArray.filter(f =>
         (f.tipo || f.format || f.category || 'unknown') === tipo
       );
     });
-    
+
     // Crear lotes intercalando tipos
     let itemsRestantes = featuresArray.length;
     let indicesPorTipo = {};
     tipos.forEach(tipo => indicesPorTipo[tipo] = 0);
-    
+
     while (itemsRestantes > 0) {
       const batch = [];
       const itemsPorTipo = Math.ceil(batchSize / tipos.length);
-      
+
       tipos.forEach(tipo => {
         const features = porTipo[tipo];
         const indice = indicesPorTipo[tipo];
         const itemsATomar = Math.min(itemsPorTipo, features.length - indice, batchSize - batch.length);
-        
+
         if (itemsATomar > 0) {
           batch.push(...features.slice(indice, indice + itemsATomar));
           indicesPorTipo[tipo] += itemsATomar;
           itemsRestantes -= itemsATomar;
         }
       });
-      
+
       if (batch.length > 0) {
         batches.push(batch);
       } else {
         break; // Evitar bucle infinito
       }
     }
-    
+
     return batches;
   }
 
@@ -2747,16 +2785,16 @@ class RedSuperior extends EventEmitter {
    */
   async _procesarLoteIndividual(batch, loteId, correlationId) {
     const inicioLote = performance.now();
-    
+
     try {
-      dragon.debug(`📦 Procesando lote: ${loteId}`, 'procesarLoteIndividual', {
+      dragon.zen(`📦 Procesando lote: ${loteId}`, 'procesarLoteIndividual', {
         loteId,
         correlationId,
         itemsEnLote: batch.length
       });
 
       // Procesar items del lote con Promise.allSettled para manejar errores individuales
-      const promesasPredicciones = batch.map((features, index) => 
+      const promesasPredicciones = batch.map((features, index) =>
         this._procesarItemLote(features, `${loteId}_${index}`, correlationId)
           .catch(error => ({
             error: true,
@@ -2777,7 +2815,7 @@ class RedSuperior extends EventEmitter {
       const errores = procesados.filter(r => r.error).length;
 
       if (errores > 0) {
-        dragon.warn(`Errores en lote ${loteId}`, 'procesarLoteIndividual', {
+        dragon.seEnfada(`Errores en lote ${loteId}`, 'procesarLoteIndividual', {
           loteId,
           correlationId,
           errores,
@@ -2787,7 +2825,7 @@ class RedSuperior extends EventEmitter {
         });
       }
 
-      dragon.debug(`✅ Lote procesado: ${loteId}`, 'procesarLoteIndividual', {
+      dragon.zen(`✅ Lote procesado: ${loteId}`, 'procesarLoteIndividual', {
         loteId,
         correlationId,
         items: batch.length,
@@ -2805,7 +2843,7 @@ class RedSuperior extends EventEmitter {
         correlationId
       });
 
-      dragon.error(`❌ Error procesando lote ${loteId}`, error, 'procesarLoteIndividual', {
+      dragon.agoniza(`❌ Error procesando lote ${loteId}`, error, 'procesarLoteIndividual', {
         loteId,
         correlationId
       });
@@ -2829,13 +2867,13 @@ class RedSuperior extends EventEmitter {
     try {
       // Usar el método de predicción individual pero sin cache para evitar overhead
       const resultado = await this._ejecutarPrediccionConAnalyzers(features, itemId, correlationId);
-      
+
       return {
         ...resultado,
         itemId,
         procesadoEn: 'lote'
       };
-      
+
     } catch (error) {
       throw new Error(`Error procesando item ${itemId}: ${error.message}`);
     }
@@ -2846,7 +2884,7 @@ class RedSuperior extends EventEmitter {
    */
   _reportarProgresoBatch(batchId, lotesProcesados, totalLotes, errores, correlationId) {
     const porcentaje = ((lotesProcesados / totalLotes) * 100).toFixed(1);
-    
+
     if (lotesProcesados % Math.max(1, Math.floor(totalLotes / 10)) === 0 || lotesProcesados === totalLotes) {
       dragon.zen(`📊 Progreso batch: ${porcentaje}%`, 'redSuperior.js', 'progreso_batch', {
         batchId,
@@ -2865,19 +2903,19 @@ class RedSuperior extends EventEmitter {
    */
   async _aplicarThrottlingDinamico(erroresAcumulados, lotesProcesados) {
     if (lotesProcesados === 0) return;
-    
+
     const tasaError = erroresAcumulados / lotesProcesados;
-    
+
     if (tasaError > 0.3) { // Más del 30% de errores
       const delay = Math.min(1000, tasaError * 2000); // Máximo 1 segundo de delay
-      
-      dragon.warn('🐌 Aplicando throttling dinámico por alta tasa de errores', 'aplicarThrottlingDinamico', {
+
+      dragon.seEnfada('🐌 Aplicando throttling dinámico por alta tasa de errores', 'aplicarThrottlingDinamico', {
         tasaError: (tasaError * 100).toFixed(1) + '%',
         delay: delay + 'ms',
         errores: erroresAcumulados,
         lotes: lotesProcesados
       });
-      
+
       await new Promise(resolve => setTimeout(resolve, delay));
     }
   }
@@ -2901,9 +2939,9 @@ class RedSuperior extends EventEmitter {
    */
   async _ejecutarPrediccionConAnalyzers(features, prediccionId, correlationId) {
     const inicioEjecucion = performance.now();
-    
+
     try {
-      dragon.debug('🔍 Iniciando ejecución con analyzers distribuidos', 'ejecutarPrediccionConAnalyzers', {
+      dragon.zen('🔍 Iniciando ejecución con analyzers distribuidos', 'ejecutarPrediccionConAnalyzers', {
         prediccionId,
         correlationId,
         analizadoresDisponibles: this.analizadores.size
@@ -2911,23 +2949,23 @@ class RedSuperior extends EventEmitter {
 
       // Seleccionar analizadores óptimos para la predicción
       const analizadoresSeleccionados = await this._seleccionarAnalizadoresOptimos(features);
-      
+
       if (analizadoresSeleccionados.length === 0) {
         throw new Error('No hay analizadores disponibles para procesamiento');
       }
 
       // Ejecutar análisis en paralelo con circuit breaker
       const resultadosAnalysis = await this._ejecutarAnalisisParalelo(
-        features, 
-        analizadoresSeleccionados, 
-        prediccionId, 
+        features,
+        analizadoresSeleccionados,
+        prediccionId,
         correlationId
       );
 
       // Agregar resultados usando algoritmo de ensemble
       const resultadoFinal = await this._agregarResultadosEnsemble(
-        resultadosAnalysis, 
-        features, 
+        resultadosAnalysis,
+        features,
         prediccionId
       );
 
@@ -2936,7 +2974,7 @@ class RedSuperior extends EventEmitter {
 
       const tiempoEjecucion = performance.now() - inicioEjecucion;
 
-      dragon.debug('✅ Ejecución con analyzers completada', 'ejecutarPrediccionConAnalyzers', {
+      dragon.zen('✅ Ejecución con analyzers completada', 'ejecutarPrediccionConAnalyzers', {
         prediccionId,
         correlationId,
         tiempoEjecucion: `${tiempoEjecucion.toFixed(2)}ms`,
@@ -2961,7 +2999,7 @@ class RedSuperior extends EventEmitter {
 
     } catch (error) {
       const tiempoTranscurrido = performance.now() - inicioEjecucion;
-      
+
       this.metricas.registrarError('ANALYZER_EXECUTION_FAILED', error.message, error.stack, CODIGOS_ERROR.PREDICTION_MODEL_ERROR, {
         prediccionId,
         correlationId,
@@ -2981,7 +3019,7 @@ class RedSuperior extends EventEmitter {
       .filter(a => this._verificarCircuitBreakerAnalizador(a.id));
 
     if (analizadoresDisponibles.length === 0) {
-      dragon.warn('No hay analizadores disponibles', 'seleccionarAnalizadoresOptimos', {
+      dragon.seEnfada('No hay analizadores disponibles', 'seleccionarAnalizadoresOptimos', {
         totalAnalizadores: this.analizadores.size,
         analizadoresActivos: Array.from(this.analizadores.values()).filter(a => a.estado === 'activo').length
       });
@@ -2990,10 +3028,10 @@ class RedSuperior extends EventEmitter {
 
     // Determinar tipos de análisis necesarios basado en features
     const tiposNecesarios = this._determinarTiposAnalisisNecesarios(features);
-    
+
     // Seleccionar analizadores por tipo con balanceo de carga
     const seleccionados = [];
-    
+
     for (const tipo of tiposNecesarios) {
       const analizadoresTipo = analizadoresDisponibles
         .filter(a => a.tipo === tipo)
@@ -3003,14 +3041,14 @@ class RedSuperior extends EventEmitter {
           const cargaB = b.estadisticas.procesamientos || 0;
           const rendimientoA = a.estadisticas.tiempoPromedioOperacion || 1000;
           const rendimientoB = b.estadisticas.tiempoPromedioOperacion || 1000;
-          
+
           return (cargaA / rendimientoA) - (cargaB / rendimientoB);
         });
 
       if (analizadoresTipo.length > 0) {
         // Seleccionar el mejor analizador de este tipo
         seleccionados.push(analizadoresTipo[0]);
-        
+
         // Si hay redundancia disponible y es un tipo crítico, añadir backup
         if (analizadoresTipo.length > 1 && this._esTipoCritico(tipo)) {
           seleccionados.push(analizadoresTipo[1]);
@@ -3018,7 +3056,7 @@ class RedSuperior extends EventEmitter {
       }
     }
 
-    dragon.debug('Analizadores óptimos seleccionados', 'seleccionarAnalizadoresOptimos', {
+    dragon.zen('Analizadores óptimos seleccionados', 'seleccionarAnalizadoresOptimos', {
       tiposNecesarios,
       analizadoresSeleccionados: seleccionados.map(a => ({ id: a.id, tipo: a.tipo })),
       analizadoresDisponibles: analizadoresDisponibles.length
@@ -3032,20 +3070,20 @@ class RedSuperior extends EventEmitter {
    */
   _determinarTiposAnalisisNecesarios(features) {
     const tipos = new Set();
-    
+
     // Análisis siempre necesarios
     tipos.add('detector_deepfake');
     tipos.add('clasificador_contenido');
-    
+
     // Análisis condicionales basados en features
     if (features.metadata || features.exif) {
       tipos.add('validador_metadatos');
     }
-    
+
     if (features.tamaño === 'grande' || features.resolucion > 2000) {
       tipos.add('analizador_calidad');
     }
-    
+
     if (features.formato === 'jpg' || features.formato === 'jpeg') {
       tipos.add('detector_compresion');
     }
@@ -3065,7 +3103,7 @@ class RedSuperior extends EventEmitter {
    * Ejecuta análisis en paralelo con todos los analizadores seleccionados
    */
   async _ejecutarAnalisisParalelo(features, analizadores, prediccionId, correlationId) {
-    const promesasAnalisis = analizadores.map(analizador => 
+    const promesasAnalisis = analizadores.map(analizador =>
       this._ejecutarAnalisisIndividual(features, analizador, prediccionId, correlationId)
         .catch(error => ({
           analizadorId: analizador.id,
@@ -3077,14 +3115,14 @@ class RedSuperior extends EventEmitter {
     );
 
     const resultados = await Promise.allSettled(promesasAnalisis);
-    
+
     // Procesar resultados y manejar errores
     const resultadosValidos = [];
     let erroresAnalisis = 0;
-    
+
     resultados.forEach((resultado, index) => {
       const analizador = analizadores[index];
-      
+
       if (resultado.status === 'fulfilled' && !resultado.value.error) {
         resultadosValidos.push(resultado.value);
         this._actualizarEstadisticasAnalizador(analizador.id, true);
@@ -3092,8 +3130,8 @@ class RedSuperior extends EventEmitter {
         erroresAnalisis++;
         this._actualizarEstadisticasAnalizador(analizador.id, false);
         this._actualizarCircuitBreakerAnalizador(analizador.id, false);
-        
-        dragon.warn(`Error en analizador ${analizador.id}`, 'ejecutarAnalisisParalelo', {
+
+        dragon.seEnfada(`Error en analizador ${analizador.id}`, 'ejecutarAnalisisParalelo', {
           analizadorId: analizador.id,
           analizadorTipo: analizador.tipo,
           error: resultado.value?.mensaje || resultado.reason?.message,
@@ -3109,7 +3147,7 @@ class RedSuperior extends EventEmitter {
     }
 
     if (erroresAnalisis > analizadores.length * 0.5) {
-      dragon.warn('Alta tasa de errores en analizadores', 'ejecutarAnalisisParalelo', {
+      dragon.seEnfada('Alta tasa de errores en analizadores', 'ejecutarAnalisisParalelo', {
         errores: erroresAnalisis,
         total: analizadores.length,
         tasaError: (erroresAnalisis / analizadores.length * 100).toFixed(1) + '%',
@@ -3117,7 +3155,7 @@ class RedSuperior extends EventEmitter {
       });
     }
 
-    dragon.debug('Análisis paralelo completado', 'ejecutarAnalisisParalelo', {
+    dragon.zen('Análisis paralelo completado', 'ejecutarAnalisisParalelo', {
       prediccionId,
       correlationId,
       analizadoresEjecutados: analizadores.length,
@@ -3133,11 +3171,11 @@ class RedSuperior extends EventEmitter {
    */
   async _ejecutarAnalisisIndividual(features, analizador, prediccionId, correlationId) {
     const inicioAnalisis = performance.now();
-    
+
     try {
       // Verificar circuit breaker del analizador
       this._verificarCircuitBreakerAnalizador(analizador.id);
-      
+
       // Preparar contexto de análisis
       const contextoAnalisis = {
         features,
@@ -3153,13 +3191,13 @@ class RedSuperior extends EventEmitter {
 
       // Ejecutar análisis específico por tipo
       const resultado = await this._ejecutarAnalisisPorTipo(analizador.tipo, contextoAnalisis);
-      
+
       const tiempoAnalisis = performance.now() - inicioAnalisis;
-      
+
       // Validar resultado del análisis
       this._validarResultadoAnalisis(resultado, analizador.tipo);
-      
-      dragon.debug(`Análisis individual completado: ${analizador.id}`, 'ejecutarAnalisisIndividual', {
+
+      dragon.zen(`Análisis individual completado: ${analizador.id}`, 'ejecutarAnalisisIndividual', {
         analizadorId: analizador.id,
         analizadorTipo: analizador.tipo,
         tiempoAnalisis: `${tiempoAnalisis.toFixed(2)}ms`,
@@ -3179,7 +3217,7 @@ class RedSuperior extends EventEmitter {
 
     } catch (error) {
       const tiempoTranscurrido = performance.now() - inicioAnalisis;
-      
+
       this.metricas.registrarError('INDIVIDUAL_ANALYSIS_FAILED', error.message, error.stack, CODIGOS_ERROR.PREDICTION_MODEL_ERROR, {
         analizadorId: analizador.id,
         analizadorTipo: analizador.tipo,
@@ -3198,19 +3236,19 @@ class RedSuperior extends EventEmitter {
     switch (tipo) {
       case 'detector_deepfake':
         return await this._ejecutarDeteccionDeepfake(contexto);
-      
+
       case 'clasificador_contenido':
         return await this._ejecutarClasificacionContenido(contexto);
-      
+
       case 'validador_metadatos':
         return await this._ejecutarValidacionMetadatos(contexto);
-      
+
       case 'analizador_calidad':
         return await this._ejecutarAnalisisCalidad(contexto);
-      
+
       case 'detector_compresion':
         return await this._ejecutarDeteccionCompresion(contexto);
-      
+
       default:
         throw new Error(`Tipo de analizador no soportado: ${tipo}`);
     }
@@ -3221,25 +3259,25 @@ class RedSuperior extends EventEmitter {
    */
   async _ejecutarDeteccionDeepfake(contexto) {
     const { features, analizador } = contexto;
-    
+
     // Simular análisis de deepfake con lógica realista
     await new Promise(resolve => setTimeout(resolve, Math.random() * 100 + 50));
-    
+
     // Lógica de detección basada en características
     let scoreAutenticidad = 0.8; // Base score
-    
+
     // Ajustar score basado en features
     if (features.calidad === 'baja') scoreAutenticidad -= 0.2;
     if (features.formato === 'webp') scoreAutenticidad -= 0.1;
     if (features.tamaño === 'pequeño') scoreAutenticidad -= 0.15;
     if (features.compresion > 80) scoreAutenticidad -= 0.1;
-    
+
     // Añadir ruido realista
     scoreAutenticidad += (Math.random() - 0.5) * 0.1;
     scoreAutenticidad = Math.max(0, Math.min(1, scoreAutenticidad));
-    
+
     const esDeepfake = scoreAutenticidad < analizador.configuracion.sensibilidad;
-    
+
     return {
       categoria: esDeepfake ? 'deepfake_detectado' : 'contenido_autentico',
       confianza: scoreAutenticidad,
@@ -3262,13 +3300,13 @@ class RedSuperior extends EventEmitter {
    */
   async _ejecutarClasificacionContenido(contexto) {
     const { features, analizador } = contexto;
-    
+
     await new Promise(resolve => setTimeout(resolve, Math.random() * 80 + 30));
-    
+
     // Clasificación basada en características
     const categorias = analizador.configuracion.categorias || ['real', 'generada', 'modificada'];
     let scores = {};
-    
+
     // Calcular scores para cada categoría
     if (features.metadata && features.metadata.software) {
       scores.modificada = 0.7;
@@ -3283,13 +3321,13 @@ class RedSuperior extends EventEmitter {
       scores.modificada = 0.25;
       scores.generada = 0.15;
     }
-    
+
     // Normalizar scores
     const totalScore = Object.values(scores).reduce((a, b) => a + b, 0);
     Object.keys(scores).forEach(cat => scores[cat] /= totalScore);
-    
+
     const categoriaMaxima = Object.keys(scores).reduce((a, b) => scores[a] > scores[b] ? a : b);
-    
+
     return {
       categoria: categoriaMaxima,
       confianza: scores[categoriaMaxima],
@@ -3312,24 +3350,24 @@ class RedSuperior extends EventEmitter {
    */
   async _ejecutarValidacionMetadatos(contexto) {
     const { features } = contexto;
-    
+
     await new Promise(resolve => setTimeout(resolve, Math.random() * 40 + 20));
-    
+
     let scoreValidez = 0.8;
     const inconsistencias = [];
-    
+
     // Validar metadatos EXIF si están disponibles
     if (features.metadata) {
       if (!features.metadata.camera) {
         inconsistencias.push('falta_info_camara');
         scoreValidez -= 0.2;
       }
-      
+
       if (!features.metadata.timestamp) {
         inconsistencias.push('falta_timestamp');
         scoreValidez -= 0.1;
       }
-      
+
       if (features.metadata.software && features.metadata.software.includes('AI')) {
         inconsistencias.push('software_generacion_ai');
         scoreValidez -= 0.3;
@@ -3338,9 +3376,9 @@ class RedSuperior extends EventEmitter {
       inconsistencias.push('metadatos_ausentes');
       scoreValidez -= 0.4;
     }
-    
+
     scoreValidez = Math.max(0, Math.min(1, scoreValidez));
-    
+
     return {
       categoria: scoreValidez > 0.6 ? 'metadatos_validos' : 'metadatos_sospechosos',
       confianza: scoreValidez,
@@ -3362,19 +3400,19 @@ class RedSuperior extends EventEmitter {
    */
   async _ejecutarAnalisisCalidad(contexto) {
     const { features } = contexto;
-    
+
     await new Promise(resolve => setTimeout(resolve, Math.random() * 60 + 40));
-    
+
     let scoreCalidad = 0.7;
-    
+
     // Evaluar factores de calidad
     if (features.resolucion > 1920) scoreCalidad += 0.1;
     if (features.calidad === 'alta') scoreCalidad += 0.2;
     if (features.ruido === 'minimo') scoreCalidad += 0.1;
     if (features.compresion < 20) scoreCalidad += 0.1;
-    
+
     scoreCalidad = Math.max(0, Math.min(1, scoreCalidad));
-    
+
     return {
       categoria: scoreCalidad > 0.7 ? 'alta_calidad' : 'calidad_moderada',
       confianza: scoreCalidad,
@@ -3397,15 +3435,15 @@ class RedSuperior extends EventEmitter {
    */
   async _ejecutarDeteccionCompresion(contexto) {
     const { features } = contexto;
-    
+
     await new Promise(resolve => setTimeout(resolve, Math.random() * 30 + 15));
-    
+
     const factorCompresion = features.compresion || 50;
     let scoreCompresion = 1 - (factorCompresion / 100);
-    
+
     // Detectar recompresiones múltiples
     const recompresiones = factorCompresion > 80 ? Math.floor(factorCompresion / 30) : 1;
-    
+
     return {
       categoria: recompresiones > 2 ? 'multiple_compression' : 'single_compression',
       confianza: scoreCompresion,
@@ -3429,11 +3467,11 @@ class RedSuperior extends EventEmitter {
     if (!resultado || typeof resultado !== 'object') {
       throw new Error(`Resultado inválido del analizador ${tipoAnalizador}`);
     }
-    
+
     if (typeof resultado.confianza !== 'number' || resultado.confianza < 0 || resultado.confianza > 1) {
       throw new Error(`Confianza inválida en ${tipoAnalizador}: ${resultado.confianza}`);
     }
-    
+
     if (!resultado.categoria || typeof resultado.categoria !== 'string') {
       throw new Error(`Categoría inválida en ${tipoAnalizador}: ${resultado.categoria}`);
     }
@@ -3444,7 +3482,7 @@ class RedSuperior extends EventEmitter {
    */
   _calcularPesoAnalizador(analizador, resultado) {
     let peso = 1.0; // Peso base
-    
+
     // Ajustar peso basado en tipo de analizador
     const pesosPorTipo = {
       'detector_deepfake': 1.5,    // Mayor peso para detección de deepfake
@@ -3453,19 +3491,19 @@ class RedSuperior extends EventEmitter {
       'analizador_calidad': 0.8,
       'detector_compresion': 0.7
     };
-    
+
     peso *= pesosPorTipo[analizador.tipo] || 1.0;
-    
+
     // Ajustar peso basado en histórico de rendimiento
     const estadisticas = analizador.estadisticas;
     if (estadisticas.procesamientos > 100) {
       const tasaExito = 1 - (estadisticas.errores / estadisticas.procesamientos);
       peso *= tasaExito;
     }
-    
+
     // Ajustar peso basado en confianza del resultado
     peso *= resultado.confianza;
-    
+
     return Math.max(0.1, Math.min(2.0, peso)); // Limitar peso entre 0.1 y 2.0
   }
   // =============================================================================
@@ -3477,9 +3515,9 @@ class RedSuperior extends EventEmitter {
    */
   async _agregarResultadosEnsemble(resultadosAnalysis, features, prediccionId) {
     const inicioEnsemble = performance.now();
-    
+
     try {
-      dragon.debug('🔮 Iniciando agregación ensemble', 'agregarResultadosEnsemble', {
+      dragon.zen('🔮 Iniciando agregación ensemble', 'agregarResultadosEnsemble', {
         prediccionId,
         analizadoresParticipantes: resultadosAnalysis.length,
         algoritmo: 'weighted_voting_with_confidence'
@@ -3499,14 +3537,14 @@ class RedSuperior extends EventEmitter {
 
       // Algoritmo de ensemble: Weighted Voting con Confidence Scaling
       const agregacion = await this._ejecutarWeightedVoting(resultadosAnalysis, features);
-      
+
       // Aplicar corrección de confianza basada en consenso
       const consenso = this._calcularConsenso(resultadosAnalysis);
       agregacion.confianza = this._ajustarConfianzaPorConsenso(agregacion.confianza, consenso);
-      
+
       // Detectar anomalías en la agregación
       const anomalias = this._detectarAnomalias(resultadosAnalysis, agregacion);
-      
+
       // Calcular métricas de calidad del ensemble
       const calidadEnsemble = this._calcularCalidadEnsemble(resultadosAnalysis, consenso);
 
@@ -3537,7 +3575,7 @@ class RedSuperior extends EventEmitter {
         analizadoresUsados: resultadosAnalysis.map(r => r.analizadorId)
       };
 
-      dragon.debug('✅ Agregación ensemble completada', 'agregarResultadosEnsemble', {
+      dragon.zen('✅ Agregación ensemble completada', 'agregarResultadosEnsemble', {
         prediccionId,
         categoriaFinal: resultadoFinal.categoria,
         confianzaFinal: resultadoFinal.confianza.toFixed(3),
@@ -3604,21 +3642,21 @@ class RedSuperior extends EventEmitter {
     });
 
     // Seleccionar categoría ganadora
-    const categoriaGanadora = Object.keys(categorias).reduce((a, b) => 
+    const categoriaGanadora = Object.keys(categorias).reduce((a, b) =>
       categorias[a].pesoAcumulado > categorias[b].pesoAcumulado ? a : b
     );
 
     const datosCategoria = categorias[categoriaGanadora];
-    
+
     // Calcular confianza final usando múltiples factores
     let confianzaFinal = datosCategoria.confianzaPromedio;
-    
+
     // Bonus por unanimidad o mayoría clara
     const mayoriaBonus = datosCategoria.pesoAcumulado / pesoAcumulado;
     if (mayoriaBonus > 0.8) {
       confianzaFinal *= 1.1; // Bonus del 10% por mayoría clara
     }
-    
+
     // Penalty por poca participación
     if (resultadosAnalysis.length < 3) {
       confianzaFinal *= 0.9; // Penalty del 10% por poca diversidad
@@ -3651,13 +3689,13 @@ class RedSuperior extends EventEmitter {
     // Calcular índice de concentración (Herfindahl-Hirschman Index adaptado)
     const valores = Object.values(categorias);
     const hhi = valores.reduce((sum, peso) => sum + (peso * peso), 0);
-    
+
     // Normalizar HHI a rango [0,1] donde 1 = consenso perfecto
     const maxHHI = 1.0; // Cuando todos votan por la misma categoría
     const minHHI = 1.0 / valores.length; // Cuando votos están perfectamente distribuidos
-    
+
     const consensoNormalizado = (hhi - minHHI) / (maxHHI - minHHI);
-    
+
     return Math.max(0, Math.min(1, consensoNormalizado));
   }
 
@@ -3667,13 +3705,13 @@ class RedSuperior extends EventEmitter {
   _ajustarConfianzaPorConsenso(confianzaBase, consenso) {
     // Factor de ajuste basado en consenso
     let factorConsenso = 1.0;
-    
+
     if (consenso > 0.8) {
       factorConsenso = 1.1; // Boost por alto consenso
     } else if (consenso < 0.4) {
       factorConsenso = 0.8; // Penalty por bajo consenso
     }
-    
+
     return Math.max(0, Math.min(1, confianzaBase * factorConsenso));
   }
 
@@ -3682,14 +3720,14 @@ class RedSuperior extends EventEmitter {
    */
   _detectarAnomalias(resultadosAnalysis, agregacion) {
     const anomalias = [];
-    
+
     // Detectar outliers en confianza
     const confianzas = resultadosAnalysis.map(r => r.confianza);
     const confianzaPromedio = confianzas.reduce((a, b) => a + b, 0) / confianzas.length;
     const desviacionEstandar = Math.sqrt(
       confianzas.reduce((sum, conf) => sum + Math.pow(conf - confianzaPromedio, 2), 0) / confianzas.length
     );
-    
+
     resultadosAnalysis.forEach(resultado => {
       if (Math.abs(resultado.confianza - confianzaPromedio) > 2 * desviacionEstandar) {
         anomalias.push({
@@ -3700,7 +3738,7 @@ class RedSuperior extends EventEmitter {
         });
       }
     });
-    
+
     // Detectar categorías minoritarias con alta confianza
     const categoriaMayoritaria = agregacion.categoria;
     resultadosAnalysis.forEach(resultado => {
@@ -3713,11 +3751,11 @@ class RedSuperior extends EventEmitter {
         });
       }
     });
-    
+
     // Detectar tiempos de procesamiento anómalos
     const tiempos = resultadosAnalysis.map(r => r.tiempoAnalisis);
     const tiempoPromedio = tiempos.reduce((a, b) => a + b, 0) / tiempos.length;
-    
+
     resultadosAnalysis.forEach(resultado => {
       if (resultado.tiempoAnalisis > tiempoPromedio * 3) {
         anomalias.push({
@@ -3730,7 +3768,7 @@ class RedSuperior extends EventEmitter {
     });
 
     if (anomalias.length > 0) {
-      dragon.warn('Anomalías detectadas en ensemble', 'detectarAnomalias', {
+      dragon.seEnfada('Anomalías detectadas en ensemble', 'detectarAnomalias', {
         totalAnomalias: anomalias.length,
         tipos: [...new Set(anomalias.map(a => a.tipo))]
       });
@@ -3744,20 +3782,20 @@ class RedSuperior extends EventEmitter {
    */
   _calcularCalidadEnsemble(resultadosAnalysis, consenso) {
     let calidad = 1.0;
-    
+
     // Factor de diversidad (más analizadores = mejor)
     const factorDiversidad = Math.min(1.0, resultadosAnalysis.length / 5); // Óptimo: 5 analizadores
-    
+
     // Factor de rendimiento (promedio de confianzas)
     const confianzaPromedio = resultadosAnalysis.reduce((sum, r) => sum + r.confianza, 0) / resultadosAnalysis.length;
-    
+
     // Factor de consenso (ya calculado)
     const factorConsenso = consenso;
-    
+
     // Factor de cobertura de tipos
     const tiposUnicos = new Set(resultadosAnalysis.map(r => r.analizadorTipo)).size;
     const factorCobertura = Math.min(1.0, tiposUnicos / 3); // Óptimo: 3 tipos diferentes
-    
+
     // Combinar factores con pesos
     calidad = (
       factorDiversidad * 0.25 +
@@ -3765,7 +3803,7 @@ class RedSuperior extends EventEmitter {
       factorConsenso * 0.25 +
       factorCobertura * 0.15
     );
-    
+
     return Math.max(0, Math.min(1, calidad));
   }
 
@@ -3779,30 +3817,30 @@ class RedSuperior extends EventEmitter {
   _verificarCircuitBreaker(servicio) {
     const breaker = this.circuitBreaker.get(servicio);
     if (!breaker) return true; // Si no existe, permitir
-    
+
     const ahora = Date.now();
-    
+
     // Si está cerrado, permitir operación
     if (breaker.estado === 'cerrado') {
       return true;
     }
-    
+
     // Si está abierto, verificar si es tiempo de intentar
     if (breaker.estado === 'abierto') {
       if (ahora >= breaker.proximoIntento) {
         breaker.estado = 'medio_abierto';
-        dragon.debug(`Circuit breaker ${servicio} cambió a medio-abierto`, 'verificarCircuitBreaker');
+        dragon.zen(`Circuit breaker ${servicio} cambió a medio-abierto`, 'verificarCircuitBreaker');
         return true;
       }
-      
+
       throw new Error(`Circuit breaker abierto para ${servicio}. Próximo intento: ${new Date(breaker.proximoIntento).toISOString()}`);
     }
-    
+
     // Si está medio-abierto, permitir un intento
     if (breaker.estado === 'medio_abierto') {
       return true;
     }
-    
+
     return false;
   }
 
@@ -3812,26 +3850,26 @@ class RedSuperior extends EventEmitter {
   _verificarCircuitBreakerAnalizador(analizadorId) {
     const analizador = this.analizadores.get(analizadorId);
     if (!analizador) return false;
-    
+
     const breaker = analizador.circuitBreaker;
     const config = this.circuitBreaker.get(analizadorId);
     const ahora = Date.now();
-    
+
     switch (breaker.estado) {
       case 'cerrado':
         return true;
-        
+
       case 'abierto':
         if (breaker.proximoIntento && ahora >= breaker.proximoIntento) {
           breaker.estado = 'medio_abierto';
-          dragon.debug(`Circuit breaker analizador ${analizadorId} cambió a medio-abierto`, 'verificarCircuitBreakerAnalizador');
+          dragon.zen(`Circuit breaker analizador ${analizadorId} cambió a medio-abierto`, 'verificarCircuitBreakerAnalizador');
           return true;
         }
         return false;
-        
+
       case 'medio_abierto':
         return true;
-        
+
       default:
         return false;
     }
@@ -3843,12 +3881,12 @@ class RedSuperior extends EventEmitter {
   _actualizarCircuitBreakerAnalizador(analizadorId, exito) {
     const analizador = this.analizadores.get(analizadorId);
     const config = this.circuitBreaker.get(analizadorId);
-    
+
     if (!analizador || !config) return;
-    
+
     const breaker = analizador.circuitBreaker;
     const ahora = Date.now();
-    
+
     if (exito) {
       // Operación exitosa
       switch (breaker.estado) {
@@ -3858,12 +3896,12 @@ class RedSuperior extends EventEmitter {
           breaker.erroresConsecutivos = 0;
           breaker.ultimoError = null;
           breaker.proximoIntento = null;
-          
+
           dragon.zen(`Circuit breaker analizador ${analizadorId} cerrado después de recuperación`, 'redSuperior.js', 'circuit_breaker_closed', {
             analizadorId
           });
           break;
-          
+
         case 'cerrado':
           // Mantener cerrado, resetear contador de errores
           breaker.erroresConsecutivos = 0;
@@ -3873,34 +3911,34 @@ class RedSuperior extends EventEmitter {
       // Operación fallida
       breaker.erroresConsecutivos++;
       breaker.ultimoError = ahora;
-      
+
       switch (breaker.estado) {
         case 'cerrado':
           if (breaker.erroresConsecutivos >= config.maxErrores) {
             // Abrir circuit breaker
             breaker.estado = 'abierto';
             breaker.proximoIntento = ahora + config.tiempoEspera;
-            
-            dragon.warn(`Circuit breaker analizador ${analizadorId} ABIERTO`, 'actualizarCircuitBreakerAnalizador', {
+
+            dragon.seEnfada(`Circuit breaker analizador ${analizadorId} ABIERTO`, 'actualizarCircuitBreakerAnalizador', {
               analizadorId,
               erroresConsecutivos: breaker.erroresConsecutivos,
               maxErrores: config.maxErrores,
               proximoIntento: new Date(breaker.proximoIntento).toISOString()
             });
-            
+
             this.metricas.registrarError('CIRCUIT_BREAKER_OPENED', `Analizador ${analizadorId}`, null, 'CB001', {
               analizadorId,
               erroresConsecutivos: breaker.erroresConsecutivos
             });
           }
           break;
-          
+
         case 'medio_abierto':
           // Fallo en estado medio-abierto, volver a abrir
           breaker.estado = 'abierto';
           breaker.proximoIntento = ahora + config.tiempoEspera;
-          
-          dragon.warn(`Circuit breaker analizador ${analizadorId} vuelve a ABIERTO`, 'actualizarCircuitBreakerAnalizador', {
+
+          dragon.seEnfada(`Circuit breaker analizador ${analizadorId} vuelve a ABIERTO`, 'actualizarCircuitBreakerAnalizador', {
             analizadorId,
             razon: 'fallo_en_medio_abierto'
           });
@@ -3917,7 +3955,7 @@ class RedSuperior extends EventEmitter {
       sistema: {},
       analizadores: {}
     };
-    
+
     // Circuit breakers del sistema
     for (const [servicio, config] of this.circuitBreaker.entries()) {
       if (!servicio.includes('_')) { // Servicios del sistema no tienen ID de analizador
@@ -3927,7 +3965,7 @@ class RedSuperior extends EventEmitter {
         };
       }
     }
-    
+
     // Circuit breakers de analizadores
     for (const [analizadorId, analizador] of this.analizadores.entries()) {
       estados.analizadores[analizadorId] = {
@@ -3938,7 +3976,7 @@ class RedSuperior extends EventEmitter {
         configuracion: this.circuitBreaker.get(analizadorId)
       };
     }
-    
+
     return estados;
   }
 
@@ -3953,48 +3991,48 @@ class RedSuperior extends EventEmitter {
     const clave = userId || ip || 'anonymous';
     const ahora = Date.now();
     const ventana = CONFIG.SECURITY.RATE_LIMIT_WINDOW;
-    
+
     if (!this.limitadorTasa.has(clave)) {
       this.limitadorTasa.set(clave, {
         requests: [],
         bloqueadoHasta: null
       });
     }
-    
+
     const datos = this.limitadorTasa.get(clave);
-    
+
     // Verificar si está bloqueado
     if (datos.bloqueadoHasta && ahora < datos.bloqueadoHasta) {
       const tiempoRestante = Math.ceil((datos.bloqueadoHasta - ahora) / 1000);
       throw new Error(`Rate limit excedido. Intente nuevamente en ${tiempoRestante} segundos`);
     }
-    
+
     // Limpiar requests antiguos
     datos.requests = datos.requests.filter(timestamp => (ahora - timestamp) < ventana);
-    
+
     // Verificar límite
     if (datos.requests.length >= CONFIG.SECURITY.RATE_LIMIT_MAX) {
       datos.bloqueadoHasta = ahora + ventana;
-      
-      dragon.warn('Rate limit excedido', 'verificarRateLimiting', {
+
+      dragon.seEnfada('Rate limit excedido', 'verificarRateLimiting', {
         clave,
         requests: datos.requests.length,
         limite: CONFIG.SECURITY.RATE_LIMIT_MAX,
         ventana: ventana / 1000 + 's',
         bloqueadoHasta: new Date(datos.bloqueadoHasta).toISOString()
       });
-      
+
       this.metricas.registrarError('RATE_LIMIT_EXCEEDED', `Clave: ${clave}`, null, CODIGOS_ERROR.NETWORK_RATE_LIMITED, {
         clave,
         requestsEnVentana: datos.requests.length
       });
-      
+
       throw new Error('Rate limit excedido. Demasiadas solicitudes');
     }
-    
+
     // Registrar request actual
     datos.requests.push(ahora);
-    
+
     // Limpiar datos de rate limiting antiguos periódicamente
     if (Math.random() < 0.01) { // 1% de probabilidad
       this._limpiarDatosRateLimiting();
@@ -4007,19 +4045,19 @@ class RedSuperior extends EventEmitter {
   _limpiarDatosRateLimiting() {
     const ahora = Date.now();
     const ventana = CONFIG.SECURITY.RATE_LIMIT_WINDOW;
-    
+
     for (const [clave, datos] of this.limitadorTasa.entries()) {
       // Limpiar si no ha habido actividad reciente y no está bloqueado
-      const ultimaActividad = datos.requests.length > 0 ? 
+      const ultimaActividad = datos.requests.length > 0 ?
         Math.max(...datos.requests) : 0;
       const sinBloqueo = !datos.bloqueadoHasta || ahora > datos.bloqueadoHasta;
-      
+
       if (sinBloqueo && (ahora - ultimaActividad) > ventana * 2) {
         this.limitadorTasa.delete(clave);
       }
     }
-    
-    dragon.debug('Limpieza de rate limiting ejecutada', 'limpiarDatosRateLimiting', {
+
+    dragon.zen('Limpieza de rate limiting ejecutada', 'limpiarDatosRateLimiting', {
       entradasRestantes: this.limitadorTasa.size
     });
   }
@@ -4034,7 +4072,7 @@ class RedSuperior extends EventEmitter {
     try {
       // Validación básica de tipos
       if (features === null || features === undefined) {
-        dragon.warn('Features null o undefined recibidas', 'validarFeatures', {
+        dragon.seEnfada('Features null o undefined recibidas', 'validarFeatures', {
           tipo: typeof features,
           valor: features
         });
@@ -4044,7 +4082,7 @@ class RedSuperior extends EventEmitter {
       // Validación de tamaño de payload
       const tamañoFeatures = this._calcularTamañoObjeto(features);
       if (tamañoFeatures > CONFIG.SECURITY.MAX_PAYLOAD_SIZE) {
-        dragon.warn('Features exceden tamaño máximo permitido', 'validarFeatures', {
+        dragon.seEnfada('Features exceden tamaño máximo permitido', 'validarFeatures', {
           tamañoActual: tamañoFeatures,
           tamañoMaximo: CONFIG.SECURITY.MAX_PAYLOAD_SIZE
         });
@@ -4061,7 +4099,7 @@ class RedSuperior extends EventEmitter {
       }
 
     } catch (error) {
-      dragon.error('Error durante validación de features', error, 'validarFeatures', {
+      dragon.agoniza('Error durante validación de features', error, 'validarFeatures', {
         featuresType: typeof features
       });
       return false;
@@ -4073,12 +4111,12 @@ class RedSuperior extends EventEmitter {
    */
   _validarFeaturesArray(features) {
     if (features.length === 0) {
-      dragon.debug('Array de features vacío', 'validarFeaturesArray');
+      dragon.zen('Array de features vacío', 'validarFeaturesArray');
       return false;
     }
 
     if (features.length > 10000) { // Límite razonable para arrays
-      dragon.warn('Array de features demasiado grande', 'validarFeaturesArray', {
+      dragon.seEnfada('Array de features demasiado grande', 'validarFeaturesArray', {
         longitud: features.length,
         limiteMaximo: 10000
       });
@@ -4090,7 +4128,7 @@ class RedSuperior extends EventEmitter {
       const elemento = features[i];
       if (elemento !== null && elemento !== undefined) {
         if (typeof elemento === 'number' && !isFinite(elemento)) {
-          dragon.warn('Número no finito encontrado en features array', 'validarFeaturesArray', {
+          dragon.seEnfada('Número no finito encontrado en features array', 'validarFeaturesArray', {
             indice: i,
             valor: elemento
           });
@@ -4108,11 +4146,11 @@ class RedSuperior extends EventEmitter {
   _validarFeaturesObjeto(features) {
     const propiedadesRequeridas = ['tipo', 'formato'];
     const propiedadesOpcionales = ['tamaño', 'calidad', 'resolucion', 'metadata', 'timestamp'];
-    
+
     // Verificar propiedades requeridas
     for (const prop of propiedadesRequeridas) {
       if (!(prop in features) || features[prop] === null || features[prop] === undefined) {
-        dragon.debug(`Propiedad requerida faltante: ${prop}`, 'validarFeaturesObjeto', {
+        dragon.zen(`Propiedad requerida faltante: ${prop}`, 'validarFeaturesObjeto', {
           propiedadesFaltantes: propiedadesRequeridas.filter(p => !(p in features))
         });
         // No es estrictamente requerido para funcionar, solo log de debug
@@ -4122,7 +4160,7 @@ class RedSuperior extends EventEmitter {
     // Validar tipos de propiedades específicas
     if (features.resolucion && typeof features.resolucion === 'number') {
       if (features.resolucion < 1 || features.resolucion > 100000) {
-        dragon.warn('Resolución fuera de rango válido', 'validarFeaturesObjeto', {
+        dragon.seEnfada('Resolución fuera de rango válido', 'validarFeaturesObjeto', {
           resolucion: features.resolucion,
           rangoValido: '1-100000'
         });
@@ -4130,11 +4168,11 @@ class RedSuperior extends EventEmitter {
     }
 
     if (features.timestamp) {
-      const timestamp = typeof features.timestamp === 'string' ? 
+      const timestamp = typeof features.timestamp === 'string' ?
         new Date(features.timestamp).getTime() : features.timestamp;
-      
+
       if (!isFinite(timestamp) || timestamp < 0) {
-        dragon.warn('Timestamp inválido en features', 'validarFeaturesObjeto', {
+        dragon.seEnfada('Timestamp inválido en features', 'validarFeaturesObjeto', {
           timestamp: features.timestamp
         });
       }
@@ -4144,7 +4182,7 @@ class RedSuperior extends EventEmitter {
     if (features.metadata && typeof features.metadata === 'object') {
       const tamañoMetadata = this._calcularTamañoObjeto(features.metadata);
       if (tamañoMetadata > 50000) { // 50KB máximo para metadata
-        dragon.warn('Metadata demasiado grande', 'validarFeaturesObjeto', {
+        dragon.seEnfada('Metadata demasiado grande', 'validarFeaturesObjeto', {
           tamañoMetadata,
           limiteMaximo: 50000
         });
@@ -4161,7 +4199,7 @@ class RedSuperior extends EventEmitter {
   _validarFeaturesPrimitivo(features) {
     if (typeof features === 'number') {
       if (!isFinite(features)) {
-        dragon.warn('Número no finito como features', 'validarFeaturesPrimitivo', {
+        dragon.seEnfada('Número no finito como features', 'validarFeaturesPrimitivo', {
           valor: features
         });
         return false;
@@ -4170,7 +4208,7 @@ class RedSuperior extends EventEmitter {
 
     if (typeof features === 'string') {
       if (features.length === 0 || features.length > 10000) {
-        dragon.warn('String features con longitud inválida', 'validarFeaturesPrimitivo', {
+        dragon.seEnfada('String features con longitud inválida', 'validarFeaturesPrimitivo', {
           longitud: features.length
         });
         return false;
@@ -4189,7 +4227,7 @@ class RedSuperior extends EventEmitter {
     } catch (error) {
       // Si no se puede serializar, estimar tamaño
       let tamaño = 0;
-      
+
       if (typeof obj === 'string') {
         tamaño = obj.length * 2; // 2 bytes por carácter aprox
       } else if (typeof obj === 'number') {
@@ -4201,7 +4239,7 @@ class RedSuperior extends EventEmitter {
       } else if (typeof obj === 'object' && obj !== null) {
         tamaño = Object.keys(obj).length * 100; // Estimación conservadora
       }
-      
+
       return tamaño;
     }
   }
@@ -4216,7 +4254,7 @@ class RedSuperior extends EventEmitter {
       }
 
       const sanitizado = {};
-      
+
       if (Array.isArray(features)) {
         sanitizado.tipo = 'array';
         sanitizado.longitud = features.length;
@@ -4225,8 +4263,8 @@ class RedSuperior extends EventEmitter {
         // Objeto
         Object.keys(features).forEach(key => {
           const valor = features[key];
-          
-          if (key.toLowerCase().includes('password') || 
+
+          if (key.toLowerCase().includes('password') ||
               key.toLowerCase().includes('secret') ||
               key.toLowerCase().includes('key')) {
             sanitizado[key] = '[SANITIZADO]';
@@ -4241,7 +4279,7 @@ class RedSuperior extends EventEmitter {
       }
 
       return sanitizado;
-      
+
     } catch (error) {
       return { error: 'Error sanitizando features', tipo: typeof features };
     }
@@ -4264,8 +4302,8 @@ class RedSuperior extends EventEmitter {
     }
 
     // Validar confianza
-    if (typeof resultado.confianza !== 'number' || 
-        resultado.confianza < 0 || 
+    if (typeof resultado.confianza !== 'number' ||
+        resultado.confianza < 0 ||
         resultado.confianza > 1 ||
         !isFinite(resultado.confianza)) {
       throw new Error(`Confianza inválida: ${resultado.confianza} (debe estar entre 0 y 1)`);
@@ -4335,7 +4373,7 @@ class RedSuperior extends EventEmitter {
     const tasaExito = (stats.procesamientos - stats.errores) / stats.procesamientos;
     if (tasaExito < 0.5 && stats.procesamientos > 10) {
       analizador.estado = 'degradado';
-      dragon.warn(`Analizador ${analizadorId} marcado como degradado`, 'actualizarEstadisticasAnalizador', {
+      dragon.seEnfada(`Analizador ${analizadorId} marcado como degradado`, 'actualizarEstadisticasAnalizador', {
         tasaExito: (tasaExito * 100).toFixed(1) + '%',
         procesamientos: stats.procesamientos,
         errores: stats.errores
@@ -4361,7 +4399,7 @@ class RedSuperior extends EventEmitter {
       }
       return null;
     } catch (error) {
-      dragon.error('Error obteniendo uso de GPU', error, 'obtenerUsoGPU');
+      dragon.agoniza('Error obteniendo uso de GPU', error, 'obtenerUsoGPU');
       return { error: error.message, timestamp: Date.now() };
     }
   }
@@ -4381,7 +4419,7 @@ class RedSuperior extends EventEmitter {
         timestamp: Date.now()
       };
     } catch (error) {
-      dragon.error('Error obteniendo uso de memoria', error, 'obtenerUsoMemoria');
+      dragon.agoniza('Error obteniendo uso de memoria', error, 'obtenerUsoMemoria');
       return { error: error.message, timestamp: Date.now() };
     }
   }
@@ -4397,16 +4435,16 @@ class RedSuperior extends EventEmitter {
   obtenerMetricas() {
     try {
       const inicioHealthCheck = performance.now();
-      
+
       const metricas = this.metricas.obtenerResumen();
       const estado = this._evaluarEstadoSistema(metricas);
-      
+
       const healthCheck = {
         status: estado.saludable ? 'healthy' : 'unhealthy',
         timestamp: Date.now(),
         uptime: process.uptime(),
         correlationId: crypto.randomUUID(),
-        
+
         // Información del sistema Red Superior
         redSuperior: {
           id: this.id,
@@ -4416,7 +4454,7 @@ class RedSuperior extends EventEmitter {
           tiempoInicializacion: this.tiempoInicializacion,
           ultimaOperacion: this.ultimaOperacion
         },
-        
+
         // Estado del sistema base
         sistema: {
           nodeVersion: process.version,
@@ -4426,14 +4464,14 @@ class RedSuperior extends EventEmitter {
           memoria: this._obtenerUsoMemoria(),
           cpu: process.cpuUsage()
         },
-        
+
         // Estado de TensorFlow y GPU
         tensorflow: {
           backend: this.backendTensorFlow,
           gpuDisponible: this.gpuDisponible,
           memoria: this._obtenerUsoGPU()
         },
-        
+
         // Estado del modelo
         modelo: this.modelo ? {
           tipo: this.modelo.tipo,
@@ -4441,7 +4479,7 @@ class RedSuperior extends EventEmitter {
           precision: this.modelo.precision,
           cargado: true
         } : { cargado: false },
-        
+
         // Estado de analizadores
         analizadores: {
           total: this.analizadores.size,
@@ -4449,23 +4487,23 @@ class RedSuperior extends EventEmitter {
           degradados: Array.from(this.analizadores.values()).filter(a => a.estado === 'degradado').length,
           distribucion: this._obtenerDistribucionAnalizadores()
         },
-        
+
         // Estado del cache
         cache: this.cache.obtenerEstadisticas(),
-        
+
         // Métricas de rendimiento
         metricas: {
           ...metricas,
           operacionesEnCurso: this.operacionesEnCurso.size,
           rateLimitingActivo: this.limitadorTasa.size
         },
-        
+
         // Circuit breakers
         circuitBreakers: this._obtenerEstadoCircuitBreakers(),
-        
+
         // Alertas activas
         alertas: estado.alertas || [],
-        
+
         // Información de diagnóstico
         diagnostico: {
           tiempoHealthCheck: performance.now() - inicioHealthCheck,
@@ -4477,7 +4515,7 @@ class RedSuperior extends EventEmitter {
 
       this.ultimoHealthCheck = Date.now();
 
-      dragon.debug('Health check completado', 'obtenerMetricas', {
+      dragon.zen('Health check completado', 'obtenerMetricas', {
         status: healthCheck.status,
         tiempoGeneracion: healthCheck.diagnostico.tiempoHealthCheck,
         alertasActivas: healthCheck.alertas.length,
@@ -4488,9 +4526,9 @@ class RedSuperior extends EventEmitter {
 
     } catch (error) {
       this.metricas.registrarError('HEALTH_CHECK_FAILED', error.message, error.stack, CODIGOS_ERROR.HEALTH_CHECK_FAILED);
-      
-      dragon.error('❌ Error generando health check', error, 'obtenerMetricas');
-      
+
+      dragon.agoniza('❌ Error generando health check', error, 'obtenerMetricas');
+
       return {
         status: 'error',
         timestamp: Date.now(),
@@ -4607,8 +4645,8 @@ class RedSuperior extends EventEmitter {
       criterios.push({ criterio: 'modelo', estado: 'ok', tipo: this.modelo.tipo });
     }
 
-    return { 
-      saludable, 
+    return {
+      saludable,
       alertas,
       criterios,
       estadoFinal: saludable ? 'healthy' : 'unhealthy',
@@ -4621,7 +4659,7 @@ class RedSuperior extends EventEmitter {
    */
   _obtenerDistribucionAnalizadores() {
     const distribucion = {};
-    
+
     for (const analizador of this.analizadores.values()) {
       const tipo = analizador.tipo;
       if (!distribucion[tipo]) {
@@ -4632,9 +4670,9 @@ class RedSuperior extends EventEmitter {
           errores: 0
         };
       }
-      
+
       distribucion[tipo].total++;
-      
+
       switch (analizador.estado) {
         case 'activo':
           distribucion[tipo].activos++;
@@ -4647,7 +4685,7 @@ class RedSuperior extends EventEmitter {
           break;
       }
     }
-    
+
     return distribucion;
   }
 
@@ -4657,13 +4695,13 @@ class RedSuperior extends EventEmitter {
   _verificarConectividadRapida() {
     const analizadoresActivos = Array.from(this.analizadores.values())
       .filter(a => a.estado === 'activo').length;
-    
+
     const totalAnalizadores = this.analizadores.size;
-    
+
     if (totalAnalizadores === 0) return 'sin_analizadores';
-    
+
     const ratio = analizadoresActivos / totalAnalizadores;
-    
+
     if (ratio >= 0.8) return 'excelente';
     if (ratio >= 0.6) return 'buena';
     if (ratio >= 0.4) return 'degradada';
@@ -4676,7 +4714,7 @@ class RedSuperior extends EventEmitter {
   _calcularFactorCarga() {
     const operacionesActuales = this.operacionesEnCurso.size;
     const maxOperacionesConcurrentes = CONFIG.RED_SUPERIOR.CONCURRENCIA_MAXIMA * 10; // Estimación
-    
+
     return Math.min(1.0, operacionesActuales / maxOperacionesConcurrentes);
   }
   // =============================================================================
@@ -4689,7 +4727,7 @@ class RedSuperior extends EventEmitter {
   async destruir() {
     const inicioDestruccion = performance.now();
     const correlationId = crypto.randomUUID();
-    
+
     try {
       dragon.zen('🧹 Iniciando destrucción de Red Superior...', 'redSuperior.js', 'destruir', {
         correlationId,
@@ -4752,13 +4790,13 @@ class RedSuperior extends EventEmitter {
 
     } catch (error) {
       const tiempoTranscurrido = performance.now() - inicioDestruccion;
-      
+
       this.metricas?.registrarError('DESTRUCTOR_FAILED', error.message, error.stack, 'D001', {
         correlationId,
         tiempoTranscurrido
       });
 
-      dragon.error('❌ Error durante destrucción de Red Superior', error, 'destruir', {
+      dragon.agoniza('❌ Error durante destrucción de Red Superior', error, 'destruir', {
         correlationId,
         tiempoTranscurrido,
         estadoSistema: this.estadoSistema
@@ -4774,7 +4812,7 @@ class RedSuperior extends EventEmitter {
   async _esperarFinalizacionOperaciones() {
     const timeout = CONFIG.SHUTDOWN.OPERATIONS_WAIT_MAX;
     const inicioEspera = Date.now();
-    
+
     dragon.zen('⏳ Esperando finalización de operaciones en curso...', 'redSuperior.js', 'esperarFinalizacionOperaciones', {
       operacionesActivas: this.operacionesEnCurso.size,
       timeoutMaximo: timeout
@@ -4782,14 +4820,14 @@ class RedSuperior extends EventEmitter {
 
     while (this.operacionesEnCurso.size > 0) {
       const tiempoTranscurrido = Date.now() - inicioEspera;
-      
+
       if (tiempoTranscurrido > timeout) {
-        dragon.warn('⚠️ Timeout esperando operaciones - forzando cierre', 'esperarFinalizacionOperaciones', {
+        dragon.seEnfada('⚠️ Timeout esperando operaciones - forzando cierre', 'esperarFinalizacionOperaciones', {
           operacionesRestantes: this.operacionesEnCurso.size,
           tiempoEsperado: tiempoTranscurrido,
           operacionesPendientes: Array.from(this.operacionesEnCurso)
         });
-        
+
         // Forzar limpieza de operaciones pendientes
         this.operacionesEnCurso.clear();
         this.correlacionRequests.clear();
@@ -4798,10 +4836,10 @@ class RedSuperior extends EventEmitter {
 
       // Esperar un poco antes de verificar nuevamente
       await new Promise(resolve => setTimeout(resolve, CONFIG.SHUTDOWN.OPERATIONS_CHECK_INTERVAL));
-      
+
       // Log de progreso cada 2 segundos
       if (tiempoTranscurrido % 2000 < CONFIG.SHUTDOWN.OPERATIONS_CHECK_INTERVAL) {
-        dragon.debug('Esperando operaciones...', 'esperarFinalizacionOperaciones', {
+        dragon.zen('Esperando operaciones...', 'esperarFinalizacionOperaciones', {
           operacionesRestantes: this.operacionesEnCurso.size,
           tiempoEsperado: tiempoTranscurrido
         });
@@ -4826,12 +4864,12 @@ class RedSuperior extends EventEmitter {
     try {
       // Notificar cierre a todos los analizadores
       const promesasDesconexion = [];
-      
+
       for (const [id, analizador] of this.analizadores.entries()) {
         promesasDesconexion.push(
           this._desconectarAnalizador(id, analizador)
             .catch(error => {
-              dragon.warn(`Error desconectando analizador ${id}`, 'destruirAnalizadores', {
+              dragon.seEnfada(`Error desconectando analizador ${id}`, 'destruirAnalizadores', {
                 analizadorId: id,
                 error: error.message
               });
@@ -4854,7 +4892,7 @@ class RedSuperior extends EventEmitter {
       });
 
     } catch (error) {
-      dragon.error('Error destruyendo analizadores', error, 'destruirAnalizadores');
+      dragon.agoniza('Error destruyendo analizadores', error, 'destruirAnalizadores');
       // Forzar limpieza
       this.analizadores.clear();
       this.poolConexiones.clear();
@@ -4868,7 +4906,7 @@ class RedSuperior extends EventEmitter {
     try {
       // Marcar como desconectando
       analizador.estado = 'desconectando';
-      
+
       // Actualizar métricas finales
       this.metricas.actualizarAnalizador(id, analizador.tipo, 'desconectado', {
         tiempoConexion: Date.now() - analizador.estadisticas.inicializado,
@@ -4878,8 +4916,8 @@ class RedSuperior extends EventEmitter {
 
       // Simular desconexión (en implementación real sería una llamada HTTP/gRPC)
       await new Promise(resolve => setTimeout(resolve, 50));
-      
-      dragon.debug(`Analizador ${id} desconectado`, 'desconectarAnalizador', {
+
+      dragon.zen(`Analizador ${id} desconectado`, 'desconectarAnalizador', {
         analizadorId: id,
         tipo: analizador.tipo,
         procesamientos: analizador.estadisticas.procesamientos
@@ -4900,7 +4938,7 @@ class RedSuperior extends EventEmitter {
       if (this.cache) {
         // Obtener estadísticas finales antes de destruir
         const estadisticasFinales = this.cache.obtenerEstadisticas();
-        
+
         dragon.audit('CACHE_ESTADISTICAS_FINALES', {
           tamaño: estadisticasFinales.tamaño,
           utilizacion: estadisticasFinales.utilizacion,
@@ -4917,7 +4955,7 @@ class RedSuperior extends EventEmitter {
         });
       }
     } catch (error) {
-      dragon.error('Error destruyendo cache', error, 'destruirCache');
+      dragon.agoniza('Error destruyendo cache', error, 'destruirCache');
       this.cache = null; // Forzar limpieza
     }
   }
@@ -4932,7 +4970,7 @@ class RedSuperior extends EventEmitter {
       if (this.metricas) {
         // Generar reporte final de métricas
         const reporteFinal = this.metricas.obtenerResumen();
-        
+
         dragon.audit('METRICAS_REPORTE_FINAL', {
           uptime: reporteFinal.uptime,
           prediccionesTotales: reporteFinal.predicciones.total,
@@ -4956,7 +4994,7 @@ class RedSuperior extends EventEmitter {
         });
       }
     } catch (error) {
-      dragon.error('Error destruyendo métricas', error, 'destruirMetricas');
+      dragon.agoniza('Error destruyendo métricas', error, 'destruirMetricas');
       this.metricas = null; // Forzar limpieza
     }
   }
@@ -4971,17 +5009,17 @@ class RedSuperior extends EventEmitter {
       if (this.gpuDisponible && tf) {
         // Obtener estado final de memoria
         const memoriaAntes = tf.memory();
-        
+
         // Limpiar tensores y variables
         tf.disposeVariables();
-        
+
         // Forzar garbage collection de TensorFlow
         if (typeof tf.dispose === 'function') {
           tf.dispose();
         }
 
         const memoriaDespues = tf.memory();
-        
+
         dragon.zen('✅ TensorFlow limpiado', 'redSuperior.js', 'tensorflow_limpiado', {
           backend: this.backendTensorFlow,
           memoriaAntes: {
@@ -4996,14 +5034,14 @@ class RedSuperior extends EventEmitter {
           bytesLiberados: memoriaAntes.numBytes - memoriaDespues.numBytes
         });
       }
-      
+
       // Limpiar referencias del modelo
       this.modelo = null;
       this.gpuDisponible = false;
       this.backendTensorFlow = null;
 
     } catch (error) {
-      dragon.error('Error limpiando TensorFlow', error, 'limpiarTensorFlow');
+      dragon.agoniza('Error limpiando TensorFlow', error, 'limpiarTensorFlow');
       // Forzar limpieza de referencias
       this.modelo = null;
       this.gpuDisponible = false;
@@ -5021,13 +5059,13 @@ class RedSuperior extends EventEmitter {
       // Limpiar operaciones en curso
       this.operacionesEnCurso.clear();
       this.correlacionRequests.clear();
-      
+
       // Limpiar rate limiting
       this.limitadorTasa.clear();
-      
+
       // Limpiar circuit breakers
       this.circuitBreaker.clear();
-      
+
       // Limpiar analizadores (por si acaso)
       this.analizadores.clear();
       this.poolConexiones.clear();
@@ -5035,7 +5073,7 @@ class RedSuperior extends EventEmitter {
       dragon.zen('✅ Estructuras de datos limpiadas', 'redSuperior.js', 'estructuras_limpiadas');
 
     } catch (error) {
-      dragon.error('Error limpiando estructuras de datos', error, 'limpiarEstructurasDatos');
+      dragon.agoniza('Error limpiando estructuras de datos', error, 'limpiarEstructurasDatos');
     }
   }
 
@@ -5048,15 +5086,16 @@ class RedSuperior extends EventEmitter {
     try {
       // Remover todos los listeners de la instancia
       this.removeAllListeners();
-      
+
       dragon.zen('✅ Event listeners limpiados', 'redSuperior.js', 'listeners_limpiados');
 
     } catch (error) {
-      dragon.error('Error limpiando event listeners', error, 'limpiarEventListeners');
+      dragon.agoniza('Error limpiando event listeners', error, 'limpiarEventListeners');
     }
   }
 
-} // Fin de la clase RedSuperior
+}// Fin de la clase RedSuperior
+
 
 // =============================================================================
 // INSTANCIA SINGLETON Y CONFIGURACIÓN GLOBAL
@@ -5080,7 +5119,7 @@ export const healthCheckTensorFlow = () => {
   try {
     return redSuperior.obtenerMetricas();
   } catch (error) {
-    dragon.error('Error en health check exportado', error, 'healthCheckTensorFlow');
+    dragon.agoniza('Error en health check exportado', error, 'healthCheckTensorFlow');
     return {
       status: 'error',
       timestamp: Date.now(),
@@ -5100,7 +5139,7 @@ export const readinessCheck = () => {
         status: 'not_ready',
         ready: false,
         timestamp: Date.now(),
-        message: redSuperior.estadoSistema === ESTADOS_SISTEMA.CERRANDO ? 
+        message: redSuperior.estadoSistema === ESTADOS_SISTEMA.CERRANDO ?
           'Sistema cerrando' : 'Sistema no inicializado',
         redSuperiorId: redSuperior.id
       };
@@ -5124,7 +5163,7 @@ export const readinessCheck = () => {
       }
     };
   } catch (error) {
-    dragon.error('Error en readiness check', error, 'readinessCheck');
+    dragon.agoniza('Error en readiness check', error, 'readinessCheck');
     return {
       status: 'error',
       ready: false,
@@ -5140,7 +5179,7 @@ export const readinessCheck = () => {
 export const livenessCheck = () => {
   try {
     const alive = redSuperior.estadoSistema !== ESTADOS_SISTEMA.ERROR;
-    
+
     return {
       status: alive ? 'alive' : 'dead',
       alive,
@@ -5175,7 +5214,7 @@ export const obtenerEstadoGPU = () => {
       timestamp: Date.now()
     };
   } catch (error) {
-    dragon.error('Error obteniendo estado GPU', error, 'obtenerEstadoGPU');
+    dragon.agoniza('Error obteniendo estado GPU', error, 'obtenerEstadoGPU');
     return { error: error.message, timestamp: Date.now() };
   }
 };
@@ -5184,7 +5223,7 @@ export const obtenerMetricasDetalladas = () => {
   try {
     return redSuperior.metricas?.obtenerResumen() || { error: 'Métricas no disponibles' };
   } catch (error) {
-    dragon.error('Error obteniendo métricas detalladas', error, 'obtenerMetricasDetalladas');
+    dragon.agoniza('Error obteniendo métricas detalladas', error, 'obtenerMetricasDetalladas');
     return { error: error.message, timestamp: Date.now() };
   }
 };
@@ -5197,7 +5236,7 @@ export const limpiarCache = () => {
     });
     return { success: true, entradasEliminadas: entradas };
   } catch (error) {
-    dragon.error('Error limpiando cache manualmente', error, 'limpiarCache');
+    dragon.agoniza('Error limpiando cache manualmente', error, 'limpiarCache');
     return { success: false, error: error.message };
   }
 };
@@ -5206,7 +5245,7 @@ export const obtenerEstadoCircuitBreakers = () => {
   try {
     return redSuperior._obtenerEstadoCircuitBreakers();
   } catch (error) {
-    dragon.error('Error obteniendo estado circuit breakers', error, 'obtenerEstadoCircuitBreakers');
+    dragon.agoniza('Error obteniendo estado circuit breakers', error, 'obtenerEstadoCircuitBreakers');
     return { error: error.message, timestamp: Date.now() };
   }
 };
@@ -5217,7 +5256,7 @@ export const forzarGracefulShutdown = async () => {
     await redSuperior.destruir();
     return { success: true, message: 'Graceful shutdown completado' };
   } catch (error) {
-    dragon.error('Error en graceful shutdown forzado', error, 'forzarGracefulShutdown');
+    dragon.agoniza('Error en graceful shutdown forzado', error, 'forzarGracefulShutdown');
     return { success: false, error: error.message };
   }
 };
@@ -5257,7 +5296,7 @@ async function manejarCierreElegante(señal, codigoSalida = 0) {
   // Prevenir múltiples ejecuciones concurrentes
   if (cierreEnProgreso) {
     const tiempoTranscurrido = Date.now() - (tiempoInicioAcierre || Date.now());
-    dragon.warn(`🔄 Señal ${señal} ignorada - cierre ya en progreso`, 'manejarCierreElegante', {
+    dragon.seEnfada(`🔄 Señal ${señal} ignorada - cierre ya en progreso`, 'manejarCierreElegante', {
       señal,
       tiempoTranscurrido,
       intentosPrevios: intentosCierre,
@@ -5298,24 +5337,24 @@ async function manejarCierreElegante(señal, codigoSalida = 0) {
 
   // Configurar timeout de seguridad con escalación
   const timeoutGraceful = setTimeout(() => {
-    dragon.error(`⏰ Timeout graceful shutdown (${SHUTDOWN_CONFIG.TIMEOUT_GRACEFUL}ms)`, 
+    dragon.agoniza(`⏰ Timeout graceful shutdown (${SHUTDOWN_CONFIG.TIMEOUT_GRACEFUL}ms)`,
       new Error('Graceful shutdown timeout'), 'graceful_shutdown_timeout', {
       señal,
       correlationId,
       tiempoTranscurrido: Date.now() - tiempoInicioAcierre,
       fasesCompletadas: 'timeout_durante_proceso'
     });
-    
+
     // Escalación: intentar force exit
     setTimeout(() => {
-      dragon.error('💥 Force exit - graceful shutdown falló completamente', 
+      dragon.agoniza('💥 Force exit - graceful shutdown falló completamente',
         new Error('Force exit required'), 'force_exit', {
         correlationId,
         tiempoTotal: Date.now() - tiempoInicioAcierre
       });
       process.exit(1);
     }, 5000); // 5 segundos adicionales para force exit
-    
+
     process.exit(1);
   }, SHUTDOWN_CONFIG.TIMEOUT_GRACEFUL);
 
@@ -5324,10 +5363,10 @@ async function manejarCierreElegante(señal, codigoSalida = 0) {
     dragon.zen('🚫 FASE 1: Deteniendo aceptación de nuevas solicitudes', 'redSuperior.js', 'shutdown_fase_1', {
       correlationId
     });
-    
+
     if (redSuperior) {
-      redSuperior.emit('cierre_iniciado', { 
-        señal, 
+      redSuperior.emit('cierre_iniciado', {
+        señal,
         timestamp: Date.now(),
         correlationId,
         fase: 1
@@ -5338,7 +5377,7 @@ async function manejarCierreElegante(señal, codigoSalida = 0) {
     dragon.zen('⏳ FASE 2: Esperando finalización de operaciones críticas', 'redSuperior.js', 'shutdown_fase_2', {
       correlationId
     });
-    
+
     if (redSuperior?.operacionesEnCurso?.size > 0) {
       await esperarOperacionesCriticas(correlationId);
     }
@@ -5347,7 +5386,7 @@ async function manejarCierreElegante(señal, codigoSalida = 0) {
     dragon.zen('🧹 FASE 3: Destruyendo Red Superior', 'redSuperior.js', 'shutdown_fase_3', {
       correlationId
     });
-    
+
     if (redSuperior && typeof redSuperior.destruir === 'function') {
       await redSuperior.destruir();
     }
@@ -5356,14 +5395,14 @@ async function manejarCierreElegante(señal, codigoSalida = 0) {
     dragon.zen('📝 FASE 4: Cerrando sistema de logging', 'redSuperior.js', 'shutdown_fase_4', {
       correlationId
     });
-    
+
     await cerrarSistemaLogging();
 
     // FASE 5: Limpieza final de memoria y garbage collection
     dragon.zen('🗑️ FASE 5: Limpieza final de memoria', 'redSuperior.js', 'shutdown_fase_5', {
       correlationId
     });
-    
+
     await limpiezaFinalMemoria();
 
     // Limpiar timeout de seguridad
@@ -5414,7 +5453,7 @@ async function manejarCierreElegante(señal, codigoSalida = 0) {
   } catch (error) {
     clearTimeout(timeoutGraceful);
     const tiempoTranscurrido = Date.now() - tiempoInicioAcierre;
-    
+
     // Log de error final con máximo detalle
     const errorFinal = {
       timestamp: new Date().toISOString(),
@@ -5441,17 +5480,17 @@ async function manejarCierreElegante(señal, codigoSalida = 0) {
 
     // Retry logic para graceful shutdown
     if (intentosCierre < SHUTDOWN_CONFIG.RETRIES_PERMITIDOS) {
-      dragon.warn(`🔄 Retry graceful shutdown - intento ${intentosCierre + 1}`, 'graceful_shutdown_retry', {
+      dragon.seEnfada(`🔄 Retry graceful shutdown - intento ${intentosCierre + 1}`, 'graceful_shutdown_retry', {
         error: error.message,
         correlationId
       });
-      
+
       cierreEnProgreso = false; // Permitir retry
-      
+
       setTimeout(() => {
         manejarCierreElegante(señal, 1);
       }, SHUTDOWN_CONFIG.DELAY_ENTRE_RETRIES);
-      
+
       return;
     }
 
@@ -5469,20 +5508,20 @@ async function esperarOperacionesCriticas(correlationId) {
   const maxEspera = CONFIG.SHUTDOWN.OPERATIONS_WAIT_MAX;
   const intervaloCheck = CONFIG.SHUTDOWN.OPERATIONS_CHECK_INTERVAL;
   let tiempoEsperado = 0;
-  
+
   while (redSuperior.operacionesEnCurso.size > 0 && tiempoEsperado < maxEspera) {
     const operacionesRestantes = redSuperior.operacionesEnCurso.size;
-    
-    dragon.debug('⏳ Esperando operaciones críticas', 'esperarOperacionesCriticas', {
+
+    dragon.zen('⏳ Esperando operaciones críticas', 'esperarOperacionesCriticas', {
       correlationId,
       operacionesRestantes,
       tiempoEsperado,
       maxEspera
     });
-    
+
     await new Promise(resolve => setTimeout(resolve, intervaloCheck));
     tiempoEsperado += intervaloCheck;
-    
+
     // Log de progreso cada 2 segundos
     if (tiempoEsperado % 2000 === 0) {
       dragon.zen(`⏳ Progreso cierre: ${operacionesRestantes} operaciones restantes`, 'redSuperior.js', 'shutdown_progress', {
@@ -5493,15 +5532,15 @@ async function esperarOperacionesCriticas(correlationId) {
       });
     }
   }
-  
+
   // Si aún hay operaciones, forzar terminación
   if (redSuperior.operacionesEnCurso.size > 0) {
-    dragon.warn('⚠️ Forzando terminación de operaciones restantes', 'esperarOperacionesCriticas', {
+    dragon.seEnfada('⚠️ Forzando terminación de operaciones restantes', 'esperarOperacionesCriticas', {
       correlationId,
       operacionesForzadas: redSuperior.operacionesEnCurso.size,
       tiempoEsperado
     });
-    
+
     redSuperior.operacionesEnCurso.clear();
     redSuperior.correlacionRequests.clear();
   }
@@ -5542,15 +5581,15 @@ async function limpiezaFinalMemoria() {
     if (global.gc) {
       global.gc();
     }
-    
+
     // Limpiar variables globales
     if (typeof cierreEnProgreso !== 'undefined') {
       cierreEnProgreso = null;
     }
-    
+
     // Breve delay para permitir limpieza
     await new Promise(resolve => setTimeout(resolve, 100));
-    
+
   } catch (error) {
     // Ignorar errores de limpieza final
   }
@@ -5604,8 +5643,8 @@ process.on('uncaughtException', (error, origin) => {
     platform: process.platform
   };
 
-  dragon.error('💥 UNCAUGHT EXCEPTION - Iniciando shutdown de emergencia', error, 'uncaughtException', errorContext);
-  
+  dragon.agoniza('💥 UNCAUGHT EXCEPTION - Iniciando shutdown de emergencia', error, 'uncaughtException', errorContext);
+
   dragon.audit('UNCAUGHT_EXCEPTION', {
     error: {
       message: error.message,
@@ -5657,10 +5696,10 @@ process.on('unhandledRejection', (reason, promise) => {
   );
 
   const severidad = esCritica ? 'CRITICAL' : 'WARNING';
-  
-  dragon.error(`🚨 UNHANDLED REJECTION [${severidad}]`, 
-    reason instanceof Error ? reason : new Error(reason), 
-    'unhandledRejection', 
+
+  dragon.agoniza(`🚨 UNHANDLED REJECTION [${severidad}]`,
+    reason instanceof Error ? reason : new Error(reason),
+    'unhandledRejection',
     rejectionContext
   );
 
@@ -5672,11 +5711,11 @@ process.on('unhandledRejection', (reason, promise) => {
 
   // Solo iniciar shutdown si es crítica y estamos en producción
   if (esCritica && process.env.NODE_ENV === 'production') {
-    dragon.error('🚨 Unhandled rejection crítica en producción - iniciando graceful shutdown', 
-      reason instanceof Error ? reason : new Error(reason), 
+    dragon.agoniza('🚨 Unhandled rejection crítica en producción - iniciando graceful shutdown',
+      reason instanceof Error ? reason : new Error(reason),
       'unhandledRejection_critical'
     );
-    
+
     setTimeout(() => {
       manejarCierreElegante('unhandledRejection', 1);
     }, 1000); // Dar tiempo para logs
@@ -5703,13 +5742,13 @@ process.on('warning', (warning) => {
   const esExperimental = warning.name === 'ExperimentalWarning';
 
   if (esDeprecation) {
-    dragon.warn(`⚠️ DEPRECATION: ${warning.message}`, 'nodejs_deprecation_warning', warningContext);
+    dragon.seEnfada(`⚠️ DEPRECATION: ${warning.message}`, 'nodejs_deprecation_warning', warningContext);
   } else if (esMemoria) {
-    dragon.warn(`🧠 MEMORY WARNING: ${warning.message}`, 'nodejs_memory_warning', warningContext);
+    dragon.seEnfada(`🧠 MEMORY WARNING: ${warning.message}`, 'nodejs_memory_warning', warningContext);
   } else if (esExperimental) {
-    dragon.debug(`🧪 EXPERIMENTAL: ${warning.message}`, 'nodejs_experimental_warning', warningContext);
+    dragon.zen(`🧪 EXPERIMENTAL: ${warning.message}`, 'nodejs_experimental_warning', warningContext);
   } else {
-    dragon.warn(`⚠️ NODE WARNING: ${warning.message}`, 'nodejs_warning', warningContext);
+    dragon.seEnfada(`⚠️ NODE WARNING: ${warning.message}`, 'nodejs_warning', warningContext);
   }
 });
 
@@ -5723,7 +5762,7 @@ process.on('warning', (warning) => {
 async function inicializarConReintentos(maxReintentos = 3, delayBase = 1000) {
   let ultimoError = null;
   const correlationId = crypto.randomUUID();
-  
+
   for (let intento = 1; intento <= maxReintentos; intento++) {
     try {
       dragon.zen(`🚀 Intento de inicialización ${intento}/${maxReintentos}`, 'redSuperior.js', 'init_attempt', {
@@ -5732,9 +5771,9 @@ async function inicializarConReintentos(maxReintentos = 3, delayBase = 1000) {
         correlationId,
         delayAnterior: intento > 1 ? delayBase * Math.pow(2, intento - 2) : 0
       });
-      
+
       const estadoInicializacion = await redSuperior.inicializar();
-      
+
       dragon.zen('🎉 Red Superior inicializada exitosamente', 'redSuperior.js', 'init_success', {
         intentos: intento,
         uptime: process.uptime(),
@@ -5748,13 +5787,13 @@ async function inicializarConReintentos(maxReintentos = 3, delayBase = 1000) {
         correlationId,
         redSuperiorId: redSuperior.id
       });
-      
+
       return estadoInicializacion;
-      
+
     } catch (error) {
       ultimoError = error;
-      
-      dragon.error(`❌ Fallo en inicialización - intento ${intento}/${maxReintentos}`, error, 'init_failure', {
+
+      dragon.agoniza(`❌ Fallo en inicialización - intento ${intento}/${maxReintentos}`, error, 'init_failure', {
         intento,
         maxReintentos,
         correlationId,
@@ -5762,10 +5801,10 @@ async function inicializarConReintentos(maxReintentos = 3, delayBase = 1000) {
         errorCode: error.code,
         errorName: error.name
       });
-      
+
       if (intento < maxReintentos) {
         const delay = delayBase * Math.pow(2, intento - 1); // Exponential backoff
-        dragon.zen(`⏳ Esperando ${delay}ms antes del siguiente intento...`, 'redSuperior.js', 'init_retry_delay', { 
+        dragon.zen(`⏳ Esperando ${delay}ms antes del siguiente intento...`, 'redSuperior.js', 'init_retry_delay', {
           delay,
           correlationId,
           intentoFallido: intento
@@ -5774,9 +5813,9 @@ async function inicializarConReintentos(maxReintentos = 3, delayBase = 1000) {
       }
     }
   }
-  
+
   // Si llegamos aquí, todos los intentos fallaron
-  dragon.error('💥 INICIALIZACIÓN FALLIDA después de todos los intentos', ultimoError, 'init_final_failure', {
+  dragon.agoniza('💥 INICIALIZACIÓN FALLIDA después de todos los intentos', ultimoError, 'init_final_failure', {
     intentosTotales: maxReintentos,
     correlationId,
     errorFinal: ultimoError?.message,
@@ -5788,7 +5827,7 @@ async function inicializarConReintentos(maxReintentos = 3, delayBase = 1000) {
     errorFinal: ultimoError?.message,
     correlationId
   });
-  
+
   // Exit con código específico para fallo de inicialización
   process.exit(3);
 }
@@ -5800,7 +5839,7 @@ async function inicializarConReintentos(maxReintentos = 3, delayBase = 1000) {
 // Solo inicializar automáticamente si NO estamos en modo test
 if (process.env.NODE_ENV !== 'test') {
   const startupCorrelationId = crypto.randomUUID();
-  
+
   dragon.zen('🌟 INICIANDO SISTEMA DRAGON RED SUPERIOR', 'redSuperior.js', 'system_startup', {
     correlationId: startupCorrelationId,
     nodeVersion: process.version,
@@ -5835,7 +5874,7 @@ if (process.env.NODE_ENV !== 'test') {
     .catch((error) => {
       // El error ya fue loggeado en inicializarConReintentos
       // Este catch es por seguridad adicional
-      dragon.error('💥 ERROR CRÍTICO EN STARTUP', error, 'system_startup_failed', {
+      dragon.agoniza('💥 ERROR CRÍTICO EN STARTUP', error, 'system_startup_failed', {
         correlationId: startupCorrelationId
       });
       process.exit(3);
@@ -5849,16 +5888,16 @@ if (process.env.NODE_ENV !== 'test') {
 // Monitoreo continuo de performance y memory leaks en producción
 if (process.env.NODE_ENV === 'production') {
   const MONITORING_INTERVAL = 60000; // Cada minuto
-  
+
   setInterval(() => {
     const memUsage = process.memoryUsage();
     const heapUsedMB = Math.round(memUsage.heapUsed / 1024 / 1024);
     const heapTotalMB = Math.round(memUsage.heapTotal / 1024 / 1024);
     const rssMB = Math.round(memUsage.rss / 1024 / 1024);
-    
+
     // Alerta por alto uso de memoria
     if (heapUsedMB > 800) { // Más de 800MB
-      dragon.warn('🚨 ALTO USO DE MEMORIA detectado', 'memory_monitor', {
+      dragon.seEnfada('🚨 ALTO USO DE MEMORIA detectado', 'memory_monitor', {
         heapUsedMB,
         heapTotalMB,
         rssMB,
@@ -5869,7 +5908,7 @@ if (process.env.NODE_ENV === 'production') {
         redSuperiorId: redSuperior?.id
       });
     }
-    
+
     // Metrics para monitoreo externo
     dragon.metrics('system_performance', MONITORING_INTERVAL, true, {
       memory: {
@@ -5881,7 +5920,7 @@ if (process.env.NODE_ENV === 'production') {
       uptime: process.uptime(),
       pid: process.pid
     });
-    
+
   }, MONITORING_INTERVAL);
 }
 
@@ -5910,3 +5949,9 @@ dragon.zen('📄 Módulo redSuperior.js cargado completamente', 'redSuperior.js'
   moduleInfo: MODULE_INFO,
   timestamp: Date.now()
 });
+
+export const iniciarRedSuperior = async (redisSubscriber, redisPublisher) => {
+  // Si necesitas lógica especial, ponla aquí.
+  // Normalmente solo inicializaría la red superior:
+  return await redSuperior.inicializar();
+};

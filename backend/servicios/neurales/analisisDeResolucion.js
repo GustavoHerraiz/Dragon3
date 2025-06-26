@@ -195,5 +195,6 @@ export function act(entrada, opts) { return analizador.act(entrada, opts); }
 
 // Export default para testing/manual
 export default AnalisisDeResolucion;
+export function act(entrada, opts) { return analizador.act(entrada, opts); }
 
 // EOF

@@ -704,7 +704,7 @@ class PerformanceMonitorFAANG {
             },
             requests: {
                 total: this.metrics.requestCounts,
-                errorCount: Array.from(this.errorCounts.values()).reduce((sum, count) => sum + count, 0)
+                errorCount: Array.from(this.metrics.errorCounts.values()).reduce((sum, count) => sum + count, 0)
             },
             alerts: {
                 lastAlerts: Object.fromEntries(this.lastAlertTimes),
