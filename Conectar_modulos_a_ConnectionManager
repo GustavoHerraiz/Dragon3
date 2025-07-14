@@ -1,0 +1,263 @@
+# Cómo conectar con ConnectionManager todos los módulos
+
+> **NOTA IMPORTANTE:**  
+> Todo el código y los ejemplos de este informe asumen SIEMPRE el uso de **ES modules** (`import/export`).  
+> No está permitido el uso de CommonJS (`require`, `module.exports`) en ningún módulo de Dragon3.
+
+---
+
+## RESUMEN RÁPIDO PARA DUMMIES 🚀
+
+1. **Crea el cliente Redis con ES Modules.**
+2. **Ponle el `serviceName` y la `priority` adecuados.**
+3. **Regístralo en `ConnectionManager` usando el nombre del módulo como CLIENT_ID.**
+4. **Para cualquier operación Redis, obtén SIEMPRE el cliente con `connectionManager.getRawClientById(CLIENT_ID)`.**
+5. **No uses nunca más la instancia directa de Redis.**
+6. **Todos los módulos deben seguir esta convención cambiando sólo el CLIENT_ID y el nivel de prioridad.**
+
+---
+
+### TABLA DE REFERENCIA DE CLIENT_ID Y PRIORIDAD
+
+| Módulo (archivo)         | CLIENT_ID              | Prioridad recomendada              |
+|--------------------------|------------------------|------------------------------------|
+| analizadorImagen.js      | "analizadorImagen"     | SERVICE_PRIORITIES.CRITICAL        |
+| servidorCentral.js       | "servidorCentral"      | SERVICE_PRIORITIES.HIGH            |
+| gestorNotificaciones.js  | "gestorNotificaciones" | SERVICE_PRIORITIES.MEDIUM          |
+| logger.js                | "logger"               | SERVICE_PRIORITIES.LOW             |
+| ...                      | ...                    | ...                                |
+
+> Usa SIEMPRE el nombre del módulo (sin extensión) como CLIENT_ID para registrar y recuperar el cliente Redis.  
+> Elige la prioridad en función de la criticidad del módulo para el sistema.
+
+---
+
+## 1. Descripción exacta del problema
+
+Actualmente, cada módulo crea y gestiona su propia conexión Redis directamente, sin utilizar el gestor centralizado `ConnectionManager.js`.  
+Esto provoca:
+
+- **Falta de control centralizado** de las conexiones Redis.
+- **Difícil monitorización, logging y priorización** de clientes Redis.
+- **Riesgo de múltiples conexiones paralelas y fugas de recursos.**
+- **Imposibilidad de aplicar políticas globales** (reconexión, healthcheck, fallback, etc.).
+- **Inconsistencia** con la arquitectura deseada del backend Dragon3.
+
+---
+
+## 2. Objetivo
+
+Asegurar que **todas las operaciones Redis en todos los módulos se gestionen a través de `ConnectionManager.js`**.  
+Se proporciona un ejemplo completo usando `analizadorImagen.js` como plantilla para migrar el resto de módulos consumidores Redis en Dragon3.
+
+---
+
+## 3. Pasos para la migración (paso a paso, ES Modules)
+
+### Paso 1: Localiza la inicialización directa del cliente Redis
+
+Busca líneas como:
+```js
+const redisClient = new Redis(...opciones...);
+```
+o cualquier inicialización de cliente Redis.
+
+**Cómo buscar con grep (evitando node_modules):**
+```sh
+grep -rnw . -e 'new Redis' --exclude-dir=node_modules
+```
+o para cualquier uso de `redisClient`:
+```sh
+grep -rnw . -e 'redisClient' --exclude-dir=node_modules
+```
+
+---
+
+### Paso 2: Importa correctamente `ConnectionManager.js` y los enums de prioridad (**con ES Modules**)
+
+```js
+import connectionManager from '../../utilidades/redis/core/ConnectionManager.js';
+import { SERVICE_PRIORITIES } from '../../utilidades/redis/core/constants.js'; // Ajusta la ruta según tu estructura
+```
+
+---
+
+### Paso 3: Crea el cliente Redis (siempre con ES modules)
+
+```js
+import Redis from 'ioredis';
+
+const redisClient = new Redis(/* tus opciones de conexión */);
+```
+
+---
+
+### Paso 4: Asigna metadatos al cliente antes de registrarlo (**DETALLE CRÍTICO**)
+
+```js
+redisClient.serviceName = 'analizadorImagen';
+redisClient.priority = SERVICE_PRIORITIES.CRITICAL;
+```
+> **El `CLIENT_ID` será siempre el nombre del módulo, por convención y en minúscula.**  
+> Ejemplo para este módulo:  
+> `const ANALIZADOR_REDIS_CLIENT_ID = 'analizadorImagen';`
+> Para otros módulos, por ejemplo:  
+> `const SERVIDOR_CENTRAL_REDIS_CLIENT_ID = 'servidorCentral';`
+
+---
+
+### Paso 5: Registra el cliente en el ConnectionManager
+
+```js
+const ANALIZADOR_REDIS_CLIENT_ID = 'analizadorImagen';
+connectionManager.registerClient(ANALIZADOR_REDIS_CLIENT_ID, redisClient);
+```
+
+---
+
+### Paso 6: Busca y sustituye todos los usos de la instancia local de Redis
+
+**Cómo buscar con grep (evitando node_modules):**
+```sh
+grep -rnw . -e 'redisClient' --exclude-dir=node_modules
+```
+Sustituye todos los usos de `redisClient` (excepto la inicialización y registro) por el cliente obtenido a través del ConnectionManager:
+
+```js
+const rawClient = connectionManager.getRawClientById(ANALIZADOR_REDIS_CLIENT_ID);
+```
+
+**Ejemplo concreto para analizadorImagen.js:**
+
+ANTES:
+```js
+await redisClient.xadd(...);
+const result = await redisClient.get(...);
+```
+DESPUÉS:
+```js
+const rawClient = connectionManager.getRawClientById('analizadorImagen');
+await rawClient.xadd(...);
+const result = await rawClient.get(...);
+```
+> **NOTA:** El CLIENT_ID de cada módulo debe ser el nombre del propio módulo.  
+> Por ejemplo, para `analizadorImagen.js` será siempre `'analizadorImagen'`.
+
+---
+
+### Paso 7: Arranca el consumidor solo si el cliente existe
+
+```js
+const rawClient = connectionManager.getRawClientById(ANALIZADOR_REDIS_CLIENT_ID);
+if (rawClient) {
+  consumirPendientesDragon3(rawClient, analizarImagen);
+} else {
+  dragon.agoniza(
+    'No se pudo obtener el cliente Redis real para el consumidor de imágenes',
+    {},
+    'analizadorImagen',
+    'CLIENTE_REDIS_NO_ENCONTRADO',
+    { clientId: ANALIZADOR_REDIS_CLIENT_ID }
+  );
+}
+```
+
+---
+
+### Paso 8: Añade listeners de error y logging robusto
+
+```js
+redisClient.on('error', (err) => {
+  dragon.agoniza(
+    'Error de conexión con Redis',
+    { error: err.message },
+    'analizadorImagen',
+    'REDIS_CONNECTION_ERROR'
+  );
+});
+```
+
+---
+
+### Paso 9: Documenta el cambio en el propio archivo y en la documentación del proyecto
+
+Incluye comentarios claros sobre el nuevo flujo y la necesidad de pasar SIEMPRE por el `ConnectionManager`.
+
+---
+
+## 4. Resultado esperado
+
+- **Conexión Redis centralizada y controlada**.
+- **Facilidad para migrar otros módulos** siguiendo el mismo patrón.
+- **Mejor trazabilidad y debugging**.
+- **Menor riesgo de bugs y fugas de recursos**.
+
+---
+
+## 5. Checklist de verificación
+
+- [ ] El cliente Redis se registra solo una vez en el ConnectionManager.
+- [ ] Todas las operaciones Redis usan el cliente obtenido por ConnectionManager.
+- [ ] El logging refleja correctamente el serviceName y los errores.
+- [ ] No queda ningún uso directo de la instancia local de Redis.
+- [ ] El shutdown y fallback funcionan correctamente si Redis falla.
+- [ ] El código está documentado y es entendible para otros desarrolladores.
+
+---
+
+## 6. Ejemplo ES Modules de adaptación final para `analizadorImagen.js` (plantilla para otros módulos)
+
+```js
+// ES Modules SIEMPRE
+import dragon from "../../utilidades/logger.js";
+import Redis from 'ioredis';
+import connectionManager from '../../utilidades/redis/core/ConnectionManager.js';
+import { SERVICE_PRIORITIES } from '../../utilidades/redis/core/constants.js';
+
+const ANALIZADOR_REDIS_CLIENT_ID = 'analizadorImagen';
+const redisClient = new Redis(/* opciones de conexión */);
+
+redisClient.serviceName = 'analizadorImagen';
+redisClient.priority = SERVICE_PRIORITIES.CRITICAL;
+
+connectionManager.registerClient(ANALIZADOR_REDIS_CLIENT_ID, redisClient);
+
+redisClient.on('error', (err) => {
+  dragon.agoniza('Error de conexión con Redis', { error: err.message }, 'analizadorImagen', 'REDIS_CONNECTION_ERROR');
+});
+
+// Siempre utiliza el cliente de ConnectionManager:
+const rawClient = connectionManager.getRawClientById(ANALIZADOR_REDIS_CLIENT_ID);
+if (rawClient) {
+  consumirPendientesDragon3(rawClient, analizarImagen);
+} else {
+  dragon.agoniza(
+    'No se pudo obtener el cliente Redis real para el consumidor de imágenes',
+    {},
+    'analizadorImagen',
+    'CLIENTE_REDIS_NO_ENCONTRADO',
+    { clientId: ANALIZADOR_REDIS_CLIENT_ID }
+  );
+}
+```
+
+---
+
+## 7. Plan detallado y exacto de migración para cualquier módulo
+
+_Seguir todos los pasos anteriores, usando siempre ES modules y convenciones de nombrado CLIENT_ID como el nombre del módulo._
+
+---
+
+## 8. Resumen de cambios esperados
+
+- **El acceso a Redis es SIEMPRE a través de ConnectionManager.**
+- **Nunca importar ni usar directamente la instancia de Redis tras la migración.**
+- **Todos los logs de Redis reflejan el `serviceName` y la prioridad.**
+- **El código queda preparado para migrar otros módulos siguiendo el mismo patrón, permitiendo orquestación, health checks y shutdown controlado de Redis.**
+- **El `CLIENT_ID` será siempre el nombre del módulo.**
+- **TODO ES modules.**
+
+---
+
+**Este informe sirve de plantilla para migrar el resto de módulos consumidores de Redis en Dragon3. Usa siempre grep para localizar referencias y evitar node_modules.**

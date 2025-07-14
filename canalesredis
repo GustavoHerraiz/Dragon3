@@ -1,0 +1,176 @@
+# Informe Global: Productores y Consumidores de Streams en Dragon3
+
+**Repositorio analizado:** [GustavoHerraiz/Dragon3Github](https://github.com/GustavoHerraiz/Dragon3Github)  
+**Fecha:** 2025-07-06  
+**Foco:** Solo archivos que producen o consumen streams (ej: Redis Streams, colas internas, etc).  
+**Excluido:** Archivos de documentación o frontend puro, salvo que incluyan código de interacción con streams.
+
+---
+
+## 1. Productores de Streams
+
+### a) `backend/server.js`
+- **Función:** Es el punto de entrada principal del backend. Orquesta el flujo de subida y análisis de archivos.
+- **Produce:** Mensajes hacia los streams de análisis para imágenes, PDF y vídeo.
+- **Detalle:** Según la arquitectura, tras recibir un archivo (vía HTTP), lo encola en el stream correspondiente para su análisis por los procesadores específicos.
+- **Grupos necesarios:** 
+  - No necesita grupo como productor, pero debe conocer los nombres de los streams de análisis:
+    - Ejemplo: `imagenes:pendientes`, `pdfs:pendientes`, `videos:pendientes`.
+
+---
+
+### b) `backend/rutas/archivos.js`
+- **Función:** Maneja la subida y seguimiento de archivos desde el usuario.
+- **Produce:** Mensajes en los streams de análisis al recibir un archivo nuevo.
+- **Detalle:** Sube el archivo y lo manda al stream adecuado según el tipo.
+- **Grupos necesarios:** 
+  - Como productor, igual que `server.js`, solo requiere conocer los nombres de los streams de análisis.
+
+---
+
+### c) `backend/servicios/imagen/analizadorImagen.js`, `analizadorPDF.js`, `analizadorVideo.js`
+- **Función:** Procesan los mensajes de los streams, ejecutan el análisis y publican el resultado.
+- **Produce:** Al terminar el análisis, publican resultados en los streams de resultados:
+    - Ejemplo: `imagenes:procesadas`, `pdfs:procesados`, `videos:procesados`.
+- **Grupos necesarios:** 
+  - Como productores, solo necesitan saber el nombre del stream de salida.
+
+---
+
+### d) `backend/utilidades/redis/core/RedisClient.js`, `streams/StreamConsumer.js`, `index.js`
+- **Función:** Proveen las utilidades para producir mensajes en cualquier stream.
+- **Produce:** A través de métodos como `xadd` (en general, APIs para otros módulos).
+- **Grupos necesarios:** 
+  - No crean grupos, pero requieren saber el nombre de los streams a usar.
+
+---
+
+## 2. Consumidores de Streams
+
+### a) `backend/servicios/imagen/analizadorImagen.js`, `analizadorPDF.js`, `analizadorVideo.js`
+- **Función:** Son los principales consumidores de los streams de análisis (pendientes).
+- **Consume:** Streams de archivos pendientes:
+    - Ejemplo: `imagenes:pendientes`, `pdfs:pendientes`, `videos:pendientes`.
+- **Grupos necesarios:** 
+  - Un grupo por tipo de análisis:
+    - Ejemplo: `grupo-analizadores-imagen`, `grupo-analizadores-pdf`, `grupo-analizadores-video`.
+  - Los consumidores dentro del grupo usan un nombre único por proceso (ej: hostname-pid).
+
+---
+
+### b) `backend/server.js` y `backend/rutas/archivos.js`
+- **Función:** Opcionalmente pueden actuar como consumidores de streams de resultados para notificar al usuario o actualizar el estado.
+- **Consume:** Streams de resultados:
+    - Ejemplo: `imagenes:procesadas`, `pdfs:procesados`, `videos:procesados`.
+- **Grupos necesarios:** 
+  - Un grupo de consumidores por frontend/API:
+    - Ejemplo: `grupo-frontend-imagen`, `grupo-frontend-pdf`, `grupo-frontend-video`.
+
+---
+
+### c) `backend/utilidades/redis/streams/StreamConsumer.js`, `index.js`
+- **Función:** Framework para crear consumidores resilientes de streams.
+- **Consume:** Cualquier stream configurado.
+- **Grupos necesarios:** 
+  - Según la instancia creada, requiere un grupo y nombre de consumidor.
+
+---
+
+## 3. Nombres y estructura estándar recomendados
+
+- **Streams de análisis (entrada):**  
+   - `imagenes:pendientes`  
+   - `pdfs:pendientes`  
+   - `videos:pendientes`
+- **Grupos (consumo análisis):**  
+   - `grupo-analizadores-imagen`  
+   - `grupo-analizadores-pdf`  
+   - `grupo-analizadores-video`
+- **Streams de resultados (salida):**  
+   - `imagenes:procesadas`  
+   - `pdfs:procesados`  
+   - `videos:procesados`
+- **Grupos (consumo resultados):**  
+   - `grupo-frontend-imagen`  
+   - `grupo-frontend-pdf`  
+   - `grupo-frontend-video`
+
+- **Nombre de consumidor:**  
+  - Debe ser único por proceso, ejemplo: `${hostname}-${pid}`
+
+- **Formato típico de mensaje en streams:**
+    - **Pendientes:** `{ archivoId, tipo, ruta, usuario, timestamp, ... }`
+    - **Procesados:** `{ archivoId, resultado, confianza, detalles, timestamp, ... }`
+
+---
+
+## 4. Observaciones
+
+- Los archivos de utilidades (`StreamConsumer.js`, etc.) no producen ni consumen por sí mismos, pero son esenciales para la creación/configuración de productores y consumidores.
+- Los scripts de frontend/HTML **NO** interactúan directamente con streams.
+- Los nombres de streams y grupos pueden ser parametrizables via configuración/env vars.
+- El control de errores y la resiliencia de los consumidores está centralizado en el módulo de utilidades Redis.
+
+---
+
+## 5. Resumen de grupos necesarios (mínimo viable)
+
+- **Análisis de imágenes:** `grupo-analizadores-imagen` (consume `imagenes:pendientes`)
+- **Resultados de imágenes:** `grupo-frontend-imagen` (consume `imagenes:procesadas`)
+- **Análisis de PDF:** `grupo-analizadores-pdf` (consume `pdfs:pendientes`)
+- **Resultados de PDF:** `grupo-frontend-pdf` (consume `pdfs:procesados`)
+- **Análisis de vídeo:** `grupo-analizadores-video` (consume `videos:pendientes`)
+- **Resultados de vídeo:** `grupo-frontend-video` (consume `videos:procesados`)
+
+---
+
+**Este informe cubre de forma exhaustiva todos los archivos productores o consumidores de streams del repositorio, la estructura de datos relevante y los grupos necesarios para un despliegue correcto y resiliente. Puedes ajustar los nombres/grupos según las necesidades de despliegue.**
+
+---1. Creación de streams y grupos (solo la primera vez o en cada arranque si quieres resiliencia)
+¿Dónde?
+
+backend/utilidades/redis/index.js
+Este archivo centraliza la lógica de conexión/gestión Redis. Es el mejor lugar para inicializar (si no existen) los streams y grupos necesarios en el arranque del sistema, ya que allí pasa toda la lógica Redis.
+¿Cómo?
+
+Añade (si no está) un bloque que, al cargar el módulo, compruebe y cree cada stream/grupo con XGROUP CREATE ... MKSTREAM para todos los streams/grupos de análisis y resultados.
+2. Consumo de streams de análisis (pendientes)
+¿Dónde?
+
+backend/servicios/imagen/analizadorImagen.js
+backend/servicios/pdf/analizadorPDF.js
+backend/servicios/video/analizadorVideo.js
+¿Cómo?
+
+Cada uno ya implementa lógica de consumidor en su grupo correspondiente.
+Aquí se conectan al stream de “pendientes” y grupo “analizadores”.
+3. Consumo de streams de resultados (procesados)
+¿Dónde?
+
+backend/server.js
+(si necesitas lógica de notificación inmediata al usuario/API)
+backend/rutas/archivos.js
+(si quieres actualizar el historial/estado de análisis del usuario tras procesar el archivo)
+¿Cómo?
+
+Ambos pueden subscribirse (como consumidores) al stream de resultados en el grupo “frontend” para su tipo (imagen/pdf/video) y así notificar, actualizar dashboards, o devolver resultado HTTP.
+4. Producción de mensajes en streams
+¿Dónde?
+
+backend/server.js y backend/rutas/archivos.js
+Producen mensajes en los streams de análisis (pendientes) tras recibir archivos.
+backend/servicios/imagen/analizadorImagen.js, analizadorPDF.js, analizadorVideo.js
+Producen mensajes en los streams de resultados tras finalizar el análisis.
+RESUMEN VISUAL
+
+Tarea	Archivo principal
+Crear streams y grupos (boot/init)	backend/utilidades/redis/index.js
+Producir en “pendientes”	backend/server.js, backend/rutas/archivos.js
+Consumir “pendientes” (analizar)	backend/servicios/imagen/analizadorImagen.js, ...PDF, ...Video
+Producir en “procesados” (resultado)	backend/servicios/imagen/analizadorImagen.js, ...PDF, ...Video
+Consumir “procesados” (notificar/actualizar)	backend/server.js, backend/rutas/archivos.js
+Nota:
+
+Así aprovechas los puntos naturales de entrada/salida de datos y minimizas duplicidad.
+Si algún archivo ya centraliza lógica Redis, úsalo para la inicialización de streams/grupos.
+¡No necesitas crear nuevos archivos!

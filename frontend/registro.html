@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Dragon3 - Registro</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- CSS real Dragon3 -->
+  <link rel="stylesheet" href="global.css">
+  <link rel="stylesheet" href="dragon.css">
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+  <!--
+    Dragon3 - registro.html
+    Registro FAANG/KISS perfectamente integrado con tu sistema y CSS real.
+  -->
+  <header class="header">
+    <div class="logo">
+      <img src="logo.png" alt="Logo Dragon3" />
+      <span>Registro Dragon3</span>
+    </div>
+    <nav class="menu">
+      <a href="index.html" class="button">Inicio</a>
+      <a href="login.html" class="button">Login</a>
+    </nav>
+  </header>
+  <main class="container">
+    <section class="panel">
+      <h2>Crear cuenta</h2>
+      <form id="registerForm" class="form-container">
+        <div class="input-field">
+          <label>Usuario:
+            <input type="text" name="usuario" class="input" required maxlength="32" autocomplete="username">
+          </label>
+        </div>
+        <div class="input-field">
+          <label>Email:
+            <input type="email" name="email" class="input" required maxlength="128" autocomplete="email">
+          </label>
+        </div>
+        <div class="input-field">
+          <label>Contraseña:
+            <input type="password" name="password" class="input" required minlength="8" autocomplete="new-password">
+          </label>
+        </div>
+        <div class="input-field">
+          <label>Repetir contraseña:
+            <input type="password" name="password2" class="input" required minlength="8" autocomplete="new-password">
+          </label>
+        </div>
+        <button type="submit" class="button">Registrarse</button>
+        <button type="button" id="btnGoLogin" class="button" style="margin-left:8px;">Login</button>
+      </form>
+      <div id="registerError" class="prx oculto"></div>
+    </section>
+  </main>
+  <footer class="footer">
+    <div class="footer-links">
+      <a href="mailto:soporte@bladecorporation.net">Soporte</a>
+      <a href="index.html">Inicio</a>
+    </div>
+    <p>© 2025 Dragon3 AI Auth System | FAANG Enterprise</p>
+  </footer>
+  <script src="scripts/registro.js"></script>
+</body>
+</html>

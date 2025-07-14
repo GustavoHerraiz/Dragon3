@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Dragon3 - Resultado del Análisis</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Protección básica de seguridad -->
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
+  <meta http-equiv="X-Frame-Options" content="DENY">
+  <!-- Estilos completos integrados -->
+  <style>
+  /* Estilos mejorados para Dragon3 FAANG */
+  body {
+    font-family: 'Segoe UI', Arial, sans-serif;
+    margin: 0; padding: 0;
+    background: #f9f9fb;
+    color: #222;
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+  }
+  header, footer {
+    background: #192137;
+    color: #fff;
+    padding: 1rem 0.5rem;
+    text-align: center;
+  }
+  main {
+    flex: 1;
+    padding: 1.2rem 0.5rem;
+    max-width: 800px;
+    margin: auto;
+    background: #fff;
+    border-radius: 12px;
+    box-shadow: 0 3px 16px rgba(30,40,80,0.06);
+  }
+  h1, h2, h3 {
+    margin: 0.5em 0;
+  }
+  #resultadoSection {
+    background: #f8fafc;
+    border-radius: 8px;
+    padding: 1.5em;
+    margin-bottom: 1.5em;
+    word-break: break-word;
+  }
+  /* Estilos para el resultado Dragon3 FAANG */
+  .resultado-principal {
+    border-radius: 8px;
+    padding: 1.5em;
+    margin: 1em 0;
+  }
+  .autentico {
+    background: #f0fdf4;
+    border: 2px solid #10b981;
+  }
+  .artificial {
+    background: #fffbeb;
+    border: 2px solid #f59e0b;
+  }
+  .resultado-header {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    margin-bottom: 1em;
+  }
+  .resultado-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1em;
+    margin: 1em 0;
+  }
+  .resultado-item {
+    background: rgba(255,255,255,0.7);
+    padding: 0.75em;
+    border-radius: 6px;
+  }
+  pre {
+    background: #1f2937;
+    color: #e5e7eb;
+    padding: 1em;
+    border-radius: 6px;
+    overflow-x: auto;
+    font-size: 0.85em;
+    line-height: 1.4;
+    margin: 0.7em 0;
+    box-shadow: 0 1px 8px rgba(25,33,55,0.1);
+  }
+  details {
+    margin: 1em 0;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+  }
+  summary {
+    cursor: pointer;
+    font-weight: bold;
+    padding: 0.75em;
+    background: #f8fafc;
+    border-radius: 6px 6px 0 0;
+    transition: background 0.2s;
+  }
+  summary:hover {
+    background: #f1f5f9;
+  }
+  .error {
+    color: #dc2626;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 6px;
+    padding: 1em;
+    margin-bottom: 1em;
+    font-weight: 600;
+    font-size: 1.05em;
+    display: block;
+  }
+  .debug-info {
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    padding: 1em;
+    margin: 1em 0;
+    font-size: 0.9em;
+    color: #64748b;
+  }
+  nav {
+    display: flex;
+    gap: 0.7em;
+    flex-wrap: wrap;
+    justify-content: center;
+    margin: 2em 0 0.5em 0;
+  }
+  /* Botón estilo para <a class="nav-btn"> */
+  .nav-btn {
+    display: inline-block;
+    background: #3b82f6;
+    color: #fff;
+    border: none;
+    border-radius: 6px;
+    padding: 0.75em 1.5em;
+    font-size: 1em;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-weight: 500;
+    text-decoration: none;
+    margin: 0.2em;
+  }
+  .nav-btn:hover, .nav-btn:focus {
+    background: #2563eb;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59,130,246,0.4);
+    outline: none;
+  }
+  @media (max-width: 600px) {
+    main {
+      padding: 0.7rem 0.4rem;
+      margin: 0.5rem;
+    }
+    .resultado-grid {
+      grid-template-columns: 1fr;
+    }
+    nav {
+      flex-direction: column;
+      gap: 0.5em;
+    }
+    .nav-btn, nav button {
+      width: 100%;
+      font-size: 0.95em;
+    }
+  }
+</style>
+</head>
+<body>
+  <!--
+    ================================================================
+    Dragon3 Analizar Imagen Público - Página de resultados (FAANG)
+    Arquitectura: frontend → server.js → analizadorImagen.js → servidorCentral.js → Red Superior
+    - Compatible con server.js: resultadoAnalisis, correlationId, analysisTimestamp
+    - UX: Accesible, robusto, profesional, responsive, botones de navegación
+    - Lógica JS EXTERNA: scripts/analizar-imagen-publico.js (NO INLINE)
+    - Cumple CSP y políticas de seguridad modernas
+    ================================================================
+  -->
+  <header>
+    <h1>Resultado del Análisis</h1>
+  </header>
+  <main>
+    <!-- Indicador de carga inicial -->
+    <div id="loadingSection" style="text-align: center; padding: 2em;">
+      <div style="font-size: 2em; margin-bottom: 1em;">🔄</div>
+      <h2>Cargando resultado del análisis...</h2>
+      <p>Por favor espera mientras procesamos la información.</p>
+      <div id="loadingDebug" style="margin-top: 1em; font-size: 0.9em; color: #666;">
+        <div>📊 Verificando localStorage...</div>
+        <div id="loadingSteps"></div>
+      </div>
+    </div>
+
+    <!-- Sección de resultado mejorada para Dragon3 FAANG -->
+    <section id="resultadoSection" style="display:none;">
+      <!-- El contenido será generado dinámicamente por el JavaScript externo -->
+    </section>
+
+    <!-- Información adicional: correlación y timestamp -->
+    <div id="extraInfo" class="debug-info" style="display:none;">
+      <div><strong>🔗 ID de correlación:</strong> <span id="correlationId">Cargando...</span></div>
+      <div><strong>🕒 Fecha/hora del análisis:</strong> <span id="analysisTimestamp">Cargando...</span></div>
+    </div>
+
+    <!-- Mensaje de error mejorado -->
+    <div id="errorMsg" class="error" role="alert" style="display:none;"></div>
+
+    <!-- Debug section para desarrollo -->
+    <details id="debugSection" style="display:none;">
+      <summary>🔧 Información de debug (desarrollo)</summary>
+      <div id="debugContent" class="debug-info">
+        <div><strong>localStorage keys:</strong> <span id="debugKeys"></span></div>
+        <div><strong>Estructura detectada:</strong> <span id="debugStructure"></span></div>
+        <div><strong>Errores de parseo:</strong> <span id="debugErrors"></span></div>
+      </div>
+    </details>
+
+    <!-- Botones de navegación optimizados -->
+    <nav>
+  <a href="index.html" class="nav-btn" title="Ir al inicio">
+    🏠 Volver a inicio
+  </a>
+  <a href="analizador.html" class="nav-btn" title="Realizar nuevo análisis">
+    🔍 Nuevo análisis
+  </a>
+  <a href="login.html" class="nav-btn" title="Iniciar sesión en tu cuenta">
+    👤 Iniciar sesión
+  </a>
+  <a href="registro.html" class="nav-btn" title="Crear nueva cuenta">
+    📝 Registrarse
+  </a>
+</nav>
+  </main>
+  <footer>
+    <small>© 2025 Dragon3 AI Auth System | FAANG Enterprise</small>
+  </footer>
+  <!-- JS externo, único permitido por CSP -->
+  <script src="scripts/analizar-imagen-publico.js"></script>
+</body>
+</html>

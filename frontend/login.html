@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Dragon3 - Acceso</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- CSS real Dragon3 -->
+  <link rel="stylesheet" href="global.css">
+  <link rel="stylesheet" href="dragon.css">
+  <link rel="stylesheet" href="index.css">
+</head>
+<body>
+  <!--
+    Dragon3 - login.html
+    Login FAANG/KISS perfectamente integrado con tu sistema y CSS real.
+  -->
+  <header class="header">
+    <div class="logo">
+      <img src="logo.png" alt="Logo Dragon3" />
+      <span>Acceso Dragon3</span>
+    </div>
+    <nav class="menu">
+      <a href="index.html" class="button">Inicio</a>
+      <a href="registro.html" class="button">Registrarse</a>
+    </nav>
+  </header>
+  <main class="container">
+    <section class="panel">
+      <h2>Iniciar sesión</h2>
+      <form id="loginForm" class="form-container">
+        <div class="input-field">
+          <label>Usuario o email:
+            <input type="text" name="usuario" class="input" required maxlength="128" autocomplete="username">
+          </label>
+        </div>
+        <div class="input-field">
+          <label>Contraseña:
+            <input type="password" name="password" class="input" required minlength="8" autocomplete="current-password">
+          </label>
+        </div>
+        <button type="submit" class="button">Entrar</button>
+        <button type="button" id="btnGoRegister" class="button" style="margin-left:8px;">Registrarse</button>
+      </form>
+      <div id="loginError" class="prx oculto"></div>
+    </section>
+  </main>
+  <footer class="footer">
+    <div class="footer-links">
+      <a href="mailto:soporte@bladecorporation.net">Soporte</a>
+      <a href="index.html">Inicio</a>
+    </div>
+    <p>© 2025 Dragon3 AI Auth System | FAANG Enterprise</p>
+  </footer>
+  <script src="scripts/login.js"></script>
+</body>
+</html>
